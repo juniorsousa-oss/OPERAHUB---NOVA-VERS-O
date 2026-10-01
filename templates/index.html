@@ -3,9 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <meta name="theme-color" content="#0F1B2D">
   <title>Opera Hub | Operações conectadas</title>
+  {% if settings['favicon_data'] %}
+  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  {% endif %}
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -13,10 +17,19 @@
 <body class="home-page">
   <div class="app-shell">
     <aside class="side-nav" id="sideNav">
-      <div class="brand">
-        <div class="brand-mark">∞</div>
-        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
-      </div>
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
+        {% if settings['logo_data'] %}
+          <img
+            class="brand-logo-img"
+            src="{{ settings['logo_data'] }}"
+            alt="Opera Hub"
+            style="--brand-user-width: {{ settings['logo_width'] }}px"
+          >
+        {% else %}
+          <div class="brand-mark">∞</div>
+          <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+        {% endif %}
+      </a>
 
       <nav class="nav-primary">
         {% for item in nav_items[:9] %}
