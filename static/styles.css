@@ -498,13 +498,18 @@ button,input{font:inherit}
   padding:0;
   background:transparent;
   border-color:#E4EAF2;
+  overflow:hidden;
+}
+.app-icon.has-custom-image img{
+  border-radius:inherit;
 }
 .app-icon.has-custom-image img{
   width:100%;
   height:100%;
   object-fit:cover;
   object-position:center;
-  transform:scale(1.04);
+  transform:scale(1.42);
+  transform-origin:center;
   filter:saturate(.82) contrast(1.04);
 }
 .app-copy{min-width:0;padding-top:1px}
@@ -826,12 +831,15 @@ button,input{font:inherit}
   background:#F6F8FB;
   color:#173A67;
   border:1px solid #E8EDF3;
+  overflow:hidden;
 }
 .app-config-icon img{
   width:100%;
   height:100%;
   object-fit:cover;
-  transform:scale(1.04);
+  object-position:center;
+  transform:scale(1.42);
+  transform-origin:center;
   filter:saturate(.82) contrast(1.04);
 }
 .app-config-head strong{display:block;font-size:13px;color:#10203A}
