@@ -235,6 +235,15 @@
   <div class="toast" id="toast" role="status" aria-live="polite">
     Configure o link deste módulo em Configurações.
   </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="toast toast-flash show toast-{{ category }}" role="status">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
   <div class="nav-overlay" id="navOverlay"></div>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
