@@ -50,7 +50,7 @@
     <section class="login-form-panel">
       <div class="login-badge">OPERA HUB • ACESSO</div>
       <h2>Entrar na plataforma</h2>
-      <p>Informe sua senha de acesso para continuar.</p>
+      <p>Informe seu usuário ou e-mail e sua senha para continuar.</p>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -58,14 +58,27 @@
         {% endfor %}
       {% endwith %}
 
-      {% if not admin_enabled %}
+      {% if not auth_users_exist and not admin_enabled %}
       <div class="flash error">
-        O login foi criado, mas ainda falta configurar a senha administrativa no Render.
-        Defina a variável <strong>ADMIN_PASSWORD</strong> para habilitar o acesso.
+        Nenhum usuário foi criado ainda. Acesse Configurações → Login para cadastrar o primeiro acesso.
       </div>
       {% endif %}
 
       <form method="post" action="{{ url_for('login', next=next_url) }}">
+        <label for="login">Usuário ou e-mail</label>
+        <div class="login-password login-field">
+          <input
+            id="login"
+            type="text"
+            name="login"
+            placeholder="Digite seu usuário ou e-mail"
+            autocomplete="username"
+            required
+            autofocus
+          >
+          <i class="fa-regular fa-user"></i>
+        </div>
+
         <label for="password">Senha</label>
         <div class="login-password">
           <input
@@ -73,12 +86,16 @@
             type="password"
             name="password"
             placeholder="Digite sua senha"
+            autocomplete="current-password"
             required
-            autofocus
           >
           <i class="fa-solid fa-lock"></i>
         </div>
-        <button type="submit" {% if not admin_enabled %}disabled{% endif %}>
+
+        <button
+          type="submit"
+          {% if not auth_users_exist and not admin_enabled %}disabled{% endif %}
+        >
           Entrar no Opera Hub
         </button>
       </form>
