@@ -28,7 +28,7 @@ SUPABASE_KEY = os.getenv(
 SUPABASE_WRITE_TOKEN = os.getenv("SUPABASE_WRITE_TOKEN", "").strip()
 
 HERO_IMAGE = (
-    "https://images.unsplash.com/photo-1776493929304-dfe4d50ae96b"
+    "https://images.unsplash.com/photo-1769701000453-e306362a7d03"
     "?auto=format&fit=crop&fm=jpg&q=82&w=2400"
 )
 
