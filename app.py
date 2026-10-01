@@ -393,30 +393,21 @@ def configuracoes():
                     }
                 )
 
-            logo_data = settings.get("logo_data", "")
-            favicon_data = settings.get("favicon_data", "")
+            logo_file = request.files.get("logo_upload")
+            favicon_file = request.files.get("favicon_upload")
+            remove_logo = request.form.get("remove_logo") == "on"
+            remove_favicon = request.form.get("remove_favicon") == "on"
 
-            if request.form.get("remove_logo") == "on":
-                logo_data = ""
             new_logo = file_to_data_uri(
-                request.files.get("logo_upload"),
+                logo_file,
                 10 * 1024 * 1024,
                 max_dimension=2400,
             )
-            if new_logo is not None:
-                logo_data = new_logo
-
-            if request.form.get("remove_favicon") == "on":
-                favicon_data = ""
             new_favicon = file_to_data_uri(
-                request.files.get("favicon_upload"),
+                favicon_file,
                 10 * 1024 * 1024,
                 max_dimension=1024,
             )
-            if new_favicon is not None:
-                # O arquivo original permanece salvo no Supabase.
-                # A rota /favicon.png faz o recorte e a ampliação automaticamente.
-                favicon_data = new_favicon
 
             logo_width = max(
                 100,
@@ -432,14 +423,25 @@ def configuracoes():
             )
 
             identity_changed = (
-                bool(request.files.get("logo_upload") and request.files.get("logo_upload").filename)
-                or bool(request.files.get("favicon_upload") and request.files.get("favicon_upload").filename)
-                or request.form.get("remove_logo") == "on"
-                or request.form.get("remove_favicon") == "on"
+                bool(new_logo)
+                or bool(new_favicon)
+                or remove_logo
+                or remove_favicon
                 or logo_width != int(settings.get("logo_width", 190))
             )
 
             if identity_changed:
+                logo_data = (
+                    ""
+                    if remove_logo
+                    else (new_logo or load_asset_data("logo_data"))
+                )
+                favicon_data = (
+                    ""
+                    if remove_favicon
+                    else (new_favicon or load_asset_data("favicon_data"))
+                )
+
                 sb_rpc(
                     "operahub_save_settings",
                     {
