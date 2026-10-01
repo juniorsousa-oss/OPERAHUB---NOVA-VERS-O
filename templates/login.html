@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acesso administrativo | Opera Hub</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">∞</div>
+      <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+    </div>
+    <h1>Acesso às configurações</h1>
+    <p>Digite a senha administrativa para editar os links do Opera Hub.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post">
+      <input type="password" name="password" placeholder="Senha administrativa" required autofocus>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>
