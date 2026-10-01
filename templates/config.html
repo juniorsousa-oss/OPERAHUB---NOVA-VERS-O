@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurações | Opera Hub</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <aside class="admin-side">
+      <div class="brand">
+        <div class="brand-mark">∞</div>
+        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+      </div>
+      <a class="back-home" href="{{ url_for('index') }}">
+        <i class="fa-solid fa-arrow-left"></i>
+        Voltar ao início
+      </a>
+      {% if admin_enabled %}
+      <a class="back-home" href="{{ url_for('logout') }}">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Sair
+      </a>
+      {% endif %}
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-title">
+        <div>
+          <h1>Configurações</h1>
+          <p>Defina os links externos usados no menu lateral e nos cartões de aplicações.</p>
+        </div>
+        {% if not admin_enabled %}
+        <div class="dev-warning">
+          <strong>Modo de validação:</strong> defina <code>ADMIN_PASSWORD</code> no Render para proteger esta tela.
+        </div>
+        {% endif %}
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post">
+        <section class="admin-card">
+          <h2>Menu lateral</h2>
+          <p>Os módulos continuam como atalhos externos até serem incorporados ao Opera Hub.</p>
+          <div class="link-list">
+            {% for item in nav_items %}
+            <div class="link-row">
+              <div class="link-label">
+                <i class="{{ item['icon'] }}"></i>
+                <span>{{ item['label'] }}</span>
+              </div>
+              <input
+                class="url-input"
+                type="url"
+                name="nav_url_{{ item['key'] }}"
+                value="{{ item['url'] }}"
+                placeholder="https://..."
+              >
+              <label class="check-wrap">
+                <input
+                  type="checkbox"
+                  name="nav_new_tab_{{ item['key'] }}"
+                  {% if item['new_tab'] %}checked{% endif %}
+                >
+                Nova aba
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="admin-card">
+          <h2>Aplicações</h2>
+          <p>Configure o destino de cada cartão da página inicial.</p>
+          <div class="link-list">
+            {% for app_item in applications %}
+            <div class="link-row">
+              <div class="link-label">
+                <i class="{{ app_item['icon'] }}"></i>
+                <span>{{ app_item['name'] }}</span>
+              </div>
+              <input
+                class="url-input"
+                type="url"
+                name="app_url_{{ app_item['key'] }}"
+                value="{{ app_item['url'] }}"
+                placeholder="https://..."
+              >
+              <label class="check-wrap">
+                <input
+                  type="checkbox"
+                  name="app_new_tab_{{ app_item['key'] }}"
+                  {% if app_item['new_tab'] %}checked{% endif %}
+                >
+                Nova aba
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <div class="admin-actions">
+          <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
+          <button class="btn btn-primary" type="submit">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Salvar links
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+</body>
+</html>
