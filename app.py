@@ -441,7 +441,7 @@ def configuracoes():
                 "Alterações salvas permanentemente no Supabase.",
                 "success",
             )
-            return redirect(url_for("configuracoes"))
+            return app.response_class(status=204)
         except Exception as exc:
             flash(f"Não foi possível salvar: {exc}", "error")
 
