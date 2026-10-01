@@ -922,6 +922,180 @@ button,input{font:inherit}
   margin:0 0 10px;
 }
 .login-help-content p:last-child{margin-bottom:0}
+.user-create-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.user-create-grid .url-input{
+  width:100%;
+}
+.user-password-field{
+  grid-column:1/-1;
+}
+.user-create-actions{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.user-create-actions>span{
+  max-width:560px;
+  color:#7A89A0;
+  font-size:10.5px;
+  line-height:1.45;
+}
+.login-required-toggle{
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#465A74;
+  font-size:11px;
+  font-weight:700;
+}
+.login-required-toggle input{
+  width:16px;
+  height:16px;
+  accent-color:var(--yellow);
+}
+.login-required-toggle input:disabled+span{
+  opacity:.5;
+}
+.login-settings-button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.users-list{
+  display:grid;
+  gap:8px;
+}
+.user-row{
+  min-height:70px;
+  display:grid;
+  grid-template-columns:42px minmax(170px,1fr) auto auto 112px;
+  gap:11px;
+  align-items:center;
+  padding:10px 12px;
+  border:1px solid #E5EBF2;
+  border-radius:11px;
+  background:#FBFCFE;
+}
+.user-row-avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(145deg,#172D48,#31577E);
+  color:#FFFFFF;
+  font-size:11px;
+  font-weight:900;
+}
+.user-row-main{
+  min-width:0;
+}
+.user-row-main strong{
+  display:block;
+  color:#10203A;
+  font-size:12px;
+}
+.user-row-main span{
+  display:block;
+  margin-top:3px;
+  color:#7A89A0;
+  font-size:9.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.user-role-pill{
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.user-role-pill.admin{
+  color:#8A6200;
+  background:#FFF3C7;
+}
+.user-role-pill.user{
+  color:#31577E;
+  background:#EAF2FA;
+}
+.user-status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.user-status-pill span{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+}
+.user-status-pill.active{
+  color:#137643;
+  background:#E8F8EF;
+}
+.user-status-pill.active span{
+  background:#18A958;
+}
+.user-status-pill.inactive{
+  color:#8A4B4B;
+  background:#FCECEC;
+}
+.user-status-pill.inactive span{
+  background:#D45A5A;
+}
+.user-last-login{
+  text-align:right;
+}
+.user-last-login small{
+  display:block;
+  color:#8B99AB;
+  font-size:8px;
+}
+.user-last-login strong{
+  display:block;
+  margin-top:3px;
+  color:#53647B;
+  font-size:8.5px;
+  font-weight:700;
+}
+.users-empty{
+  min-height:150px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:#7D8CA2;
+}
+.users-empty i{
+  font-size:28px;
+  color:#A1AFC0;
+  margin-bottom:8px;
+}
+.users-empty strong{
+  color:#31455F;
+  font-size:12px;
+}
+.users-empty span{
+  margin-top:4px;
+  font-size:10px;
+}
+.login-field{
+  margin-bottom:2px;
+}
+
 
 .dev-warning{
   max-width:430px;background:#FFF4D6;border:1px solid #F5D57D;color:#7A5800;
@@ -1369,6 +1543,22 @@ button,input{font:inherit}
 
 /* Responsividade das telas administrativas */
 @media (max-width:860px){
+  .user-create-grid{grid-template-columns:1fr}
+  .user-password-field{grid-column:auto}
+  .user-create-actions{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .user-create-actions .btn{justify-content:center}
+  .user-row{
+    grid-template-columns:42px minmax(0,1fr) auto;
+  }
+  .user-role-pill{grid-column:2}
+  .user-status-pill{grid-column:3;grid-row:1}
+  .user-last-login{
+    grid-column:2/-1;
+    text-align:left;
+  }
   .config-tabs{
     width:100%;
     overflow-x:auto;
