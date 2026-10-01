@@ -4,8 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Configurações | Opera Hub</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
-  <link rel="shortcut icon" type="image/png" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
+  {% if settings['favicon_data'] %}
+  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  {% endif %}
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -14,12 +17,17 @@
   <div class="admin-shell">
     <aside class="admin-side">
       <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
-        <img
-          class="brand-logo-img"
-          src="{{ url_for('brand_logo', v=settings['updated_at']) }}"
-          alt="Opera Hub"
-          style="--brand-user-width: {{ settings['logo_width'] }}px"
-        >
+        {% if settings['logo_data'] %}
+          <img
+            class="brand-logo-img"
+            src="{{ settings['logo_data'] }}"
+            alt="Opera Hub"
+            style="--brand-user-width: {{ settings['logo_width'] }}px"
+          >
+        {% else %}
+          <div class="brand-mark">∞</div>
+          <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+        {% endif %}
       </a>
 
       <a class="back-home" href="{{ url_for('index') }}">
@@ -62,10 +70,13 @@
             <div class="identity-field">
               <label>Logo principal</label>
               <div class="asset-preview asset-preview-logo">
-                <img src="{{ url_for('brand_logo', v=settings['updated_at']) }}" alt="Logo atual">
+                {% if settings['logo_data'] %}
+                  <img src="{{ settings['logo_data'] }}" alt="Logo atual">
+                {% else %}
+                  <span>∞ <strong>OPERA HUB</strong></span>
+                {% endif %}
               </div>
               <input class="file-input" type="file" name="logo_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
-              <small>PNG, JPG, WEBP ou SVG. Até 10 MB.</small>
               <label class="range-label" for="logo_width">
                 Largura da logo: <strong><span id="logoWidthValue">{{ settings['logo_width'] }}</span> px</strong>
               </label>
@@ -88,10 +99,14 @@
             <div class="identity-field">
               <label>Favicon</label>
               <div class="asset-preview asset-preview-favicon">
-                <img src="{{ url_for('favicon_png', v=settings['updated_at']) }}" alt="Favicon atual">
+                {% if settings['favicon_data'] %}
+                  <img src="{{ settings['favicon_data'] }}" alt="Favicon atual">
+                {% else %}
+                  <span>∞</span>
+                {% endif %}
               </div>
               <input class="file-input" type="file" name="favicon_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
-              <small>Até 10 MB. Recomendado: imagem quadrada e sem margens.</small>
+              <small>Recomendado: imagem quadrada e sem margens.</small>
               <label class="check-wrap">
                 <input type="checkbox" name="remove_favicon">
                 Usar favicon padrão
