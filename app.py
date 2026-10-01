@@ -106,7 +106,7 @@ def load_settings():
     try:
         rows = sb_get(
             "operahub_settings",
-            {"id": "eq.main", "select": "*", "limit": "1"},
+            {"id": "eq.main", "select": "id,logo_width,updated_at", "limit": "1"},
         )
         if rows:
             data = dict(DEFAULT_SETTINGS)
