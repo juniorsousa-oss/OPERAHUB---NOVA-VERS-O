@@ -95,14 +95,31 @@
             <i class="fa-regular fa-bell"></i>
             <span class="notification-dot"></span>
           </button>
-          <a class="user-chip" href="{{ url_for('configuracoes') }}" title="Abrir configurações">
-            <div class="avatar small">OH</div>
-            <div class="user-copy">
-              <strong>Opera Hub</strong>
-              <span>Operações</span>
-            </div>
-            <i class="fa-solid fa-chevron-down"></i>
+
+          {% if logged_in %}
+          <div class="user-session">
+            <a class="user-chip" href="{{ url_for('configuracoes') }}" title="Abrir configurações">
+              <div class="avatar small">AD</div>
+              <div class="user-copy">
+                <strong>Administrador</strong>
+                <span>Opera Hub</span>
+              </div>
+              <i class="fa-solid fa-chevron-down"></i>
+            </a>
+            <a class="logout-button" href="{{ url_for('logout') }}" title="Sair">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </a>
+          </div>
+          {% else %}
+          <a class="login-button" href="{{ url_for('login', next=url_for('index')) }}">
+            <span class="login-avatar"><i class="fa-regular fa-user"></i></span>
+            <span class="login-copy">
+              <strong>Entrar</strong>
+              <small>Acessar Opera Hub</small>
+            </span>
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
           </a>
+          {% endif %}
         </div>
       </header>
 
@@ -180,7 +197,7 @@
               {% if not configured %}data-unconfigured="true"{% endif %}
             >
               <div class="app-main">
-                <div class="app-icon">
+                <div class="app-icon {{ 'has-custom-image' if app_item['has_image'] else '' }}">
                   {% if app_item['has_image'] %}
                     <img
                       src="{{ url_for('application_asset', app_key=app_item['key'], v=app_item['updated_at']) }}"
