@@ -192,7 +192,7 @@
               class="app-card accent-{{ app_item['accent'] }} {{ 'app-disabled' if not configured else '' }}"
               style="
                 --card-accent: {{ app_item['accent_color'] or '#F4B400' }};
-                --icon-zoom: {{ app_item['image_zoom'] or 142 }}%;
+                --icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};
               "
               href="{{ app_item['url'] if configured else '#' }}"
               data-search="{{ (app_item['name'] ~ ' ' ~ app_item['description'])|lower }}"
