@@ -349,6 +349,7 @@ def index():
         nav_items=load_nav(),
         applications=load_apps(),
         settings=settings,
+        logged_in=bool(session.get("admin_ok")),
         hero_image=url_for(
             "hero_asset",
             v=settings.get("updated_at", ""),
@@ -555,13 +556,13 @@ def configuracoes():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if not admin_enabled():
-        return redirect(url_for("configuracoes"))
+        return redirect(url_for("index"))
 
     if request.method == "POST":
         password = request.form.get("password", "")
         if password == app.config["ADMIN_PASSWORD"]:
             session["admin_ok"] = True
-            next_url = request.args.get("next") or url_for("configuracoes")
+            next_url = request.args.get("next") or url_for("index")
             return redirect(next_url)
         flash("Senha incorreta.", "error")
 
