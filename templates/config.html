@@ -248,7 +248,10 @@
             {% for app_item in applications %}
             <article
               class="app-config-card"
-              style="--preview-accent: {{ app_item['accent_color'] or '#F4B400' }}"
+              style="
+                --preview-accent: {{ app_item['accent_color'] or '#F4B400' }};
+                --preview-icon-zoom: {{ app_item['image_zoom'] or 142 }}%;
+              "
               data-app-config
             >
               <div class="app-config-head">
@@ -277,6 +280,23 @@
                     name="app_image_{{ app_item['key'] }}"
                     accept=".png,.jpg,.jpeg,.webp,.svg,image/*"
                   >
+                </label>
+
+                <label class="field-label">
+                  Preenchimento do ícone
+                  <div class="app-zoom-control">
+                    <input
+                      class="range-input"
+                      type="range"
+                      min="100"
+                      max="220"
+                      step="1"
+                      name="app_zoom_{{ app_item['key'] }}"
+                      value="{{ app_item['image_zoom'] or 142 }}"
+                      data-app-zoom
+                    >
+                    <strong data-app-zoom-value>{{ app_item['image_zoom'] or 142 }}%</strong>
+                  </div>
                 </label>
 
                 <label class="field-label color-field">
@@ -353,12 +373,21 @@
     document.querySelectorAll("[data-app-config]").forEach((card) => {
       const picker = card.querySelector("[data-color-input]");
       const label = card.querySelector(".color-control span");
-      if (!picker) return;
+      if (picker) {
+        picker.addEventListener("input", () => {
+          card.style.setProperty("--preview-accent", picker.value);
+          if (label) label.textContent = picker.value.toUpperCase();
+        });
+      }
 
-      picker.addEventListener("input", () => {
-        card.style.setProperty("--preview-accent", picker.value);
-        if (label) label.textContent = picker.value.toUpperCase();
-      });
+      const zoom = card.querySelector("[data-app-zoom]");
+      const zoomValue = card.querySelector("[data-app-zoom-value]");
+      if (zoom) {
+        zoom.addEventListener("input", () => {
+          card.style.setProperty("--preview-icon-zoom", zoom.value + "%");
+          if (zoomValue) zoomValue.textContent = zoom.value + "%";
+        });
+      }
     });
 
     const heroPreview = document.getElementById("heroPreview");
