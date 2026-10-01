@@ -78,6 +78,7 @@
                 {% endif %}
               </div>
               <input class="file-input" type="file" name="logo_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
+              <small>PNG, JPG, WEBP ou SVG. Até 10 MB.</small>
               <label class="range-label" for="logo_width">
                 Largura da logo: <strong><span id="logoWidthValue">{{ settings['logo_width'] }}</span> px</strong>
               </label>
@@ -107,7 +108,7 @@
                 {% endif %}
               </div>
               <input class="file-input" type="file" name="favicon_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
-              <small>Recomendado: imagem quadrada e sem margens.</small>
+              <small>Até 10 MB. Recomendado: imagem quadrada e sem margens.</small>
               <label class="check-wrap">
                 <input type="checkbox" name="remove_favicon">
                 Usar favicon padrão
