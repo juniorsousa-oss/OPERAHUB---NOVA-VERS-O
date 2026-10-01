@@ -568,20 +568,30 @@ def configuracoes():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if not admin_enabled():
-        return redirect(url_for("index"))
+    next_url = request.args.get("next") or url_for("index")
 
     if request.method == "POST":
-        password = request.form.get("password", "")
-        if password == app.config["ADMIN_PASSWORD"]:
-            session["admin_ok"] = True
-            next_url = request.args.get("next") or url_for("index")
-            return redirect(next_url)
-        flash("Senha incorreta.", "error")
+        if not admin_enabled():
+            flash(
+                "O login ainda não está habilitado porque ADMIN_PASSWORD "
+                "não está configurado no Render.",
+                "error",
+            )
+        else:
+            password = request.form.get("password", "")
+            if password == app.config["ADMIN_PASSWORD"]:
+                session.clear()
+                session["admin_ok"] = True
+                session.permanent = True
+                flash("Login realizado com sucesso.", "success")
+                return redirect(next_url)
+            flash("Senha incorreta. Tente novamente.", "error")
 
     return render_template(
         "login.html",
         settings=load_settings(),
+        admin_enabled=admin_enabled(),
+        next_url=next_url,
     )
 
 
@@ -593,7 +603,11 @@ def logout():
 
 @app.route("/healthz")
 def healthz():
-    return {"status": "ok", "storage": "supabase"}
+    return {
+        "status": "ok",
+        "storage": "supabase",
+        "admin_auth_configured": admin_enabled(),
+    }
 
 
 if __name__ == "__main__":
