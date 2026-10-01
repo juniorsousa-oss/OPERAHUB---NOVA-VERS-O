@@ -64,17 +64,27 @@
           </a>
         {% endfor %}
 
+        {% if can_admin %}
         <a class="nav-link config-link" href="{{ url_for('configuracoes') }}">
           <i class="fa-solid fa-gear"></i>
           <span>Configurações</span>
         </a>
+        {% endif %}
 
         <div class="nav-user">
-          <div class="avatar">OH</div>
-          <div>
-            <strong>Opera Hub</strong>
-            <span>Operações</span>
-          </div>
+          {% if current_user %}
+            <div class="avatar">{{ current_user['initials'] }}</div>
+            <div>
+              <strong>{{ current_user['name'] }}</strong>
+              <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
+            </div>
+          {% else %}
+            <div class="avatar">OH</div>
+            <div>
+              <strong>Opera Hub</strong>
+              <span>Operações</span>
+            </div>
+          {% endif %}
         </div>
       </div>
     </aside>
@@ -98,14 +108,24 @@
 
           {% if logged_in %}
           <div class="user-session">
+            {% if can_admin %}
             <a class="user-chip" href="{{ url_for('configuracoes') }}" title="Abrir configurações">
-              <div class="avatar small">AD</div>
+            {% else %}
+            <div class="user-chip" title="Usuário conectado">
+            {% endif %}
+              <div class="avatar small">{{ current_user['initials'] }}</div>
               <div class="user-copy">
-                <strong>Administrador</strong>
-                <span>Opera Hub</span>
+                <strong>{{ current_user['name'] }}</strong>
+                <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
               </div>
+              {% if can_admin %}
               <i class="fa-solid fa-chevron-down"></i>
+              {% endif %}
+            {% if can_admin %}
             </a>
+            {% else %}
+            </div>
+            {% endif %}
             <a class="logout-button" href="{{ url_for('logout') }}" title="Sair">
               <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </a>
