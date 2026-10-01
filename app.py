@@ -43,6 +43,7 @@ DEFAULT_SETTINGS = {
     "hero_pos_x": 50,
     "hero_pos_y": 50,
     "hero_zoom": 100,
+    "login_required": False,
     "updated_at": "",
 }
 
@@ -104,6 +105,22 @@ def sb_rpc(name, payload):
         timeout=20,
     )
     response.raise_for_status()
+    if not response.content:
+        return None
+    return response.json()
+
+
+def sb_rpc_public(name, payload=None):
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/rpc/{name}",
+        headers=sb_headers(),
+        json=payload or {},
+        timeout=20,
+    )
+    response.raise_for_status()
+    if not response.content:
+        return None
+    return response.json()
 
 
 def load_settings():
@@ -115,7 +132,7 @@ def load_settings():
                 "select": (
                     "id,logo_width,has_logo,has_favicon,"
                     "has_hero,hero_pos_x,hero_pos_y,hero_zoom,"
-                    "updated_at"
+                    "login_required,updated_at"
                 ),
                 "limit": "1",
             },
@@ -282,8 +299,67 @@ def admin_enabled():
     return bool(app.config["ADMIN_PASSWORD"])
 
 
+def auth_users_exist():
+    try:
+        result = sb_rpc_public("operahub_has_users")
+        return bool(result)
+    except Exception:
+        return False
+
+
+def load_users():
+    if not SUPABASE_WRITE_TOKEN:
+        return []
+    try:
+        rows = sb_rpc("operahub_list_users", {})
+        return rows or []
+    except Exception:
+        return []
+
+
+def current_user():
+    if session.get("user_id"):
+        name = session.get("user_name") or session.get("username") or "Usuário"
+        initials = "".join(
+            part[0] for part in str(name).split()[:2] if part
+        ).upper() or "US"
+        return {
+            "id": session.get("user_id"),
+            "username": session.get("username"),
+            "name": name,
+            "email": session.get("user_email") or "",
+            "role": session.get("user_role") or "user",
+            "initials": initials,
+            "legacy": False,
+        }
+
+    if session.get("admin_ok"):
+        return {
+            "id": "legacy-admin",
+            "username": "admin",
+            "name": "Administrador",
+            "email": "",
+            "role": "admin",
+            "initials": "AD",
+            "legacy": True,
+        }
+
+    return None
+
+
+def is_logged_in():
+    return current_user() is not None
+
+
 def admin_authorized():
-    return (not admin_enabled()) or bool(session.get("admin_ok"))
+    user = current_user()
+    if user and user.get("role") == "admin":
+        return True
+
+    if not auth_users_exist() and not admin_enabled():
+        return True
+
+    return False
 
 
 @app.route("/assets/logo")
@@ -345,12 +421,21 @@ def application_asset(app_key):
 @app.route("/")
 def index():
     settings = load_settings()
+
+    if (
+        settings.get("login_required")
+        and auth_users_exist()
+        and not is_logged_in()
+    ):
+        return redirect(url_for("login", next=url_for("index")))
+
     return render_template(
         "index.html",
         nav_items=load_nav(),
         applications=load_apps(),
         settings=settings,
-        logged_in=bool(session.get("admin_ok")),
+        logged_in=is_logged_in(),
+        current_user=current_user(),
         hero_image=url_for(
             "hero_asset",
             v=settings.get("updated_at", ""),
@@ -366,9 +451,66 @@ def configuracoes():
     nav_items = load_nav()
     applications = load_apps()
     settings = load_settings()
+    users = load_users()
 
     if request.method == "POST":
         try:
+            config_action = request.form.get(
+                "config_action",
+                "save_general",
+            )
+
+            if config_action == "create_user":
+                username = request.form.get("user_username", "").strip()
+                full_name = request.form.get("user_full_name", "").strip()
+                email = request.form.get("user_email", "").strip()
+                password = request.form.get("user_password", "")
+                role = request.form.get("user_role", "user")
+
+                if not username or not full_name or not password:
+                    raise ValueError(
+                        "Informe nome, usuário e senha para criar a conta."
+                    )
+
+                sb_rpc(
+                    "operahub_create_user",
+                    {
+                        "p_username": username,
+                        "p_full_name": full_name,
+                        "p_email": email,
+                        "p_password": password,
+                        "p_role": role,
+                    },
+                )
+                flash("Usuário criado com sucesso.", "success")
+                return redirect(
+                    url_for("configuracoes", _anchor="login")
+                )
+
+            if config_action == "save_login_settings":
+                require_login = (
+                    request.form.get("login_required") == "on"
+                )
+
+                if require_login and not auth_users_exist():
+                    raise ValueError(
+                        "Crie pelo menos um usuário antes de exigir login."
+                    )
+
+                sb_rpc(
+                    "operahub_set_login_required",
+                    {
+                        "p_login_required": require_login,
+                    },
+                )
+                flash(
+                    "Configuração de acesso atualizada.",
+                    "success",
+                )
+                return redirect(
+                    url_for("configuracoes", _anchor="login")
+                )
+
             nav_payload = []
             for item in nav_items:
                 key = item["key"]
@@ -562,6 +704,9 @@ def configuracoes():
         applications=applications,
         settings=settings,
         admin_enabled=admin_enabled(),
+        auth_users_exist=auth_users_exist(),
+        users=users,
+        current_user=current_user(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
     )
 
@@ -569,28 +714,62 @@ def configuracoes():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     next_url = request.args.get("next") or url_for("index")
+    if not next_url.startswith("/"):
+        next_url = url_for("index")
 
     if request.method == "POST":
-        if not admin_enabled():
-            flash(
-                "O login ainda não está habilitado porque ADMIN_PASSWORD "
-                "não está configurado no Render.",
-                "error",
+        login_id = request.form.get("login", "").strip()
+        password = request.form.get("password", "")
+
+        try:
+            rows = sb_rpc_public(
+                "operahub_auth_user",
+                {
+                    "p_login": login_id,
+                    "p_password": password,
+                },
             )
-        else:
-            password = request.form.get("password", "")
-            if password == app.config["ADMIN_PASSWORD"]:
-                session.clear()
-                session["admin_ok"] = True
-                session.permanent = True
-                flash("Login realizado com sucesso.", "success")
-                return redirect(next_url)
-            flash("Senha incorreta. Tente novamente.", "error")
+        except Exception:
+            rows = []
+
+        if rows:
+            user = rows[0]
+            session.clear()
+            session["user_id"] = str(user["id"])
+            session["username"] = user["username"]
+            session["user_name"] = user["full_name"]
+            session["user_email"] = user.get("email") or ""
+            session["user_role"] = user["role"]
+            session.permanent = True
+            flash(
+                f"Bem-vindo, {user['full_name']}.",
+                "success",
+            )
+            return redirect(next_url)
+
+        if (
+            admin_enabled()
+            and password == app.config["ADMIN_PASSWORD"]
+        ):
+            session.clear()
+            session["admin_ok"] = True
+            session.permanent = True
+            flash(
+                "Acesso administrativo realizado.",
+                "success",
+            )
+            return redirect(next_url)
+
+        flash(
+            "Usuário ou senha inválidos.",
+            "error",
+        )
 
     return render_template(
         "login.html",
         settings=load_settings(),
         admin_enabled=admin_enabled(),
+        auth_users_exist=auth_users_exist(),
         next_url=next_url,
     )
 
@@ -607,6 +786,7 @@ def healthz():
         "status": "ok",
         "storage": "supabase",
         "admin_auth_configured": admin_enabled(),
+        "user_auth_configured": auth_users_exist(),
     }
 
 
