@@ -40,6 +40,9 @@ DEFAULT_SETTINGS = {
     "has_logo": False,
     "has_favicon": False,
     "has_hero": False,
+    "hero_pos_x": 50,
+    "hero_pos_y": 50,
+    "hero_zoom": 100,
     "updated_at": "",
 }
 
@@ -111,7 +114,8 @@ def load_settings():
                 "id": "eq.main",
                 "select": (
                     "id,logo_width,has_logo,has_favicon,"
-                    "has_hero,updated_at"
+                    "has_hero,hero_pos_x,hero_pos_y,hero_zoom,"
+                    "updated_at"
                 ),
                 "limit": "1",
             },
@@ -122,6 +126,18 @@ def load_settings():
             data["logo_width"] = max(
                 80,
                 min(240, int(data.get("logo_width") or 190)),
+            )
+            data["hero_pos_x"] = max(
+                0,
+                min(100, int(data.get("hero_pos_x") or 50)),
+            )
+            data["hero_pos_y"] = max(
+                0,
+                min(100, int(data.get("hero_pos_y") or 50)),
+            )
+            data["hero_zoom"] = max(
+                100,
+                min(220, int(data.get("hero_zoom") or 100)),
             )
             return data
     except Exception:
@@ -448,8 +464,45 @@ def configuracoes():
                 ),
             )
 
+            hero_pos_x = max(
+                0,
+                min(
+                    100,
+                    int(
+                        request.form.get(
+                            "hero_pos_x",
+                            settings.get("hero_pos_x", 50),
+                        )
+                    ),
+                ),
+            )
+            hero_pos_y = max(
+                0,
+                min(
+                    100,
+                    int(
+                        request.form.get(
+                            "hero_pos_y",
+                            settings.get("hero_pos_y", 50),
+                        )
+                    ),
+                ),
+            )
+            hero_zoom = max(
+                100,
+                min(
+                    220,
+                    int(
+                        request.form.get(
+                            "hero_zoom",
+                            settings.get("hero_zoom", 100),
+                        )
+                    ),
+                ),
+            )
+
             sb_rpc(
-                "operahub_save_settings_v2",
+                "operahub_save_settings_v3",
                 {
                     "p_logo_data": (
                         ""
@@ -470,6 +523,9 @@ def configuracoes():
                     "p_update_logo": update_logo,
                     "p_update_favicon": update_favicon,
                     "p_update_hero": update_hero,
+                    "p_hero_pos_x": hero_pos_x,
+                    "p_hero_pos_y": hero_pos_y,
+                    "p_hero_zoom": hero_zoom,
                 },
             )
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
