@@ -1,8 +1,10 @@
 import base64
 import os
+from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
+from PIL import Image, ImageChops, ImageDraw
 from flask import (
     Flask,
     flash,
@@ -11,6 +13,7 @@ from flask import (
     request,
     session,
     url_for,
+    send_file,
 )
 
 app = Flask(__name__)
@@ -173,6 +176,98 @@ def file_to_data_uri(file_storage, max_bytes):
     return f"data:{mime};base64,{encoded}"
 
 
+def decode_data_uri(data_uri):
+    if not data_uri or "," not in data_uri:
+        return b""
+    try:
+        return base64.b64decode(data_uri.split(",", 1)[1])
+    except Exception:
+        return b""
+
+
+def normalized_favicon_png(data_uri):
+    raw = decode_data_uri(data_uri)
+    if not raw:
+        return None
+
+    try:
+        image = Image.open(BytesIO(raw)).convert("RGBA")
+    except Exception:
+        return None
+
+    # Reduz imagens enormes antes do processamento.
+    if max(image.size) > 1024:
+        image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+
+    alpha = image.getchannel("A")
+    rgb = image.convert("RGB")
+    white = Image.new("RGB", image.size, (255, 255, 255))
+    diff = ImageChops.difference(rgb, white).convert("L")
+
+    # Descobre se há um fundo branco/creme ocupando as bordas.
+    corners = [
+        image.getpixel((0, 0)),
+        image.getpixel((image.width - 1, 0)),
+        image.getpixel((0, image.height - 1)),
+        image.getpixel((image.width - 1, image.height - 1)),
+    ]
+    white_corners = sum(
+        1 for r, g, b, a in corners
+        if a > 200 and r > 242 and g > 242 and b > 242
+    )
+
+    if white_corners >= 3:
+        # Remove apenas o fundo claro conectado visualmente às bordas,
+        # preservando antialias e deixando o favicon realmente transparente.
+        bg_alpha = diff.point(
+            lambda p: 0 if p <= 10 else min(255, (p - 10) * 14)
+        )
+        alpha = ImageChops.multiply(alpha, bg_alpha)
+        image.putalpha(alpha)
+
+    # Recorta margens transparentes / quase vazias.
+    alpha = image.getchannel("A")
+    bbox = alpha.point(lambda p: 255 if p > 14 else 0).getbbox()
+    if bbox:
+        image = image.crop(bbox)
+
+    # Se o usuário enviou somente o símbolo horizontal, cria automaticamente
+    # um bloco navy para ocupar melhor o slot 16x16/32x32 do navegador.
+    ratio = image.width / max(1, image.height)
+    if ratio > 1.35:
+        tile = Image.new("RGBA", (256, 256), (15, 27, 45, 255))
+        draw = ImageDraw.Draw(tile)
+        # cantos transparentes dão aparência de ícone de app sem desperdiçar área
+        radius = 48
+        mask = Image.new("L", (256, 256), 0)
+        ImageDraw.Draw(mask).rounded_rectangle(
+            (0, 0, 255, 255),
+            radius=radius,
+            fill=255,
+        )
+        tile.putalpha(mask)
+
+        image.thumbnail((222, 154), Image.Resampling.LANCZOS)
+        x = (256 - image.width) // 2
+        y = (256 - image.height) // 2
+        tile.alpha_composite(image, (x, y))
+        image = tile
+    else:
+        # Ícones já quadrados/circulares são ampliados até quase encostar
+        # no limite, mantendo a proporção original.
+        image.thumbnail((252, 252), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        x = (256 - image.width) // 2
+        y = (256 - image.height) // 2
+        canvas.alpha_composite(image, (x, y))
+        image = canvas
+
+    out = BytesIO()
+    image.save(out, format="PNG", optimize=True)
+    out.seek(0)
+    return out
+
+
 def admin_enabled():
     return bool(app.config["ADMIN_PASSWORD"])
 
@@ -253,6 +348,8 @@ def configuracoes():
                 1 * 1024 * 1024,
             )
             if new_favicon is not None:
+                # O arquivo original permanece salvo no Supabase.
+                # A rota /favicon.png faz o recorte e a ampliação automaticamente.
                 favicon_data = new_favicon
 
             logo_width = max(
@@ -320,6 +417,25 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("index"))
+
+
+@app.route("/favicon.png")
+def favicon_png():
+    settings = load_settings()
+    favicon = normalized_favicon_png(settings.get("favicon_data", ""))
+    if favicon is None:
+        return redirect(url_for("static", filename="favicon.svg"))
+
+    response = send_file(
+        favicon,
+        mimetype="image/png",
+        max_age=0,
+        download_name="favicon.png",
+    )
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.route("/healthz")
