@@ -250,7 +250,7 @@
               class="app-config-card"
               style="
                 --preview-accent: {{ app_item['accent_color'] or '#F4B400' }};
-                --preview-icon-zoom: {{ app_item['image_zoom'] or 142 }}%;
+                --preview-icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};
               "
               data-app-config
             >
@@ -384,7 +384,7 @@
       const zoomValue = card.querySelector("[data-app-zoom-value]");
       if (zoom) {
         zoom.addEventListener("input", () => {
-          card.style.setProperty("--preview-icon-zoom", zoom.value + "%");
+          card.style.setProperty("--preview-icon-zoom", String(Number(zoom.value) / 100));
           if (zoomValue) zoomValue.textContent = zoom.value + "%";
         });
       }
