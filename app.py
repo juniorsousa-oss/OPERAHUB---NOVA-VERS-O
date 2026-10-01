@@ -1,5 +1,6 @@
 import base64
 import os
+from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
@@ -9,6 +10,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
 )
@@ -34,9 +36,11 @@ HERO_IMAGE = (
 
 DEFAULT_SETTINGS = {
     "id": "main",
-    "logo_data": "",
-    "favicon_data": "",
     "logo_width": 190,
+    "has_logo": False,
+    "has_favicon": False,
+    "has_hero": False,
+    "updated_at": "",
 }
 
 DEFAULT_NAV_ITEMS = [
@@ -103,14 +107,21 @@ def load_settings():
     try:
         rows = sb_get(
             "operahub_settings",
-            {"id": "eq.main", "select": "*", "limit": "1"},
+            {
+                "id": "eq.main",
+                "select": (
+                    "id,logo_width,has_logo,has_favicon,"
+                    "has_hero,updated_at"
+                ),
+                "limit": "1",
+            },
         )
         if rows:
             data = dict(DEFAULT_SETTINGS)
             data.update(rows[0])
             data["logo_width"] = max(
-                100,
-                min(320, int(data.get("logo_width") or 190)),
+                80,
+                min(240, int(data.get("logo_width") or 190)),
             )
             return data
     except Exception:
@@ -135,13 +146,41 @@ def load_apps():
     try:
         rows = sb_get(
             "operahub_applications",
-            {"select": "*", "order": "sort_order.asc"},
+            {
+                "select": (
+                    "key,name,description,icon,accent,status,url,"
+                    "sort_order,new_tab,accent_color,has_image,updated_at"
+                ),
+                "order": "sort_order.asc",
+            },
         )
         if rows:
             return rows
     except Exception:
         pass
-    return [dict(item) for item in DEFAULT_APPLICATIONS]
+
+    fallback_colors = {
+        "gold": "#F4B400",
+        "blue": "#4F7FE8",
+        "amber": "#F2A11B",
+        "orange": "#F58B38",
+        "green": "#36B66F",
+        "steel": "#6998CF",
+        "violet": "#8B67E8",
+        "peach": "#EF9A54",
+        "sky": "#5F9FDB",
+    }
+    items = []
+    for item in DEFAULT_APPLICATIONS:
+        data = dict(item)
+        data["accent_color"] = fallback_colors.get(
+            data.get("accent"),
+            "#F4B400",
+        )
+        data["has_image"] = False
+        data["updated_at"] = ""
+        items.append(data)
+    return items
 
 
 def safe_url(value):
@@ -152,6 +191,55 @@ def safe_url(value):
     if parsed.scheme in {"http", "https"} and parsed.netloc:
         return value
     return ""
+
+
+def safe_hex_color(value, fallback="#F4B400"):
+    value = (value or "").strip()
+    if (
+        len(value) == 7
+        and value.startswith("#")
+        and all(ch in "0123456789abcdefABCDEF" for ch in value[1:])
+    ):
+        return value.upper()
+    return fallback
+
+
+def asset_data(table, column, key_column, key_value):
+    try:
+        rows = sb_get(
+            table,
+            {
+                key_column: f"eq.{key_value}",
+                "select": column,
+                "limit": "1",
+            },
+        )
+        if rows:
+            return rows[0].get(column) or ""
+    except Exception:
+        pass
+    return ""
+
+
+def data_uri_response(data_uri, max_age=3600):
+    if not data_uri or "," not in data_uri:
+        return None
+    try:
+        header, encoded = data_uri.split(",", 1)
+        mime = header.split(":", 1)[1].split(";", 1)[0]
+        raw = base64.b64decode(encoded)
+    except Exception:
+        return None
+
+    response = send_file(
+        BytesIO(raw),
+        mimetype=mime,
+        max_age=max_age,
+    )
+    response.headers["Cache-Control"] = (
+        f"public, max-age={max_age}"
+    )
+    return response
 
 
 def file_to_data_uri(file_storage, max_bytes):
@@ -181,6 +269,62 @@ def admin_authorized():
     return (not admin_enabled()) or bool(session.get("admin_ok"))
 
 
+@app.route("/assets/logo")
+def logo_asset():
+    data = asset_data(
+        "operahub_settings",
+        "logo_data",
+        "id",
+        "main",
+    )
+    response = data_uri_response(data)
+    if response is not None:
+        return response
+    return redirect(url_for("static", filename="favicon.svg"))
+
+
+@app.route("/assets/favicon")
+def favicon_asset():
+    data = asset_data(
+        "operahub_settings",
+        "favicon_data",
+        "id",
+        "main",
+    )
+    response = data_uri_response(data)
+    if response is not None:
+        return response
+    return redirect(url_for("static", filename="favicon.svg"))
+
+
+@app.route("/assets/hero")
+def hero_asset():
+    data = asset_data(
+        "operahub_settings",
+        "hero_data",
+        "id",
+        "main",
+    )
+    response = data_uri_response(data)
+    if response is not None:
+        return response
+    return redirect(HERO_IMAGE)
+
+
+@app.route("/assets/app/<app_key>")
+def application_asset(app_key):
+    data = asset_data(
+        "operahub_applications",
+        "image_data",
+        "key",
+        app_key,
+    )
+    response = data_uri_response(data)
+    if response is not None:
+        return response
+    return ("", 404)
+
+
 @app.route("/")
 def index():
     settings = load_settings()
@@ -189,7 +333,10 @@ def index():
         nav_items=load_nav(),
         applications=load_apps(),
         settings=settings,
-        hero_image=HERO_IMAGE,
+        hero_image=url_for(
+            "hero_asset",
+            v=settings.get("updated_at", ""),
+        ),
     )
 
 
@@ -222,6 +369,22 @@ def configuracoes():
             app_payload = []
             for item in applications:
                 key = item["key"]
+                image_file = request.files.get(
+                    f"app_image_{key}"
+                )
+                remove_image = request.form.get(
+                    f"remove_app_image_{key}"
+                ) == "on"
+                new_image = file_to_data_uri(
+                    image_file,
+                    10 * 1024 * 1024,
+                )
+                update_image = remove_image or new_image is not None
+                current_color = item.get(
+                    "accent_color",
+                    "#F4B400",
+                )
+
                 app_payload.append(
                     {
                         "key": key,
@@ -231,34 +394,51 @@ def configuracoes():
                         "new_tab": request.form.get(
                             f"app_new_tab_{key}"
                         ) == "on",
+                        "accent_color": safe_hex_color(
+                            request.form.get(
+                                f"app_color_{key}",
+                                current_color,
+                            ),
+                            current_color,
+                        ),
+                        "update_image": update_image,
+                        "image_data": (
+                            ""
+                            if remove_image
+                            else (new_image or "")
+                        ),
                     }
                 )
 
-            logo_data = settings.get("logo_data", "")
-            favicon_data = settings.get("favicon_data", "")
-
-            if request.form.get("remove_logo") == "on":
-                logo_data = ""
+            remove_logo = request.form.get("remove_logo") == "on"
             new_logo = file_to_data_uri(
                 request.files.get("logo_upload"),
-                3 * 1024 * 1024,
+                10 * 1024 * 1024,
             )
-            if new_logo is not None:
-                logo_data = new_logo
+            update_logo = remove_logo or new_logo is not None
 
-            if request.form.get("remove_favicon") == "on":
-                favicon_data = ""
+            remove_favicon = (
+                request.form.get("remove_favicon") == "on"
+            )
             new_favicon = file_to_data_uri(
                 request.files.get("favicon_upload"),
-                1 * 1024 * 1024,
+                10 * 1024 * 1024,
             )
-            if new_favicon is not None:
-                favicon_data = new_favicon
+            update_favicon = (
+                remove_favicon or new_favicon is not None
+            )
+
+            remove_hero = request.form.get("remove_hero") == "on"
+            new_hero = file_to_data_uri(
+                request.files.get("hero_upload"),
+                10 * 1024 * 1024,
+            )
+            update_hero = remove_hero or new_hero is not None
 
             logo_width = max(
-                100,
+                80,
                 min(
-                    320,
+                    240,
                     int(
                         request.form.get(
                             "logo_width",
@@ -269,15 +449,34 @@ def configuracoes():
             )
 
             sb_rpc(
-                "operahub_save_settings",
+                "operahub_save_settings_v2",
                 {
-                    "p_logo_data": logo_data,
-                    "p_favicon_data": favicon_data,
+                    "p_logo_data": (
+                        ""
+                        if remove_logo
+                        else (new_logo or "")
+                    ),
+                    "p_favicon_data": (
+                        ""
+                        if remove_favicon
+                        else (new_favicon or "")
+                    ),
                     "p_logo_width": logo_width,
+                    "p_hero_data": (
+                        ""
+                        if remove_hero
+                        else (new_hero or "")
+                    ),
+                    "p_update_logo": update_logo,
+                    "p_update_favicon": update_favicon,
+                    "p_update_hero": update_hero,
                 },
             )
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
-            sb_rpc("operahub_save_apps", {"p_items": app_payload})
+            sb_rpc(
+                "operahub_save_apps_v2",
+                {"p_items": app_payload},
+            )
 
             flash(
                 "Alterações salvas permanentemente no Supabase.",
