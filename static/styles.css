@@ -508,7 +508,7 @@ button,input{font:inherit}
   height:100%;
   object-fit:cover;
   object-position:center;
-  transform:scale(1.42);
+  zoom:calc(var(--icon-zoom,142) / 100);
   transform-origin:center;
   filter:saturate(.82) contrast(1.04);
 }
@@ -838,7 +838,7 @@ button,input{font:inherit}
   height:100%;
   object-fit:cover;
   object-position:center;
-  transform:scale(1.42);
+  zoom:calc(var(--preview-icon-zoom,142) / 100);
   transform-origin:center;
   filter:saturate(.82) contrast(1.04);
 }
@@ -887,6 +887,22 @@ button,input{font:inherit}
   color:#65758D;
   font-weight:800;
   text-transform:uppercase;
+}
+.app-zoom-control{
+  min-height:40px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 48px;
+  align-items:center;
+  gap:9px;
+  border:1px solid #D8E1EC;
+  border-radius:8px;
+  background:#fff;
+  padding:4px 8px;
+}
+.app-zoom-control strong{
+  text-align:right;
+  color:#10203A;
+  font-size:10px;
 }
 .app-config-checks{
   grid-column:1/-1;
