@@ -436,6 +436,7 @@ def index():
         settings=settings,
         logged_in=is_logged_in(),
         current_user=current_user(),
+        can_admin=admin_authorized(),
         hero_image=url_for(
             "hero_asset",
             v=settings.get("updated_at", ""),
