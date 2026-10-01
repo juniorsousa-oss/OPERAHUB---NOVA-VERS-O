@@ -416,14 +416,24 @@ def configuracoes():
                 ),
             )
 
-            sb_rpc(
-                "operahub_save_settings",
-                {
-                    "p_logo_data": logo_data,
-                    "p_favicon_data": favicon_data,
-                    "p_logo_width": logo_width,
-                },
+            identity_changed = (
+                bool(request.files.get("logo_upload") and request.files.get("logo_upload").filename)
+                or bool(request.files.get("favicon_upload") and request.files.get("favicon_upload").filename)
+                or request.form.get("remove_logo") == "on"
+                or request.form.get("remove_favicon") == "on"
+                or logo_width != int(settings.get("logo_width", 190))
             )
+
+            if identity_changed:
+                sb_rpc(
+                    "operahub_save_settings",
+                    {
+                        "p_logo_data": logo_data,
+                        "p_favicon_data": favicon_data,
+                        "p_logo_width": logo_width,
+                    },
+                )
+
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
             sb_rpc("operahub_save_apps", {"p_items": app_payload})
 
