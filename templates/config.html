@@ -496,61 +496,225 @@
         </section>
 
         <!-- LOGIN -->
-        <section class="config-tab-panel" data-tab-panel="login">
+        <section class="config-tab-panel" data-tab-panel="login" id="login">
           <div class="tab-intro">
             <div>
               <span class="tab-eyebrow">ACESSO</span>
               <h2>Login</h2>
-              <p>Status da autenticação administrativa e acesso à tela de login.</p>
+              <p>Crie usuários reais no Supabase e controle o acesso ao Opera Hub.</p>
             </div>
           </div>
 
           <div class="login-settings-grid">
             <article class="login-settings-card">
-              <div class="login-settings-icon {{ 'ok' if admin_enabled else 'warning' }}">
-                <i class="fa-solid {{ 'fa-circle-check' if admin_enabled else 'fa-triangle-exclamation' }}"></i>
+              <div class="login-settings-icon {{ 'ok' if auth_users_exist else 'warning' }}">
+                <i class="fa-solid {{ 'fa-circle-check' if auth_users_exist else 'fa-user-plus' }}"></i>
               </div>
 
               <div class="login-settings-copy">
-                <span class="login-settings-label">STATUS DO LOGIN</span>
-                <strong>{{ 'Ativo' if admin_enabled else 'Não configurado' }}</strong>
-                <p>
-                  {% if admin_enabled %}
-                    A senha administrativa está configurada no Render e o login está habilitado.
+                <span class="login-settings-label">USUÁRIOS</span>
+                <strong>
+                  {% if auth_users_exist %}
+                    {{ users|length }} usuário{{ '' if users|length == 1 else 's' }} cadastrado{{ '' if users|length == 1 else 's' }}
                   {% else %}
-                    Defina a variável <code>ADMIN_PASSWORD</code> no Render para habilitar a autenticação.
+                    Nenhum usuário criado
                   {% endif %}
+                </strong>
+                <p>
+                  As contas são armazenadas no Supabase e as senhas permanecem protegidas por hash.
                 </p>
               </div>
             </article>
 
             <article class="login-settings-card">
-              <div class="login-settings-icon">
-                <i class="fa-solid fa-right-to-bracket"></i>
+              <div class="login-settings-icon {{ 'ok' if settings['login_required'] else '' }}">
+                <i class="fa-solid fa-shield-halved"></i>
               </div>
 
               <div class="login-settings-copy">
-                <span class="login-settings-label">TELA DE ACESSO</span>
-                <strong>Visualizar login</strong>
-                <p>Abra a interface de autenticação para validar o layout e o fluxo de entrada.</p>
+                <span class="login-settings-label">PROTEÇÃO DO APP</span>
+                <strong>{{ 'Login obrigatório' if settings['login_required'] else 'Acesso público' }}</strong>
+                <p>
+                  Defina se a tela inicial exige autenticação antes de liberar os módulos.
+                </p>
 
-                <a
+                <label class="login-required-toggle">
+                  <input
+                    type="checkbox"
+                    name="login_required"
+                    {% if settings['login_required'] %}checked{% endif %}
+                    {% if not auth_users_exist %}disabled{% endif %}
+                  >
+                  <span>Exigir login para acessar o Opera Hub</span>
+                </label>
+
+                <button
                   class="btn btn-secondary login-settings-button"
-                  href="{{ url_for('login', next=url_for('configuracoes')) }}"
+                  type="submit"
+                  name="config_action"
+                  value="save_login_settings"
+                  {% if not auth_users_exist %}disabled{% endif %}
                 >
-                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                  Abrir tela de login
-                </a>
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Salvar acesso
+                </button>
               </div>
             </article>
           </div>
+
+          <details class="settings-accordion" {% if not auth_users_exist %}open{% endif %}>
+            <summary>
+              <span class="settings-accordion-icon"><i class="fa-solid fa-user-plus"></i></span>
+              <span class="settings-accordion-copy">
+                <strong>Criar usuário</strong>
+                <small>Cadastre nome, usuário, senha e nível de acesso</small>
+              </span>
+              <i class="fa-solid fa-chevron-down settings-accordion-chevron"></i>
+            </summary>
+
+            <div class="settings-accordion-body">
+              <div class="user-create-grid">
+                <label class="field-label">
+                  Nome completo
+                  <input
+                    class="url-input"
+                    type="text"
+                    name="user_full_name"
+                    placeholder="Ex.: Júnior Andrade"
+                    autocomplete="off"
+                  >
+                </label>
+
+                <label class="field-label">
+                  Usuário
+                  <input
+                    class="url-input"
+                    type="text"
+                    name="user_username"
+                    placeholder="Ex.: junior.andrade"
+                    pattern="[A-Za-z0-9._-]{3,50}"
+                    autocomplete="off"
+                  >
+                </label>
+
+                <label class="field-label">
+                  E-mail
+                  <input
+                    class="url-input"
+                    type="email"
+                    name="user_email"
+                    placeholder="nome@empresa.com"
+                    autocomplete="off"
+                  >
+                </label>
+
+                <label class="field-label">
+                  Perfil
+                  <select class="url-input" name="user_role">
+                    <option value="admin">Administrador</option>
+                    <option value="user">Usuário</option>
+                  </select>
+                </label>
+
+                <label class="field-label user-password-field">
+                  Senha inicial
+                  <input
+                    class="url-input"
+                    type="password"
+                    name="user_password"
+                    placeholder="Mínimo de 6 caracteres"
+                    minlength="6"
+                    autocomplete="new-password"
+                  >
+                </label>
+              </div>
+
+              <div class="user-create-actions">
+                <span>
+                  O usuário poderá entrar usando o nome de usuário ou o e-mail cadastrado.
+                </span>
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  name="config_action"
+                  value="create_user"
+                >
+                  <i class="fa-solid fa-user-plus"></i>
+                  Criar usuário
+                </button>
+              </div>
+            </div>
+          </details>
+
+          <details class="settings-accordion" {% if auth_users_exist %}open{% endif %}>
+            <summary>
+              <span class="settings-accordion-icon"><i class="fa-solid fa-users"></i></span>
+              <span class="settings-accordion-copy">
+                <strong>Usuários cadastrados</strong>
+                <small>Contas que podem acessar o Opera Hub</small>
+              </span>
+              <span class="settings-accordion-status">{{ users|length }} conta{{ '' if users|length == 1 else 's' }}</span>
+              <i class="fa-solid fa-chevron-down settings-accordion-chevron"></i>
+            </summary>
+
+            <div class="settings-accordion-body">
+              {% if users %}
+              <div class="users-list">
+                {% for user in users %}
+                <article class="user-row">
+                  <div class="user-row-avatar">
+                    {{ (user['full_name'][:1] ~ (user['full_name'].split()[-1][:1] if user['full_name'].split()|length > 1 else ''))|upper }}
+                  </div>
+
+                  <div class="user-row-main">
+                    <strong>{{ user['full_name'] }}</strong>
+                    <span>
+                      @{{ user['username'] }}
+                      {% if user['email'] %} • {{ user['email'] }}{% endif %}
+                    </span>
+                  </div>
+
+                  <div class="user-role-pill {{ user['role'] }}">
+                    {{ 'Administrador' if user['role'] == 'admin' else 'Usuário' }}
+                  </div>
+
+                  <div class="user-status-pill {{ 'active' if user['is_active'] else 'inactive' }}">
+                    <span></span>
+                    {{ 'Ativo' if user['is_active'] else 'Inativo' }}
+                  </div>
+
+                  <div class="user-last-login">
+                    <small>Último acesso</small>
+                    <strong>
+                      {% if user['last_login'] %}
+                        {{ user['last_login'][:16].replace('T',' ') }}
+                      {% else %}
+                        Nunca
+                      {% endif %}
+                    </strong>
+                  </div>
+                </article>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="users-empty">
+                <i class="fa-regular fa-user"></i>
+                <strong>Nenhum usuário cadastrado</strong>
+                <span>Abra “Criar usuário” acima para gerar o primeiro acesso.</span>
+              </div>
+              {% endif %}
+            </div>
+          </details>
 
           <details class="settings-accordion login-help-accordion">
             <summary>
               <span class="settings-accordion-icon"><i class="fa-solid fa-lock"></i></span>
               <span class="settings-accordion-copy">
-                <strong>Como a autenticação funciona</strong>
-                <small>Configuração atual de segurança do Opera Hub</small>
+                <strong>Acesso administrativo legado</strong>
+                <small>Compatibilidade com a senha configurada no Render</small>
+              </span>
+              <span class="settings-accordion-status">
+                {{ 'Ativo' if admin_enabled else 'Desativado' }}
               </span>
               <i class="fa-solid fa-chevron-down settings-accordion-chevron"></i>
             </summary>
@@ -558,13 +722,16 @@
             <div class="settings-accordion-body">
               <div class="login-help-content">
                 <p>
-                  Nesta etapa, o Opera Hub utiliza uma senha administrativa definida pela variável
-                  <code>ADMIN_PASSWORD</code> no Render. A senha não é exibida nem armazenada nesta tela.
+                  A variável <code>ADMIN_PASSWORD</code> continua funcionando como acesso administrativo de emergência.
+                  Os novos usuários, porém, são autenticados diretamente pelo Supabase.
                 </p>
-                <p>
-                  Depois podemos evoluir esta área para usuários individuais no Supabase,
-                  com nome, foto, função e permissões por módulo.
-                </p>
+                <a
+                  class="btn btn-secondary login-settings-button"
+                  href="{{ url_for('login', next=url_for('configuracoes')) }}"
+                >
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  Abrir tela de login
+                </a>
               </div>
             </div>
           </details>
@@ -623,9 +790,15 @@
     });
 
     try {
+      const hashTab = window.location.hash.replace("#", "");
       const savedTab = localStorage.getItem("operaHubConfigTab");
-      if (savedTab && tabButtons.some((button) => button.dataset.configTab === savedTab)) {
-        activateConfigTab(savedTab);
+      const initialTab = hashTab || savedTab;
+
+      if (
+        initialTab &&
+        tabButtons.some((button) => button.dataset.configTab === initialTab)
+      ) {
+        activateConfigTab(initialTab);
       }
     } catch (_) {}
 
