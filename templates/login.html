@@ -3,21 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {% if settings and settings['favicon_data'] %}
-  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% if settings and settings['has_favicon'] %}
+  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at']) }}">
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
   <title>Acesso administrativo | Opera Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="login-page">
   <div class="login-card">
     <div class="brand">
-      {% if settings and settings['logo_data'] %}
+      {% if settings and settings['has_logo'] %}
         <img
           class="brand-logo-img"
-          src="{{ settings['logo_data'] }}"
+          src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
           alt="Opera Hub"
           style="--brand-user-width: {{ settings['logo_width'] }}px"
         >
