@@ -1,10 +1,8 @@
 import base64
 import os
-from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
-from PIL import Image, ImageChops, ImageDraw
 from flask import (
     Flask,
     flash,
@@ -13,7 +11,6 @@ from flask import (
     request,
     session,
     url_for,
-    send_file,
 )
 
 app = Flask(__name__)
@@ -106,7 +103,7 @@ def load_settings():
     try:
         rows = sb_get(
             "operahub_settings",
-            {"id": "eq.main", "select": "id,logo_width,updated_at", "limit": "1"},
+            {"id": "eq.main", "select": "*", "limit": "1"},
         )
         if rows:
             data = dict(DEFAULT_SETTINGS)
@@ -119,21 +116,6 @@ def load_settings():
     except Exception:
         pass
     return dict(DEFAULT_SETTINGS)
-
-
-def load_asset_data(column):
-    if column not in {"logo_data", "favicon_data"}:
-        return ""
-    try:
-        rows = sb_get(
-            "operahub_settings",
-            {"id": "eq.main", "select": column, "limit": "1"},
-        )
-        if rows:
-            return rows[0].get(column) or ""
-    except Exception:
-        pass
-    return ""
 
 
 def load_nav():
@@ -172,7 +154,7 @@ def safe_url(value):
     return ""
 
 
-def file_to_data_uri(file_storage, max_bytes, max_dimension=2400):
+def file_to_data_uri(file_storage, max_bytes):
     if not file_storage or not file_storage.filename:
         return None
 
@@ -187,149 +169,8 @@ def file_to_data_uri(file_storage, max_bytes, max_dimension=2400):
             f"Imagem acima de {max_bytes // (1024 * 1024)} MB."
         )
 
-    # SVG permanece vetorial. Para imagens raster, reduzimos dimensões muito
-    # grandes antes de gravar no Supabase, sem impor o antigo limite de 1 MB.
-    if mime == "image/svg+xml":
-        encoded = base64.b64encode(raw).decode("ascii")
-        return f"data:{mime};base64,{encoded}"
-
-    try:
-        image = Image.open(BytesIO(raw))
-        image.load()
-    except Exception:
-        raise ValueError("Não foi possível processar a imagem enviada.")
-
-    if max(image.size) > max_dimension:
-        image.thumbnail(
-            (max_dimension, max_dimension),
-            Image.Resampling.LANCZOS,
-        )
-
-    out = BytesIO()
-
-    if mime == "image/jpeg":
-        image = image.convert("RGB")
-        image.save(
-            out,
-            format="JPEG",
-            quality=92,
-            optimize=True,
-            progressive=True,
-        )
-        result_mime = "image/jpeg"
-    elif mime == "image/webp":
-        if image.mode not in {"RGB", "RGBA"}:
-            image = image.convert("RGBA")
-        image.save(
-            out,
-            format="WEBP",
-            quality=92,
-            method=6,
-        )
-        result_mime = "image/webp"
-    else:
-        image = image.convert("RGBA")
-        image.save(
-            out,
-            format="PNG",
-            optimize=True,
-        )
-        result_mime = "image/png"
-
-    encoded = base64.b64encode(out.getvalue()).decode("ascii")
-    return f"data:{result_mime};base64,{encoded}"
-
-
-def decode_data_uri(data_uri):
-    if not data_uri or "," not in data_uri:
-        return b""
-    try:
-        return base64.b64decode(data_uri.split(",", 1)[1])
-    except Exception:
-        return b""
-
-
-def normalized_favicon_png(data_uri):
-    raw = decode_data_uri(data_uri)
-    if not raw:
-        return None
-
-    try:
-        image = Image.open(BytesIO(raw)).convert("RGBA")
-    except Exception:
-        return None
-
-    # Reduz imagens enormes antes do processamento.
-    if max(image.size) > 1024:
-        image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
-
-    alpha = image.getchannel("A")
-    rgb = image.convert("RGB")
-    white = Image.new("RGB", image.size, (255, 255, 255))
-    diff = ImageChops.difference(rgb, white).convert("L")
-
-    # Descobre se há um fundo branco/creme ocupando as bordas.
-    corners = [
-        image.getpixel((0, 0)),
-        image.getpixel((image.width - 1, 0)),
-        image.getpixel((0, image.height - 1)),
-        image.getpixel((image.width - 1, image.height - 1)),
-    ]
-    white_corners = sum(
-        1 for r, g, b, a in corners
-        if a > 200 and r > 242 and g > 242 and b > 242
-    )
-
-    if white_corners >= 3:
-        # Remove apenas o fundo claro conectado visualmente às bordas,
-        # preservando antialias e deixando o favicon realmente transparente.
-        bg_alpha = diff.point(
-            lambda p: 0 if p <= 10 else min(255, (p - 10) * 14)
-        )
-        alpha = ImageChops.multiply(alpha, bg_alpha)
-        image.putalpha(alpha)
-
-    # Recorta margens transparentes / quase vazias.
-    alpha = image.getchannel("A")
-    bbox = alpha.point(lambda p: 255 if p > 14 else 0).getbbox()
-    if bbox:
-        image = image.crop(bbox)
-
-    # Se o usuário enviou somente o símbolo horizontal, cria automaticamente
-    # um bloco navy para ocupar melhor o slot 16x16/32x32 do navegador.
-    ratio = image.width / max(1, image.height)
-    if ratio > 1.35:
-        tile = Image.new("RGBA", (256, 256), (15, 27, 45, 255))
-        draw = ImageDraw.Draw(tile)
-        # cantos transparentes dão aparência de ícone de app sem desperdiçar área
-        radius = 48
-        mask = Image.new("L", (256, 256), 0)
-        ImageDraw.Draw(mask).rounded_rectangle(
-            (0, 0, 255, 255),
-            radius=radius,
-            fill=255,
-        )
-        tile.putalpha(mask)
-
-        image.thumbnail((222, 154), Image.Resampling.LANCZOS)
-        x = (256 - image.width) // 2
-        y = (256 - image.height) // 2
-        tile.alpha_composite(image, (x, y))
-        image = tile
-    else:
-        # Ícones já quadrados/circulares são ampliados até quase encostar
-        # no limite, mantendo a proporção original.
-        image.thumbnail((252, 252), Image.Resampling.LANCZOS)
-        canvas = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-        x = (256 - image.width) // 2
-        y = (256 - image.height) // 2
-        canvas.alpha_composite(image, (x, y))
-        image = canvas
-
-    out = BytesIO()
-    image.save(out, format="PNG", optimize=True)
-    out.seek(0)
-    return out
+    encoded = base64.b64encode(raw).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
 
 
 def admin_enabled():
@@ -393,21 +234,26 @@ def configuracoes():
                     }
                 )
 
-            logo_file = request.files.get("logo_upload")
-            favicon_file = request.files.get("favicon_upload")
-            remove_logo = request.form.get("remove_logo") == "on"
-            remove_favicon = request.form.get("remove_favicon") == "on"
+            logo_data = settings.get("logo_data", "")
+            favicon_data = settings.get("favicon_data", "")
 
+            if request.form.get("remove_logo") == "on":
+                logo_data = ""
             new_logo = file_to_data_uri(
-                logo_file,
-                10 * 1024 * 1024,
-                max_dimension=2400,
+                request.files.get("logo_upload"),
+                3 * 1024 * 1024,
             )
+            if new_logo is not None:
+                logo_data = new_logo
+
+            if request.form.get("remove_favicon") == "on":
+                favicon_data = ""
             new_favicon = file_to_data_uri(
-                favicon_file,
-                10 * 1024 * 1024,
-                max_dimension=1024,
+                request.files.get("favicon_upload"),
+                1 * 1024 * 1024,
             )
+            if new_favicon is not None:
+                favicon_data = new_favicon
 
             logo_width = max(
                 100,
@@ -422,35 +268,14 @@ def configuracoes():
                 ),
             )
 
-            identity_changed = (
-                bool(new_logo)
-                or bool(new_favicon)
-                or remove_logo
-                or remove_favicon
-                or logo_width != int(settings.get("logo_width", 190))
+            sb_rpc(
+                "operahub_save_settings",
+                {
+                    "p_logo_data": logo_data,
+                    "p_favicon_data": favicon_data,
+                    "p_logo_width": logo_width,
+                },
             )
-
-            if identity_changed:
-                logo_data = (
-                    ""
-                    if remove_logo
-                    else (new_logo or load_asset_data("logo_data"))
-                )
-                favicon_data = (
-                    ""
-                    if remove_favicon
-                    else (new_favicon or load_asset_data("favicon_data"))
-                )
-
-                sb_rpc(
-                    "operahub_save_settings",
-                    {
-                        "p_logo_data": logo_data,
-                        "p_favicon_data": favicon_data,
-                        "p_logo_width": logo_width,
-                    },
-                )
-
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
             sb_rpc("operahub_save_apps", {"p_items": app_payload})
 
@@ -458,7 +283,7 @@ def configuracoes():
                 "Alterações salvas permanentemente no Supabase.",
                 "success",
             )
-            return app.response_class(status=204)
+            return redirect(url_for("configuracoes"))
         except Exception as exc:
             flash(f"Não foi possível salvar: {exc}", "error")
 
@@ -495,44 +320,6 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("index"))
-
-
-@app.route("/brand-logo")
-def brand_logo():
-    data_uri = load_asset_data("logo_data")
-    raw = decode_data_uri(data_uri)
-    if not raw:
-        return redirect(url_for("static", filename="favicon.svg"))
-
-    mime = "image/png"
-    if data_uri.startswith("data:image/jpeg"):
-        mime = "image/jpeg"
-    elif data_uri.startswith("data:image/webp"):
-        mime = "image/webp"
-    elif data_uri.startswith("data:image/svg+xml"):
-        mime = "image/svg+xml"
-
-    response = send_file(BytesIO(raw), mimetype=mime, max_age=3600)
-    response.headers["Cache-Control"] = "public, max-age=3600"
-    return response
-
-
-@app.route("/favicon.png")
-def favicon_png():
-    favicon = normalized_favicon_png(load_asset_data("favicon_data"))
-    if favicon is None:
-        return redirect(url_for("static", filename="favicon.svg"))
-
-    response = send_file(
-        favicon,
-        mimetype="image/png",
-        max_age=0,
-        download_name="favicon.png",
-    )
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
 
 
 @app.route("/healthz")
