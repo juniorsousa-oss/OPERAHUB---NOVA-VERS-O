@@ -165,7 +165,7 @@ def load_apps():
             {
                 "select": (
                     "key,name,description,icon,accent,status,url,"
-                    "sort_order,new_tab,accent_color,has_image,updated_at"
+                    "sort_order,new_tab,accent_color,has_image,image_zoom,updated_at"
                 ),
                 "order": "sort_order.asc",
             },
@@ -194,6 +194,7 @@ def load_apps():
             "#F4B400",
         )
         data["has_image"] = False
+        data["image_zoom"] = 142
         data["updated_at"] = ""
         items.append(data)
     return items
@@ -418,6 +419,18 @@ def configuracoes():
                             ),
                             current_color,
                         ),
+                        "image_zoom": max(
+                            100,
+                            min(
+                                220,
+                                int(
+                                    request.form.get(
+                                        f"app_zoom_{key}",
+                                        item.get("image_zoom", 142),
+                                    )
+                                ),
+                            ),
+                        ),
                         "update_image": update_image,
                         "image_data": (
                             ""
@@ -531,7 +544,7 @@ def configuracoes():
             )
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
             sb_rpc(
-                "operahub_save_apps_v2",
+                "operahub_save_apps_v3",
                 {"p_items": app_payload},
             )
 
