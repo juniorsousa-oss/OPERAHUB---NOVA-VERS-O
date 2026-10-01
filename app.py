@@ -121,6 +121,21 @@ def load_settings():
     return dict(DEFAULT_SETTINGS)
 
 
+def load_asset_data(column):
+    if column not in {"logo_data", "favicon_data"}:
+        return ""
+    try:
+        rows = sb_get(
+            "operahub_settings",
+            {"id": "eq.main", "select": column, "limit": "1"},
+        )
+        if rows:
+            return rows[0].get(column) or ""
+    except Exception:
+        pass
+    return ""
+
+
 def load_nav():
     try:
         rows = sb_get(
