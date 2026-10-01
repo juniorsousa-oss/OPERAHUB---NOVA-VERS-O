@@ -120,13 +120,88 @@
             <div class="identity-field hero-identity-field">
               <label>Imagem do banner</label>
               <div
+                id="heroPreview"
                 class="asset-preview asset-preview-hero"
-                style="background-image:url('{{ url_for('hero_asset', v=settings['updated_at']) }}')"
+                style="
+                  --hero-preview-image:url('{{ url_for('hero_asset', v=settings['updated_at']) }}');
+                  --hero-preview-x:{{ settings['hero_pos_x'] }}%;
+                  --hero-preview-y:{{ settings['hero_pos_y'] }}%;
+                  --hero-preview-zoom:{{ settings['hero_zoom'] }}%;
+                "
               >
                 <span>Prévia do banner da tela inicial</span>
               </div>
-              <input class="file-input" type="file" name="hero_upload" accept=".png,.jpg,.jpeg,.webp,image/*">
-              <small>Até 10 MB. Recomendado: imagem horizontal em alta resolução. O app aplica automaticamente o tratamento escuro do layout.</small>
+
+              <input
+                id="heroUpload"
+                class="file-input"
+                type="file"
+                name="hero_upload"
+                accept=".png,.jpg,.jpeg,.webp,image/*"
+              >
+
+              <div class="hero-adjust-grid">
+                <label class="hero-adjust-control">
+                  <span>
+                    Zoom
+                    <strong><span id="heroZoomValue">{{ settings['hero_zoom'] }}</span>%</strong>
+                  </span>
+                  <input
+                    id="hero_zoom"
+                    class="range-input"
+                    type="range"
+                    name="hero_zoom"
+                    min="100"
+                    max="220"
+                    step="1"
+                    value="{{ settings['hero_zoom'] }}"
+                  >
+                </label>
+
+                <label class="hero-adjust-control">
+                  <span>
+                    Posição horizontal
+                    <strong><span id="heroPosXValue">{{ settings['hero_pos_x'] }}</span>%</strong>
+                  </span>
+                  <input
+                    id="hero_pos_x"
+                    class="range-input"
+                    type="range"
+                    name="hero_pos_x"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="{{ settings['hero_pos_x'] }}"
+                  >
+                </label>
+
+                <label class="hero-adjust-control">
+                  <span>
+                    Posição vertical
+                    <strong><span id="heroPosYValue">{{ settings['hero_pos_y'] }}</span>%</strong>
+                  </span>
+                  <input
+                    id="hero_pos_y"
+                    class="range-input"
+                    type="range"
+                    name="hero_pos_y"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="{{ settings['hero_pos_y'] }}"
+                  >
+                </label>
+              </div>
+
+              <div class="hero-adjust-actions">
+                <button class="btn btn-secondary btn-compact" type="button" id="resetHeroCrop">
+                  <i class="fa-solid fa-rotate-left"></i>
+                  Centralizar imagem
+                </button>
+              </div>
+
+              <small>Até 10 MB. Ajuste o zoom e arraste o enquadramento pelos controles acima. O tratamento escuro do banner continua automático.</small>
+
               <label class="check-wrap">
                 <input type="checkbox" name="remove_hero">
                 Restaurar imagem padrão do banner
@@ -285,6 +360,64 @@
         if (label) label.textContent = picker.value.toUpperCase();
       });
     });
+
+    const heroPreview = document.getElementById("heroPreview");
+    const heroUpload = document.getElementById("heroUpload");
+    const heroZoom = document.getElementById("hero_zoom");
+    const heroPosX = document.getElementById("hero_pos_x");
+    const heroPosY = document.getElementById("hero_pos_y");
+    const heroZoomValue = document.getElementById("heroZoomValue");
+    const heroPosXValue = document.getElementById("heroPosXValue");
+    const heroPosYValue = document.getElementById("heroPosYValue");
+    const resetHeroCrop = document.getElementById("resetHeroCrop");
+
+    function updateHeroPreview() {
+      if (!heroPreview) return;
+
+      if (heroZoom) {
+        heroPreview.style.setProperty("--hero-preview-zoom", heroZoom.value + "%");
+        if (heroZoomValue) heroZoomValue.textContent = heroZoom.value;
+      }
+      if (heroPosX) {
+        heroPreview.style.setProperty("--hero-preview-x", heroPosX.value + "%");
+        if (heroPosXValue) heroPosXValue.textContent = heroPosX.value;
+      }
+      if (heroPosY) {
+        heroPreview.style.setProperty("--hero-preview-y", heroPosY.value + "%");
+        if (heroPosYValue) heroPosYValue.textContent = heroPosY.value;
+      }
+    }
+
+    [heroZoom, heroPosX, heroPosY].forEach((control) => {
+      if (control) control.addEventListener("input", updateHeroPreview);
+    });
+
+    if (resetHeroCrop) {
+      resetHeroCrop.addEventListener("click", () => {
+        if (heroZoom) heroZoom.value = 100;
+        if (heroPosX) heroPosX.value = 50;
+        if (heroPosY) heroPosY.value = 50;
+        updateHeroPreview();
+      });
+    }
+
+    if (heroUpload) {
+      heroUpload.addEventListener("change", () => {
+        const file = heroUpload.files && heroUpload.files[0];
+        if (!file || !heroPreview) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          heroPreview.style.setProperty(
+            "--hero-preview-image",
+            "url('" + reader.result + "')"
+          );
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    updateHeroPreview();
   </script>
 </body>
 </html>
