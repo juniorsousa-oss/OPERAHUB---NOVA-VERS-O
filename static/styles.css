@@ -599,57 +599,9 @@ button,input{font:inherit}
 .login-card input{height:44px;border:1px solid #D7E1ED;border-radius:9px;padding:0 12px;outline:none}
 .login-card button{height:44px;border:0;border-radius:9px;background:linear-gradient(90deg,var(--yellow),var(--yellow-2));font-weight:800;color:#10203A}
 
-/* Notebook: mantém a mesma arquitetura do monitor, apenas compacta */
-@media (max-width:1366px){
-  :root{
-    --side-width:clamp(188px,14vw,210px);
-    --page-gap:clamp(12px,1.35vw,20px);
-  }
-  .side-nav{padding-left:10px;padding-right:10px}
-  .nav-link{min-height:40px;padding:8px 10px;gap:10px}
-  .brand{padding-left:8px;padding-right:8px}
-  .top-bar{height:66px}
-  .hero{min-height:176px;padding:25px 30px}
-  .hero h1{font-size:28px}
-  .hero p{font-size:12px;max-width:430px}
-  .kpi-card{min-height:86px;padding:12px 13px}
-  .kpi-icon{width:47px;height:47px;flex-basis:47px;font-size:22px}
-  .kpi-card strong{font-size:21px}
-  .app-card{min-height:116px;padding:13px 13px 10px}
-  .app-main{grid-template-columns:50px minmax(0,1fr) auto;gap:10px}
-  .app-icon{width:50px;height:50px;font-size:22px}
-  .app-copy h3{font-size:13px}
-  .app-copy p{font-size:10px}
-  .status-pill{height:24px;padding:0 8px;font-size:8px}
-  .app-footer{padding-top:8px;font-size:11px}
-}
 
-/* Tablet landscape / janelas realmente estreitas */
-@media (max-width:1080px){
-  .apps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .hero-side{display:none}
-  .search-wrap{max-width:none}
-}
-
-/* Mobile/tablet: menu vira drawer */
+/* Responsividade das telas administrativas */
 @media (max-width:860px){
-  .app-shell{display:block}
-  .side-nav{
-    position:fixed;left:-270px;top:0;width:250px;height:100dvh;
-    transition:left .22s ease;box-shadow:12px 0 30px rgba(9,21,38,.15)
-  }
-  .side-nav.open{left:0}
-  .nav-overlay{position:fixed;inset:0;background:rgba(9,21,38,.45);z-index:25}
-  .nav-overlay.show{display:block}
-  .main-area{padding:0 14px 20px}
-  .mobile-menu{display:grid;place-items:center}
-  .top-bar{height:64px}
-  .user-copy{display:none}
-  .user-chip{padding-left:7px}
-  .hero{min-height:205px;padding:26px 22px}
-  .hero h1{font-size:27px}
-  .section-head{align-items:flex-start;flex-direction:column;gap:4px}
   .admin-shell{display:block}
   .admin-side{padding:14px}
   .admin-main{padding:20px 14px}
@@ -658,20 +610,7 @@ button,input{font:inherit}
 }
 
 @media (max-width:560px){
-  .main-area{padding:0 10px 16px}
-  .top-actions .icon-button{display:none}
-  .search-wrap{height:39px;padding:0 11px}
-  .hero{min-height:205px;border-radius:12px;padding:22px 17px}
-  .hero::after{font-size:112px}
-  .hero h1{font-size:23px}
-  .hero p{font-size:12px}
-  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .kpi-card{min-height:90px;padding:10px;gap:9px}
-  .kpi-icon{width:43px;height:43px;flex-basis:43px;font-size:20px}
-  .kpi-card strong{font-size:19px}
-  .kpi-card small{display:none}
-  .apps-grid{grid-template-columns:1fr}
-  .app-card{min-height:118px}
-  .app-main{grid-template-columns:50px minmax(0,1fr)}
-  .status-pill{grid-column:2;justify-self:start;height:24px;margin-top:2px}
+  .admin-title{flex-direction:column}
+  .admin-card{padding:15px}
+  .admin-main{padding:16px 10px}
 }
