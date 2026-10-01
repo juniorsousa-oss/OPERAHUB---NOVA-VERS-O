@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Configurações | Opera Hub</title>
-  {% if settings['favicon_data'] %}
-  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% if settings['has_favicon'] %}
+  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at']) }}">
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -17,10 +20,10 @@
   <div class="admin-shell">
     <aside class="admin-side">
       <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
-        {% if settings['logo_data'] %}
+        {% if settings['has_logo'] %}
           <img
             class="brand-logo-img"
-            src="{{ settings['logo_data'] }}"
+            src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
             alt="Opera Hub"
             style="--brand-user-width: {{ settings['logo_width'] }}px"
           >
@@ -70,26 +73,27 @@
             <div class="identity-field">
               <label>Logo principal</label>
               <div class="asset-preview asset-preview-logo">
-                {% if settings['logo_data'] %}
-                  <img src="{{ settings['logo_data'] }}" alt="Logo atual">
+                {% if settings['has_logo'] %}
+                  <img src="{{ url_for('logo_asset', v=settings['updated_at']) }}" alt="Logo atual">
                 {% else %}
                   <span>∞ <strong>OPERA HUB</strong></span>
                 {% endif %}
               </div>
               <input class="file-input" type="file" name="logo_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
               <label class="range-label" for="logo_width">
-                Largura da logo: <strong><span id="logoWidthValue">{{ settings['logo_width'] }}</span> px</strong>
+                Tamanho da logo: <strong><span id="logoWidthValue">{{ settings['logo_width'] }}</span> px</strong>
               </label>
               <input
                 id="logo_width"
                 class="range-input"
                 type="range"
                 name="logo_width"
-                min="100"
-                max="320"
+                min="80"
+                max="240"
                 step="5"
                 value="{{ settings['logo_width'] }}"
               >
+              <small>A logo é centralizada automaticamente no espaço do menu lateral.</small>
               <label class="check-wrap">
                 <input type="checkbox" name="remove_logo">
                 Remover logo personalizada
@@ -99,17 +103,33 @@
             <div class="identity-field">
               <label>Favicon</label>
               <div class="asset-preview asset-preview-favicon">
-                {% if settings['favicon_data'] %}
-                  <img src="{{ settings['favicon_data'] }}" alt="Favicon atual">
+                {% if settings['has_favicon'] %}
+                  <img src="{{ url_for('favicon_asset', v=settings['updated_at']) }}" alt="Favicon atual">
                 {% else %}
                   <span>∞</span>
                 {% endif %}
               </div>
               <input class="file-input" type="file" name="favicon_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
-              <small>Recomendado: imagem quadrada e sem margens.</small>
+              <small>Recomendado: imagem quadrada, sem margens e com o símbolo ocupando a maior área possível.</small>
               <label class="check-wrap">
                 <input type="checkbox" name="remove_favicon">
                 Usar favicon padrão
+              </label>
+            </div>
+
+            <div class="identity-field hero-identity-field">
+              <label>Imagem do banner</label>
+              <div
+                class="asset-preview asset-preview-hero"
+                style="background-image:url('{{ url_for('hero_asset', v=settings['updated_at']) }}')"
+              >
+                <span>Prévia do banner da tela inicial</span>
+              </div>
+              <input class="file-input" type="file" name="hero_upload" accept=".png,.jpg,.jpeg,.webp,image/*">
+              <small>Recomendado: imagem horizontal em alta resolução. O app aplica automaticamente o tratamento escuro do layout.</small>
+              <label class="check-wrap">
+                <input type="checkbox" name="remove_hero">
+                Restaurar imagem padrão do banner
               </label>
             </div>
           </div>
@@ -147,30 +167,90 @@
 
         <section class="admin-card">
           <h2>Aplicações</h2>
-          <p>Configure o destino de cada cartão da página inicial.</p>
-          <div class="link-list">
+          <p>Personalize a imagem, a cor visual e o destino de cada cartão da página inicial.</p>
+
+          <div class="app-custom-grid">
             {% for app_item in applications %}
-            <div class="link-row">
-              <div class="link-label">
-                <i class="{{ app_item['icon'] }}"></i>
-                <span>{{ app_item['name'] }}</span>
+            <article
+              class="app-config-card"
+              style="--preview-accent: {{ app_item['accent_color'] or '#F4B400' }}"
+              data-app-config
+            >
+              <div class="app-config-head">
+                <div class="app-config-icon">
+                  {% if app_item['has_image'] %}
+                    <img
+                      src="{{ url_for('application_asset', app_key=app_item['key'], v=app_item['updated_at']) }}"
+                      alt=""
+                    >
+                  {% else %}
+                    <i class="{{ app_item['icon'] }}"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <strong>{{ app_item['name'] }}</strong>
+                  <span>{{ app_item['description'] }}</span>
+                </div>
               </div>
-              <input
-                class="url-input"
-                type="url"
-                name="app_url_{{ app_item['key'] }}"
-                value="{{ app_item['url'] }}"
-                placeholder="https://..."
-              >
-              <label class="check-wrap">
-                <input
-                  type="checkbox"
-                  name="app_new_tab_{{ app_item['key'] }}"
-                  {% if app_item['new_tab'] %}checked{% endif %}
-                >
-                Nova aba
-              </label>
-            </div>
+
+              <div class="app-config-fields">
+                <label class="field-label">
+                  Imagem do card
+                  <input
+                    class="file-input"
+                    type="file"
+                    name="app_image_{{ app_item['key'] }}"
+                    accept=".png,.jpg,.jpeg,.webp,.svg,image/*"
+                  >
+                </label>
+
+                <label class="field-label color-field">
+                  Cor do card
+                  <div class="color-control">
+                    <input
+                      class="color-input"
+                      type="color"
+                      name="app_color_{{ app_item['key'] }}"
+                      value="{{ app_item['accent_color'] or '#F4B400' }}"
+                      data-color-input
+                    >
+                    <span>{{ app_item['accent_color'] or '#F4B400' }}</span>
+                  </div>
+                </label>
+
+                <label class="field-label app-url-field">
+                  Link
+                  <input
+                    class="url-input"
+                    type="url"
+                    name="app_url_{{ app_item['key'] }}"
+                    value="{{ app_item['url'] }}"
+                    placeholder="https://..."
+                  >
+                </label>
+
+                <div class="app-config-checks">
+                  <label class="check-wrap">
+                    <input
+                      type="checkbox"
+                      name="app_new_tab_{{ app_item['key'] }}"
+                      {% if app_item['new_tab'] %}checked{% endif %}
+                    >
+                    Abrir em nova aba
+                  </label>
+
+                  {% if app_item['has_image'] %}
+                  <label class="check-wrap">
+                    <input
+                      type="checkbox"
+                      name="remove_app_image_{{ app_item['key'] }}"
+                    >
+                    Remover imagem personalizada
+                  </label>
+                  {% endif %}
+                </div>
+              </div>
+            </article>
             {% endfor %}
           </div>
         </section>
@@ -194,6 +274,17 @@
         value.textContent = range.value;
       });
     }
+
+    document.querySelectorAll("[data-app-config]").forEach((card) => {
+      const picker = card.querySelector("[data-color-input]");
+      const label = card.querySelector(".color-control span");
+      if (!picker) return;
+
+      picker.addEventListener("input", () => {
+        card.style.setProperty("--preview-accent", picker.value);
+        if (label) label.textContent = picker.value.toUpperCase();
+      });
+    });
   </script>
 </body>
 </html>
