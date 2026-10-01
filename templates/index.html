@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0F1B2D">
+  <title>Opera Hub | Operações conectadas</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="home-page">
+  <div class="app-shell">
+    <aside class="side-nav" id="sideNav">
+      <div class="brand">
+        <div class="brand-mark">∞</div>
+        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+      </div>
+
+      <nav class="nav-primary">
+        {% for item in nav_items[:9] %}
+          {% set configured = item['url']|length > 0 %}
+          {% set href = item['url'] if configured else ('/' if item['key'] == 'inicio' else '#') %}
+          <a
+            class="nav-link {{ 'active' if item['key'] == 'inicio' else '' }} {{ 'disabled' if not configured and item['key'] != 'inicio' else '' }}"
+            href="{{ href }}"
+            {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
+            {% if not configured and item['key'] != 'inicio' %}data-unconfigured="true"{% endif %}
+          >
+            <i class="{{ item['icon'] }}"></i>
+            <span>{{ item['label'] }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+
+      <div class="nav-secondary">
+        {% for item in nav_items[9:] %}
+          {% set configured = item['url']|length > 0 %}
+          <a
+            class="nav-link {{ 'disabled' if not configured else '' }}"
+            href="{{ item['url'] if configured else '#' }}"
+            {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
+            {% if not configured %}data-unconfigured="true"{% endif %}
+          >
+            <i class="{{ item['icon'] }}"></i>
+            <span>{{ item['label'] }}</span>
+          </a>
+        {% endfor %}
+
+        <a class="nav-link config-link" href="{{ url_for('configuracoes') }}">
+          <i class="fa-solid fa-gear"></i>
+          <span>Configurações</span>
+        </a>
+
+        <div class="nav-user">
+          <div class="avatar">OH</div>
+          <div>
+            <strong>Opera Hub</strong>
+            <span>Operações</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="top-bar">
+        <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="appSearch" type="search" placeholder="Buscar no Opera Hub..." autocomplete="off">
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-button" type="button" aria-label="Notificações">
+            <i class="fa-regular fa-bell"></i>
+            <span class="notification-dot"></span>
+          </button>
+          <a class="user-chip" href="{{ url_for('configuracoes') }}" title="Abrir configurações">
+            <div class="avatar small">OH</div>
+            <div class="user-copy">
+              <strong>Opera Hub</strong>
+              <span>Operações</span>
+            </div>
+            <i class="fa-solid fa-chevron-down"></i>
+          </a>
+        </div>
+      </header>
+
+      <section class="hero" style="--hero-image: url('{{ hero_image }}');">
+        <div class="hero-content">
+          <span class="hero-kicker">OPERAÇÕES EM MOVIMENTO</span>
+          <h1>Conecta processos.<br><strong>Impulsiona resultados.</strong></h1>
+          <div class="hero-line"></div>
+          <p>Ferramentas de gestão para uma operação mais eficiente, integrada e conectada.</p>
+        </div>
+        <div class="hero-side">
+          <span>DA PLANTA.</span>
+          <span>À ENTREGA.</span>
+          <span>TUDO CONECTADO.</span>
+        </div>
+      </section>
+
+      <section class="kpi-grid" aria-label="Indicadores">
+        <article class="kpi-card kpi-green">
+          <div class="kpi-icon"><i class="fa-regular fa-file-lines"></i></div>
+          <div>
+            <span>Pedidos hoje</span>
+            <strong>—</strong>
+            <small>Aguardando integração</small>
+          </div>
+        </article>
+        <article class="kpi-card kpi-blue">
+          <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
+          <div>
+            <span>Entregas no prazo</span>
+            <strong>—</strong>
+            <small>Aguardando integração</small>
+          </div>
+        </article>
+        <article class="kpi-card kpi-orange">
+          <div class="kpi-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <div>
+            <span>Produção</span>
+            <strong>—</strong>
+            <small>Aguardando integração</small>
+          </div>
+        </article>
+        <article class="kpi-card kpi-red">
+          <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <span>Ocorrências</span>
+            <strong>—</strong>
+            <small>Aguardando integração</small>
+          </div>
+        </article>
+      </section>
+
+      <section class="apps-section">
+        <div class="section-head">
+          <h2>APLICAÇÕES</h2>
+          <span>Acesso rápido aos principais módulos da sua operação.</span>
+        </div>
+
+        <div class="apps-grid" id="appsGrid">
+          {% for app_item in applications %}
+            {% set configured = app_item['url']|length > 0 %}
+            <a
+              class="app-card accent-{{ app_item['accent'] }} {{ 'app-disabled' if not configured else '' }}"
+              href="{{ app_item['url'] if configured else '#' }}"
+              data-search="{{ (app_item['name'] ~ ' ' ~ app_item['description'])|lower }}"
+              {% if configured and app_item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
+              {% if not configured %}data-unconfigured="true"{% endif %}
+            >
+              <div class="app-main">
+                <div class="app-icon"><i class="{{ app_item['icon'] }}"></i></div>
+                <div class="app-copy">
+                  <h3>{{ app_item['name'] }}</h3>
+                  <p>{{ app_item['description'] }}</p>
+                </div>
+                <div class="status-pill">
+                  <span></span>{{ app_item['status'] }}
+                </div>
+              </div>
+              <div class="app-footer">
+                <span>Acessar</span><i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="empty-search" id="emptySearch" hidden>
+          Nenhuma aplicação encontrada.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    Configure o link deste módulo em Configurações.
+  </div>
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
