@@ -67,19 +67,19 @@ button,input{font:inherit}
   min-height:58px;
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:9px;
   padding:0 12px 17px;
   overflow:hidden;
 }
 .brand-logo-img{
   display:block;
-  width:min(var(--brand-user-width,210px),100%);
-  transform:scale(1.12);
-  transform-origin:left center;
+  width:min(var(--brand-user-width,190px),100%);
   max-width:100%;
   max-height:54px;
   object-fit:contain;
-  object-position:left center;
+  object-position:center center;
+  margin:0 auto;
 }
 .brand-mark{font-size:44px;line-height:.8;font-weight:900;color:var(--yellow);letter-spacing:-6px}
 .brand-text{
@@ -374,7 +374,11 @@ button,input{font:inherit}
   min-height:108px;
   border:1px solid #E2E9F1;
   background:
-    radial-gradient(circle at 112% 132%,var(--accent-wash) 0 30%,transparent 31%),
+    radial-gradient(
+      circle at 112% 132%,
+      color-mix(in srgb,var(--card-accent,#F4B400) 22%,white) 0 30%,
+      transparent 31%
+    ),
     linear-gradient(180deg,#FFFFFF 0%,#FCFDFE 100%);
   border-radius:12px;
   box-shadow:var(--shadow-soft);
@@ -403,11 +407,21 @@ button,input{font:inherit}
   display:grid;
   place-items:center;
   font-size:22px;
-  background:linear-gradient(145deg,var(--icon-bg-1),var(--icon-bg-2));
-  color:var(--icon-color);
+  background:linear-gradient(
+    145deg,
+    color-mix(in srgb,var(--card-accent,#F4B400) 10%,white),
+    color-mix(in srgb,var(--card-accent,#F4B400) 24%,white)
+  );
+  color:color-mix(in srgb,var(--card-accent,#F4B400) 78%,#0F1B2D);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.92),
     0 5px 12px rgba(18,32,58,.055)
+}
+.app-icon img{
+  width:78%;
+  height:78%;
+  object-fit:contain;
+  display:block;
 }
 .app-copy{min-width:0;padding-top:1px}
 .app-copy h3{
@@ -575,7 +589,7 @@ button,input{font:inherit}
 .admin-body{background:#F3F6FA}
 .admin-shell{min-height:100vh;display:grid;grid-template-columns:220px minmax(0,1fr)}
 .admin-side{background:linear-gradient(180deg,#0B1929,#10233A);padding:22px 15px;color:#fff}
-.admin-side .brand{padding-left:4px}
+.admin-side .brand{padding-left:4px;padding-right:4px;justify-content:center}
 .admin-side a.back-home{
   display:flex;align-items:center;gap:10px;color:#EAF0F7;margin-top:14px;
   padding:11px 12px;border-radius:9px;font-size:13px
@@ -612,6 +626,29 @@ button,input{font:inherit}
 .asset-preview-favicon{min-height:80px}
 .asset-preview-favicon img{width:52px;height:52px;object-fit:contain}
 .asset-preview-favicon span{font-size:46px;color:var(--yellow);font-weight:900}
+.hero-identity-field{grid-column:1/-1}
+.asset-preview-hero{
+  min-height:190px;
+  padding:0;
+  position:relative;
+  background-size:cover;
+  background-position:center;
+  overflow:hidden;
+}
+.asset-preview-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(15,27,45,.76),rgba(15,27,45,.20));
+}
+.asset-preview-hero span{
+  position:relative;
+  z-index:1;
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.6px;
+  text-shadow:0 2px 8px rgba(0,0,0,.25);
+}
 .file-input{
   width:100%;font-size:12px;border:1px solid #D8E1EC;border-radius:8px;background:#fff;padding:8px
 }
@@ -619,6 +656,104 @@ button,input{font:inherit}
 .range-input{width:100%}
 .identity-field small{font-size:11px;color:#8694A8}
 
+.app-custom-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:14px;
+}
+.app-config-card{
+  position:relative;
+  overflow:hidden;
+  border:1px solid #E3EAF2;
+  border-radius:14px;
+  padding:15px;
+  background:
+    radial-gradient(
+      circle at 108% 112%,
+      color-mix(in srgb,var(--preview-accent,#F4B400) 20%,white) 0 29%,
+      transparent 30%
+    ),
+    #FBFCFE;
+}
+.app-config-head{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  gap:11px;
+  align-items:center;
+  margin-bottom:13px;
+}
+.app-config-icon{
+  width:52px;
+  height:52px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  font-size:22px;
+  background:linear-gradient(
+    145deg,
+    color-mix(in srgb,var(--preview-accent,#F4B400) 10%,white),
+    color-mix(in srgb,var(--preview-accent,#F4B400) 24%,white)
+  );
+  color:color-mix(in srgb,var(--preview-accent,#F4B400) 78%,#0F1B2D);
+}
+.app-config-icon img{
+  width:78%;
+  height:78%;
+  object-fit:contain;
+}
+.app-config-head strong{display:block;font-size:13px;color:#10203A}
+.app-config-head span{
+  display:block;
+  margin-top:3px;
+  color:#7A89A0;
+  font-size:10px;
+  line-height:1.3;
+}
+.app-config-fields{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 132px;
+  gap:10px 12px;
+}
+.field-label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:11px;
+  color:#5E6F89;
+  font-weight:700;
+}
+.app-url-field{grid-column:1/-1}
+.color-control{
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #D8E1EC;
+  border-radius:8px;
+  background:#fff;
+  padding:5px 8px;
+}
+.color-input{
+  width:34px;
+  height:28px;
+  padding:0;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+}
+.color-control span{
+  font-size:10px;
+  color:#65758D;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.app-config-checks{
+  grid-column:1/-1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 18px;
+}
 .link-list{display:grid;gap:8px}
 .link-row{
   display:grid;grid-template-columns:minmax(170px,230px) minmax(0,1fr) 112px;
@@ -668,6 +803,8 @@ button,input{font:inherit}
   .admin-side{padding:14px}
   .admin-main{padding:20px 14px}
   .identity-grid{grid-template-columns:1fr}
+  .hero-identity-field{grid-column:auto}
+  .app-custom-grid{grid-template-columns:1fr}
   .link-row{grid-template-columns:1fr}
 }
 
@@ -692,4 +829,9 @@ button,input{font:inherit}
     box-shadow:none;
   }
   .main-area{height:auto;overflow:visible}
+}
+
+@media (max-width:560px){
+  .app-config-fields{grid-template-columns:1fr}
+  .app-url-field,.app-config-checks{grid-column:auto}
 }
