@@ -1,9 +1,8 @@
+import base64
 import os
-import sqlite3
-from contextlib import closing
-from pathlib import Path
 from urllib.parse import urlparse
 
+import requests
 from flask import (
     Flask,
     flash,
@@ -14,105 +13,140 @@ from flask import (
     url_for,
 )
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = DATA_DIR / "operahub.db"
-
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "opera-hub-local-dev-key")
 app.config["ADMIN_PASSWORD"] = os.getenv("ADMIN_PASSWORD", "").strip()
+
+SUPABASE_URL = os.getenv(
+    "SUPABASE_URL",
+    "https://cuixazpxkvniqldmmnth.supabase.co",
+).rstrip("/")
+SUPABASE_KEY = os.getenv(
+    "SUPABASE_KEY",
+    "sb_publishable_ZTqIgmA9Ez6AVQsoXa0P8Q_6CYHDFye",
+).strip()
+SUPABASE_WRITE_TOKEN = os.getenv("SUPABASE_WRITE_TOKEN", "").strip()
 
 HERO_IMAGE = (
     "https://images.unsplash.com/photo-1776493929304-dfe4d50ae96b"
     "?auto=format&fit=crop&fm=jpg&q=82&w=2400"
 )
 
+DEFAULT_SETTINGS = {
+    "id": "main",
+    "logo_data": "",
+    "favicon_data": "",
+    "logo_width": 190,
+}
+
 DEFAULT_NAV_ITEMS = [
-    ("inicio", "Início", "fa-solid fa-house", "", 1, 0),
-    ("mrp", "MRP", "fa-regular fa-file-lines", "", 2, 1),
-    ("estoque", "Estoque", "fa-solid fa-box-open", "", 3, 1),
-    ("inventario", "Inventário", "fa-regular fa-clipboard", "", 4, 1),
-    ("fechamentos", "Fechamentos", "fa-regular fa-calendar-check", "", 5, 1),
-    ("conferencias", "Conferências", "fa-solid fa-shield-halved", "", 6, 1),
-    ("entregas", "Entregas", "fa-solid fa-truck", "", 7, 1),
-    ("indicadores", "Indicadores", "fa-solid fa-chart-column", "", 8, 1),
-    ("projetos", "Projetos", "fa-solid fa-bullseye", "", 9, 1),
-    ("notificacoes", "Notificações", "fa-regular fa-bell", "", 10, 1),
-    ("ajuda", "Ajuda", "fa-regular fa-circle-question", "", 11, 1),
+    {"key": "inicio", "label": "Início", "icon": "fa-solid fa-house", "url": "", "sort_order": 1, "new_tab": False},
+    {"key": "mrp", "label": "MRP", "icon": "fa-regular fa-file-lines", "url": "", "sort_order": 2, "new_tab": True},
+    {"key": "estoque", "label": "Estoque", "icon": "fa-solid fa-box-open", "url": "", "sort_order": 3, "new_tab": True},
+    {"key": "inventario", "label": "Inventário", "icon": "fa-regular fa-clipboard", "url": "", "sort_order": 4, "new_tab": True},
+    {"key": "fechamentos", "label": "Fechamentos", "icon": "fa-regular fa-calendar-check", "url": "", "sort_order": 5, "new_tab": True},
+    {"key": "conferencias", "label": "Conferências", "icon": "fa-solid fa-shield-halved", "url": "", "sort_order": 6, "new_tab": True},
+    {"key": "entregas", "label": "Entregas", "icon": "fa-solid fa-truck", "url": "", "sort_order": 7, "new_tab": True},
+    {"key": "indicadores", "label": "Indicadores", "icon": "fa-solid fa-chart-column", "url": "", "sort_order": 8, "new_tab": True},
+    {"key": "projetos", "label": "Projetos", "icon": "fa-solid fa-bullseye", "url": "", "sort_order": 9, "new_tab": True},
+    {"key": "notificacoes", "label": "Notificações", "icon": "fa-regular fa-bell", "url": "", "sort_order": 10, "new_tab": True},
+    {"key": "ajuda", "label": "Ajuda", "icon": "fa-regular fa-circle-question", "url": "", "sort_order": 11, "new_tab": True},
 ]
 
 DEFAULT_APPLICATIONS = [
-    ("gestao-equipes", "GESTÃO DE EQUIPES", "Acompanhamento de indicadores e equipes.", "fa-solid fa-people-group", "gold", "ONLINE", "", 1),
-    ("conversor-mrp", "CONVERSOR MRP", "Conversor de relatórios para alimentação MRP.", "fa-solid fa-file-circle-check", "blue", "ONLINE", "", 2),
-    ("mrp", "MRP", "Demanda e necessidade de materiais.", "fa-solid fa-clipboard-list", "amber", "ONLINE", "", 3),
-    ("gestao-entregas", "GESTÃO DE ENTREGAS", "Controle de entrega de OPs e cronograma.", "fa-solid fa-truck-fast", "orange", "ONLINE", "", 4),
-    ("inventario-rotativo", "INVENTÁRIO ROTATIVO", "Acompanhamento e geração de inventários.", "fa-solid fa-boxes-stacked", "green", "WORK", "", 5),
-    ("smtc", "SMTC", "Acompanhamento, armazenamento e reposição de parafusos, porcas e arruelas.", "fa-solid fa-screwdriver-wrench", "steel", "WORK", "", 6),
-    ("gestao-nfs", "GESTÃO DE NFS", "Controle de realização e envio de NFs para lançamento.", "fa-solid fa-file-invoice-dollar", "violet", "ONLINE", "", 7),
-    ("fechamento-mensal", "FECHAMENTO MENSAL", "Auditoria de baixas, acompanhamento da evolução de estoque mês a mês.", "fa-solid fa-chart-simple", "peach", "WORK", "", 8),
-    ("monitor-apis", "MONITOR DE APIs", "Painel de verificação de status de conexão de APIs.", "fa-solid fa-network-wired", "sky", "WORK", "", 9),
+    {"key": "gestao-equipes", "name": "GESTÃO DE EQUIPES", "description": "Acompanhamento de indicadores e equipes.", "icon": "fa-solid fa-people-group", "accent": "gold", "status": "ONLINE", "url": "", "sort_order": 1, "new_tab": True},
+    {"key": "conversor-mrp", "name": "CONVERSOR MRP", "description": "Conversor de relatórios para alimentação MRP.", "icon": "fa-solid fa-file-circle-check", "accent": "blue", "status": "ONLINE", "url": "", "sort_order": 2, "new_tab": True},
+    {"key": "mrp", "name": "MRP", "description": "Demanda e necessidade de materiais.", "icon": "fa-solid fa-clipboard-list", "accent": "amber", "status": "ONLINE", "url": "", "sort_order": 3, "new_tab": True},
+    {"key": "gestao-entregas", "name": "GESTÃO DE ENTREGAS", "description": "Controle de entrega de OPs e cronograma.", "icon": "fa-solid fa-truck-fast", "accent": "orange", "status": "ONLINE", "url": "", "sort_order": 4, "new_tab": True},
+    {"key": "inventario-rotativo", "name": "INVENTÁRIO ROTATIVO", "description": "Acompanhamento e geração de inventários.", "icon": "fa-solid fa-boxes-stacked", "accent": "green", "status": "WORK", "url": "", "sort_order": 5, "new_tab": True},
+    {"key": "smtc", "name": "SMTC", "description": "Acompanhamento, armazenamento e reposição de parafusos, porcas e arruelas.", "icon": "fa-solid fa-screwdriver-wrench", "accent": "steel", "status": "WORK", "url": "", "sort_order": 6, "new_tab": True},
+    {"key": "gestao-nfs", "name": "GESTÃO DE NFS", "description": "Controle de realização e envio de NFs para lançamento.", "icon": "fa-solid fa-file-invoice-dollar", "accent": "violet", "status": "ONLINE", "url": "", "sort_order": 7, "new_tab": True},
+    {"key": "fechamento-mensal", "name": "FECHAMENTO MENSAL", "description": "Auditoria de baixas, acompanhamento da evolução de estoque mês a mês.", "icon": "fa-solid fa-chart-simple", "accent": "peach", "status": "WORK", "url": "", "sort_order": 8, "new_tab": True},
+    {"key": "monitor-apis", "name": "MONITOR DE APIs", "description": "Painel de verificação de status de conexão de APIs.", "icon": "fa-solid fa-network-wired", "accent": "sky", "status": "WORK", "url": "", "sort_order": 9, "new_tab": True},
 ]
 
 
-def db_connect():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+def sb_headers():
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+    }
+    if SUPABASE_KEY.startswith("eyJ"):
+        headers["Authorization"] = f"Bearer {SUPABASE_KEY}"
+    return headers
 
 
-def init_db():
-    with closing(db_connect()) as conn:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS nav_items (
-                key TEXT PRIMARY KEY,
-                label TEXT NOT NULL,
-                icon TEXT NOT NULL,
-                url TEXT NOT NULL DEFAULT '',
-                sort_order INTEGER NOT NULL,
-                new_tab INTEGER NOT NULL DEFAULT 1
-            );
+def sb_get(table, params):
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/{table}",
+        headers=sb_headers(),
+        params=params,
+        timeout=15,
+    )
+    response.raise_for_status()
+    return response.json()
 
-            CREATE TABLE IF NOT EXISTS applications (
-                key TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT NOT NULL,
-                icon TEXT NOT NULL,
-                accent TEXT NOT NULL,
-                status TEXT NOT NULL,
-                url TEXT NOT NULL DEFAULT '',
-                sort_order INTEGER NOT NULL,
-                new_tab INTEGER NOT NULL DEFAULT 1
-            );
-            """
+
+def sb_rpc(name, payload):
+    if not SUPABASE_WRITE_TOKEN:
+        raise RuntimeError(
+            "SUPABASE_WRITE_TOKEN não configurado no Render."
         )
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/rpc/{name}",
+        headers=sb_headers(),
+        json={"p_token": SUPABASE_WRITE_TOKEN, **payload},
+        timeout=20,
+    )
+    response.raise_for_status()
 
-        count = conn.execute("SELECT COUNT(*) AS c FROM nav_items").fetchone()["c"]
-        if count == 0:
-            conn.executemany(
-                """
-                INSERT INTO nav_items
-                (key, label, icon, url, sort_order, new_tab)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                DEFAULT_NAV_ITEMS,
+
+def load_settings():
+    try:
+        rows = sb_get(
+            "operahub_settings",
+            {"id": "eq.main", "select": "*", "limit": "1"},
+        )
+        if rows:
+            data = dict(DEFAULT_SETTINGS)
+            data.update(rows[0])
+            data["logo_width"] = max(
+                100,
+                min(320, int(data.get("logo_width") or 190)),
             )
-
-        count = conn.execute("SELECT COUNT(*) AS c FROM applications").fetchone()["c"]
-        if count == 0:
-            conn.executemany(
-                """
-                INSERT INTO applications
-                (key, name, description, icon, accent, status, url, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                DEFAULT_APPLICATIONS,
-            )
-        conn.commit()
+            return data
+    except Exception:
+        pass
+    return dict(DEFAULT_SETTINGS)
 
 
-def safe_url(value: str) -> str:
+def load_nav():
+    try:
+        rows = sb_get(
+            "operahub_nav_items",
+            {"select": "*", "order": "sort_order.asc"},
+        )
+        if rows:
+            return rows
+    except Exception:
+        pass
+    return [dict(item) for item in DEFAULT_NAV_ITEMS]
+
+
+def load_apps():
+    try:
+        rows = sb_get(
+            "operahub_applications",
+            {"select": "*", "order": "sort_order.asc"},
+        )
+        if rows:
+            return rows
+    except Exception:
+        pass
+    return [dict(item) for item in DEFAULT_APPLICATIONS]
+
+
+def safe_url(value):
     value = (value or "").strip()
     if not value:
         return ""
@@ -122,18 +156,23 @@ def safe_url(value: str) -> str:
     return ""
 
 
-def load_nav():
-    with closing(db_connect()) as conn:
-        return conn.execute(
-            "SELECT * FROM nav_items ORDER BY sort_order, label"
-        ).fetchall()
+def file_to_data_uri(file_storage, max_bytes):
+    if not file_storage or not file_storage.filename:
+        return None
 
+    mime = (file_storage.mimetype or "").lower()
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/svg+xml"}
+    if mime not in allowed:
+        raise ValueError("Formato de imagem não suportado.")
 
-def load_apps():
-    with closing(db_connect()) as conn:
-        return conn.execute(
-            "SELECT * FROM applications ORDER BY sort_order, name"
-        ).fetchall()
+    raw = file_storage.read()
+    if len(raw) > max_bytes:
+        raise ValueError(
+            f"Imagem acima de {max_bytes // (1024 * 1024)} MB."
+        )
+
+    encoded = base64.b64encode(raw).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
 
 
 def admin_enabled():
@@ -146,10 +185,12 @@ def admin_authorized():
 
 @app.route("/")
 def index():
+    settings = load_settings()
     return render_template(
         "index.html",
         nav_items=load_nav(),
         applications=load_apps(),
+        settings=settings,
         hero_image=HERO_IMAGE,
     )
 
@@ -161,37 +202,100 @@ def configuracoes():
 
     nav_items = load_nav()
     applications = load_apps()
+    settings = load_settings()
 
     if request.method == "POST":
-        with closing(db_connect()) as conn:
+        try:
+            nav_payload = []
             for item in nav_items:
                 key = item["key"]
-                url = safe_url(request.form.get(f"nav_url_{key}", ""))
-                new_tab = 1 if request.form.get(f"nav_new_tab_{key}") == "on" else 0
-                conn.execute(
-                    "UPDATE nav_items SET url = ?, new_tab = ? WHERE key = ?",
-                    (url, new_tab, key),
+                nav_payload.append(
+                    {
+                        "key": key,
+                        "url": safe_url(
+                            request.form.get(f"nav_url_{key}", "")
+                        ),
+                        "new_tab": request.form.get(
+                            f"nav_new_tab_{key}"
+                        ) == "on",
+                    }
                 )
 
+            app_payload = []
             for item in applications:
                 key = item["key"]
-                url = safe_url(request.form.get(f"app_url_{key}", ""))
-                new_tab = 1 if request.form.get(f"app_new_tab_{key}") == "on" else 0
-                conn.execute(
-                    "UPDATE applications SET url = ?, new_tab = ? WHERE key = ?",
-                    (url, new_tab, key),
+                app_payload.append(
+                    {
+                        "key": key,
+                        "url": safe_url(
+                            request.form.get(f"app_url_{key}", "")
+                        ),
+                        "new_tab": request.form.get(
+                            f"app_new_tab_{key}"
+                        ) == "on",
+                    }
                 )
 
-            conn.commit()
+            logo_data = settings.get("logo_data", "")
+            favicon_data = settings.get("favicon_data", "")
 
-        flash("Links atualizados com sucesso.", "success")
-        return redirect(url_for("configuracoes"))
+            if request.form.get("remove_logo") == "on":
+                logo_data = ""
+            new_logo = file_to_data_uri(
+                request.files.get("logo_upload"),
+                3 * 1024 * 1024,
+            )
+            if new_logo is not None:
+                logo_data = new_logo
+
+            if request.form.get("remove_favicon") == "on":
+                favicon_data = ""
+            new_favicon = file_to_data_uri(
+                request.files.get("favicon_upload"),
+                1 * 1024 * 1024,
+            )
+            if new_favicon is not None:
+                favicon_data = new_favicon
+
+            logo_width = max(
+                100,
+                min(
+                    320,
+                    int(
+                        request.form.get(
+                            "logo_width",
+                            settings.get("logo_width", 190),
+                        )
+                    ),
+                ),
+            )
+
+            sb_rpc(
+                "operahub_save_settings",
+                {
+                    "p_logo_data": logo_data,
+                    "p_favicon_data": favicon_data,
+                    "p_logo_width": logo_width,
+                },
+            )
+            sb_rpc("operahub_save_nav", {"p_items": nav_payload})
+            sb_rpc("operahub_save_apps", {"p_items": app_payload})
+
+            flash(
+                "Alterações salvas permanentemente no Supabase.",
+                "success",
+            )
+            return redirect(url_for("configuracoes"))
+        except Exception as exc:
+            flash(f"Não foi possível salvar: {exc}", "error")
 
     return render_template(
         "config.html",
         nav_items=nav_items,
         applications=applications,
+        settings=settings,
         admin_enabled=admin_enabled(),
+        supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
     )
 
 
@@ -208,7 +312,10 @@ def login():
             return redirect(next_url)
         flash("Senha incorreta.", "error")
 
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        settings=load_settings(),
+    )
 
 
 @app.route("/logout")
@@ -219,10 +326,12 @@ def logout():
 
 @app.route("/healthz")
 def healthz():
-    return {"status": "ok"}
+    return {"status": "ok", "storage": "supabase"}
 
-
-init_db()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "5000")),
+        debug=True,
+    )
