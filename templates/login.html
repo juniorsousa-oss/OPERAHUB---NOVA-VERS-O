@@ -58,7 +58,14 @@
         {% endfor %}
       {% endwith %}
 
-      <form method="post">
+      {% if not admin_enabled %}
+      <div class="flash error">
+        O login foi criado, mas ainda falta configurar a senha administrativa no Render.
+        Defina a variável <strong>ADMIN_PASSWORD</strong> para habilitar o acesso.
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('login', next=next_url) }}">
         <label for="password">Senha</label>
         <div class="login-password">
           <input
@@ -71,7 +78,9 @@
           >
           <i class="fa-solid fa-lock"></i>
         </div>
-        <button type="submit">Entrar no Opera Hub</button>
+        <button type="submit" {% if not admin_enabled %}disabled{% endif %}>
+          Entrar no Opera Hub
+        </button>
       </form>
 
       <a class="login-back" href="{{ url_for('index') }}">
