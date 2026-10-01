@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0F1B2D">
   <title>Opera Hub | Operações conectadas</title>
-  {% if settings['favicon_data'] %}
-  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% if settings['has_favicon'] %}
+  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at']) }}">
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -18,10 +21,10 @@
   <div class="app-shell">
     <aside class="side-nav" id="sideNav">
       <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
-        {% if settings['logo_data'] %}
+        {% if settings['has_logo'] %}
           <img
             class="brand-logo-img"
-            src="{{ settings['logo_data'] }}"
+            src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
             alt="Opera Hub"
             style="--brand-user-width: {{ settings['logo_width'] }}px"
           >
@@ -162,13 +165,23 @@
             {% set configured = app_item['url']|length > 0 %}
             <a
               class="app-card accent-{{ app_item['accent'] }} {{ 'app-disabled' if not configured else '' }}"
+              style="--card-accent: {{ app_item['accent_color'] or '#F4B400' }}"
               href="{{ app_item['url'] if configured else '#' }}"
               data-search="{{ (app_item['name'] ~ ' ' ~ app_item['description'])|lower }}"
               {% if configured and app_item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
               {% if not configured %}data-unconfigured="true"{% endif %}
             >
               <div class="app-main">
-                <div class="app-icon"><i class="{{ app_item['icon'] }}"></i></div>
+                <div class="app-icon">
+                  {% if app_item['has_image'] %}
+                    <img
+                      src="{{ url_for('application_asset', app_key=app_item['key'], v=app_item['updated_at']) }}"
+                      alt=""
+                    >
+                  {% else %}
+                    <i class="{{ app_item['icon'] }}"></i>
+                  {% endif %}
+                </div>
                 <div class="app-copy">
                   <h3>{{ app_item['name'] }}</h3>
                   <p>{{ app_item['description'] }}</p>
