@@ -38,7 +38,7 @@
         Voltar ao início
       </a>
 
-      {% if admin_enabled %}
+      {% if current_user %}
       <a class="back-home" href="{{ url_for('logout') }}">
         <i class="fa-solid fa-right-from-bracket"></i>
         Sair
