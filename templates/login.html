@@ -3,29 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {% if settings and settings['favicon_data'] %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
   <link rel="shortcut icon" type="image/png" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
-  {% else %}
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-  {% endif %}
   <title>Acesso administrativo | Opera Hub</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="login-page">
   <div class="login-card">
     <div class="brand">
-      {% if settings and settings['logo_data'] %}
-        <img
-          class="brand-logo-img"
-          src="{{ settings['logo_data'] }}"
-          alt="Opera Hub"
-          style="--brand-user-width: {{ settings['logo_width'] }}px"
-        >
-      {% else %}
-        <div class="brand-mark">∞</div>
-        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
-      {% endif %}
+      <img
+        class="brand-logo-img"
+        src="{{ url_for('brand_logo', v=settings['updated_at']) }}"
+        alt="Opera Hub"
+        style="--brand-user-width: {{ settings['logo_width'] }}px"
+      >
     </div>
     <h1>Acesso às configurações</h1>
     <p>Digite a senha administrativa para editar os links do Opera Hub.</p>
