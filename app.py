@@ -157,7 +157,7 @@ def safe_url(value):
     return ""
 
 
-def file_to_data_uri(file_storage, max_bytes):
+def file_to_data_uri(file_storage, max_bytes, max_dimension=2400):
     if not file_storage or not file_storage.filename:
         return None
 
@@ -172,8 +172,57 @@ def file_to_data_uri(file_storage, max_bytes):
             f"Imagem acima de {max_bytes // (1024 * 1024)} MB."
         )
 
-    encoded = base64.b64encode(raw).decode("ascii")
-    return f"data:{mime};base64,{encoded}"
+    # SVG permanece vetorial. Para imagens raster, reduzimos dimensões muito
+    # grandes antes de gravar no Supabase, sem impor o antigo limite de 1 MB.
+    if mime == "image/svg+xml":
+        encoded = base64.b64encode(raw).decode("ascii")
+        return f"data:{mime};base64,{encoded}"
+
+    try:
+        image = Image.open(BytesIO(raw))
+        image.load()
+    except Exception:
+        raise ValueError("Não foi possível processar a imagem enviada.")
+
+    if max(image.size) > max_dimension:
+        image.thumbnail(
+            (max_dimension, max_dimension),
+            Image.Resampling.LANCZOS,
+        )
+
+    out = BytesIO()
+
+    if mime == "image/jpeg":
+        image = image.convert("RGB")
+        image.save(
+            out,
+            format="JPEG",
+            quality=92,
+            optimize=True,
+            progressive=True,
+        )
+        result_mime = "image/jpeg"
+    elif mime == "image/webp":
+        if image.mode not in {"RGB", "RGBA"}:
+            image = image.convert("RGBA")
+        image.save(
+            out,
+            format="WEBP",
+            quality=92,
+            method=6,
+        )
+        result_mime = "image/webp"
+    else:
+        image = image.convert("RGBA")
+        image.save(
+            out,
+            format="PNG",
+            optimize=True,
+        )
+        result_mime = "image/png"
+
+    encoded = base64.b64encode(out.getvalue()).decode("ascii")
+    return f"data:{result_mime};base64,{encoded}"
 
 
 def decode_data_uri(data_uri):
@@ -336,7 +385,8 @@ def configuracoes():
                 logo_data = ""
             new_logo = file_to_data_uri(
                 request.files.get("logo_upload"),
-                3 * 1024 * 1024,
+                10 * 1024 * 1024,
+                max_dimension=2400,
             )
             if new_logo is not None:
                 logo_data = new_logo
@@ -345,7 +395,8 @@ def configuracoes():
                 favicon_data = ""
             new_favicon = file_to_data_uri(
                 request.files.get("favicon_upload"),
-                1 * 1024 * 1024,
+                10 * 1024 * 1024,
+                max_dimension=1024,
             )
             if new_favicon is not None:
                 # O arquivo original permanece salvo no Supabase.
