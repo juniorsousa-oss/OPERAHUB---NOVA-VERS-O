@@ -106,7 +106,15 @@
         </div>
       </header>
 
-      <section class="hero" style="--hero-image: url('{{ hero_image }}');">
+      <section
+        class="hero"
+        style="
+          --hero-image: url('{{ hero_image }}');
+          --hero-pos-x: {{ settings['hero_pos_x'] }}%;
+          --hero-pos-y: {{ settings['hero_pos_y'] }}%;
+          --hero-zoom: {{ settings['hero_zoom'] }}%;
+        "
+      >
         <div class="hero-content">
           <span class="hero-kicker">OPERAÇÕES CONECTADAS</span>
           <h1>Operações em movimento<br>para um futuro mais eficiente.</h1>
