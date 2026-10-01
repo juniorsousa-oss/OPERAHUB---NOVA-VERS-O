@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0F1B2D">
   <title>Opera Hub | Operações conectadas</title>
-  {% if settings['favicon_data'] %}
-  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% if settings and settings['favicon_data'] %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('favicon_png', v=settings['updated_at']) }}">
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
