@@ -495,10 +495,29 @@ def logout():
     return redirect(url_for("index"))
 
 
+@app.route("/brand-logo")
+def brand_logo():
+    data_uri = load_asset_data("logo_data")
+    raw = decode_data_uri(data_uri)
+    if not raw:
+        return redirect(url_for("static", filename="favicon.svg"))
+
+    mime = "image/png"
+    if data_uri.startswith("data:image/jpeg"):
+        mime = "image/jpeg"
+    elif data_uri.startswith("data:image/webp"):
+        mime = "image/webp"
+    elif data_uri.startswith("data:image/svg+xml"):
+        mime = "image/svg+xml"
+
+    response = send_file(BytesIO(raw), mimetype=mime, max_age=3600)
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
 @app.route("/favicon.png")
 def favicon_png():
-    settings = load_settings()
-    favicon = normalized_favicon_png(settings.get("favicon_data", ""))
+    favicon = normalized_favicon_png(load_asset_data("favicon_data"))
     if favicon is None:
         return redirect(url_for("static", filename="favicon.svg"))
 
