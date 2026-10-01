@@ -14,3 +14,9 @@ services:
         generateValue: true
       - key: ADMIN_PASSWORD
         sync: false
+      - key: SUPABASE_URL
+        value: https://cuixazpxkvniqldmmnth.supabase.co
+      - key: SUPABASE_KEY
+        value: sb_publishable_ZTqIgmA9Ez6AVQsoXa0P8Q_6CYHDFye
+      - key: SUPABASE_WRITE_TOKEN
+        sync: false
