@@ -8,40 +8,78 @@
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
-  <title>Acesso administrativo | Opera Hub</title>
+  <title>Entrar | Opera Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="login-page">
-  <div class="login-card">
-    <div class="brand">
-      {% if settings and settings['has_logo'] %}
-        <img
-          class="brand-logo-img"
-          src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
-          alt="Opera Hub"
-          style="--brand-user-width: {{ settings['logo_width'] }}px"
-        >
-      {% else %}
-        <div class="brand-mark">∞</div>
-        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
-      {% endif %}
-    </div>
-    <h1>Acesso às configurações</h1>
-    <p>Digite a senha administrativa para editar os links do Opera Hub.</p>
+  <div class="login-shell">
+    <section
+      class="login-visual"
+      style="--login-hero:url('{{ url_for('hero_asset', v=settings['updated_at']) }}')"
+    >
+      <div class="brand">
+        {% if settings and settings['has_logo'] %}
+          <img
+            class="brand-logo-img"
+            src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
+            alt="Opera Hub"
+            style="--brand-user-width: {{ settings['logo_width'] }}px"
+          >
+        {% else %}
+          <div class="brand-mark">∞</div>
+          <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+        {% endif %}
+      </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
+      <div class="login-copy-panel">
+        <span>OPERAÇÕES CONECTADAS</span>
+        <h1>
+          Conecta processos.
+          <strong>Impulsiona resultados.</strong>
+        </h1>
+        <p>
+          Acesse a plataforma para continuar com seus controles, aplicações
+          e rotinas operacionais em um único ambiente.
+        </p>
+      </div>
+    </section>
 
-    <form method="post">
-      <input type="password" name="password" placeholder="Senha administrativa" required autofocus>
-      <button type="submit">Entrar</button>
-    </form>
+    <section class="login-form-panel">
+      <div class="login-badge">OPERA HUB • ACESSO</div>
+      <h2>Entrar na plataforma</h2>
+      <p>Informe sua senha de acesso para continuar.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post">
+        <label for="password">Senha</label>
+        <div class="login-password">
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Digite sua senha"
+            required
+            autofocus
+          >
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <button type="submit">Entrar no Opera Hub</button>
+      </form>
+
+      <a class="login-back" href="{{ url_for('index') }}">
+        ← Voltar para a página inicial
+      </a>
+    </section>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
 </body>
 </html>
