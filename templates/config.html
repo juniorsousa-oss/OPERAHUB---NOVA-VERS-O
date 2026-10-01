@@ -3,8 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <title>Configurações | Opera Hub</title>
+  {% if settings['favicon_data'] %}
+  <link rel="icon" href="{{ settings['favicon_data'] }}">
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  {% endif %}
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -12,10 +16,20 @@
 <body class="admin-body">
   <div class="admin-shell">
     <aside class="admin-side">
-      <div class="brand">
-        <div class="brand-mark">∞</div>
-        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
-      </div>
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
+        {% if settings['logo_data'] %}
+          <img
+            class="brand-logo-img"
+            src="{{ settings['logo_data'] }}"
+            alt="Opera Hub"
+            style="--brand-user-width: {{ settings['logo_width'] }}px"
+          >
+        {% else %}
+          <div class="brand-mark">∞</div>
+          <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+        {% endif %}
+      </a>
+
       <a class="back-home" href="{{ url_for('index') }}">
         <i class="fa-solid fa-arrow-left"></i>
         Voltar ao início
@@ -32,11 +46,11 @@
       <div class="admin-title">
         <div>
           <h1>Configurações</h1>
-          <p>Defina os links externos usados no menu lateral e nos cartões de aplicações.</p>
+          <p>Identidade visual e links externos do Opera Hub.</p>
         </div>
-        {% if not admin_enabled %}
+        {% if not supabase_write_ready %}
         <div class="dev-warning">
-          <strong>Modo de validação:</strong> defina <code>ADMIN_PASSWORD</code> no Render para proteger esta tela.
+          <strong>Supabase incompleto:</strong> configure <code>SUPABASE_WRITE_TOKEN</code> no Render para habilitar o salvamento permanente.
         </div>
         {% endif %}
       </div>
@@ -47,7 +61,60 @@
         {% endfor %}
       {% endwith %}
 
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
+        <section class="admin-card">
+          <h2>Identidade visual</h2>
+          <p>Personalize a logo do menu lateral e o favicon do navegador. Os arquivos ficam salvos no Supabase.</p>
+
+          <div class="identity-grid">
+            <div class="identity-field">
+              <label>Logo principal</label>
+              <div class="asset-preview asset-preview-logo">
+                {% if settings['logo_data'] %}
+                  <img src="{{ settings['logo_data'] }}" alt="Logo atual">
+                {% else %}
+                  <span>∞ <strong>OPERA HUB</strong></span>
+                {% endif %}
+              </div>
+              <input class="file-input" type="file" name="logo_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
+              <label class="range-label" for="logo_width">
+                Largura da logo: <strong><span id="logoWidthValue">{{ settings['logo_width'] }}</span> px</strong>
+              </label>
+              <input
+                id="logo_width"
+                class="range-input"
+                type="range"
+                name="logo_width"
+                min="100"
+                max="320"
+                step="5"
+                value="{{ settings['logo_width'] }}"
+              >
+              <label class="check-wrap">
+                <input type="checkbox" name="remove_logo">
+                Remover logo personalizada
+              </label>
+            </div>
+
+            <div class="identity-field">
+              <label>Favicon</label>
+              <div class="asset-preview asset-preview-favicon">
+                {% if settings['favicon_data'] %}
+                  <img src="{{ settings['favicon_data'] }}" alt="Favicon atual">
+                {% else %}
+                  <span>∞</span>
+                {% endif %}
+              </div>
+              <input class="file-input" type="file" name="favicon_upload" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
+              <small>Recomendado: imagem quadrada e sem margens.</small>
+              <label class="check-wrap">
+                <input type="checkbox" name="remove_favicon">
+                Usar favicon padrão
+              </label>
+            </div>
+          </div>
+        </section>
+
         <section class="admin-card">
           <h2>Menu lateral</h2>
           <p>Os módulos continuam como atalhos externos até serem incorporados ao Opera Hub.</p>
@@ -112,11 +179,21 @@
           <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
           <button class="btn btn-primary" type="submit">
             <i class="fa-solid fa-floppy-disk"></i>
-            Salvar links
+            Salvar no Supabase
           </button>
         </div>
       </form>
     </main>
   </div>
+
+  <script>
+    const range = document.getElementById("logo_width");
+    const value = document.getElementById("logoWidthValue");
+    if (range && value) {
+      range.addEventListener("input", () => {
+        value.textContent = range.value;
+      });
+    }
+  </script>
 </body>
 </html>
