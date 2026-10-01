@@ -190,7 +190,10 @@
             {% set configured = app_item['url']|length > 0 %}
             <a
               class="app-card accent-{{ app_item['accent'] }} {{ 'app-disabled' if not configured else '' }}"
-              style="--card-accent: {{ app_item['accent_color'] or '#F4B400' }}"
+              style="
+                --card-accent: {{ app_item['accent_color'] or '#F4B400' }};
+                --icon-zoom: {{ app_item['image_zoom'] or 142 }}%;
+              "
               href="{{ app_item['url'] if configured else '#' }}"
               data-search="{{ (app_item['name'] ~ ' ' ~ app_item['description'])|lower }}"
               {% if configured and app_item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
