@@ -67,13 +67,11 @@ DEFAULT_APPLICATIONS = [
 
 
 def sb_headers():
-    headers = {
+    return {
         "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
     }
-    if SUPABASE_KEY.startswith("eyJ"):
-        headers["Authorization"] = f"Bearer {SUPABASE_KEY}"
-    return headers
 
 
 def sb_get(table, params):
