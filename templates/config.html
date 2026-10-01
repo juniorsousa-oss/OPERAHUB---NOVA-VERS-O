@@ -570,7 +570,7 @@
           </details>
         </section>
 
-        <div class="admin-actions">
+        <div class="admin-actions" id="adminActions">
           <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
           <button class="btn btn-primary" type="submit">
             <i class="fa-solid fa-floppy-disk"></i>
@@ -594,6 +594,8 @@
     const tabButtons = Array.from(document.querySelectorAll("[data-config-tab]"));
     const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
 
+    const adminActions = document.getElementById("adminActions");
+
     function activateConfigTab(name) {
       tabButtons.forEach((button) => {
         const active = button.dataset.configTab === name;
@@ -604,6 +606,10 @@
       tabPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.dataset.tabPanel === name);
       });
+
+      if (adminActions) {
+        adminActions.style.display = name === "login" ? "none" : "flex";
+      }
 
       try {
         localStorage.setItem("operaHubConfigTab", name);
