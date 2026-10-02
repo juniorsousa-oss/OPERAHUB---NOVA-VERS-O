@@ -273,6 +273,9 @@ def fallback_apps():
 
 
 def load_bootstrap():
+    stale_item = RUNTIME_CACHE.get("bootstrap")
+    stale_value = stale_item[1] if stale_item else None
+
     cached = cache_get("bootstrap", BOOTSTRAP_TTL)
     if cached is not None:
         return cached
@@ -300,10 +303,16 @@ def load_bootstrap():
                 "has_users": bool(payload.get("has_users")),
             }
             return cache_set("bootstrap", result)
-    except Exception:
-        pass
+    except Exception as exc:
+        app.logger.warning(
+            "Bootstrap Supabase indisponível: %s",
+            exc,
+        )
 
-    return cache_set("bootstrap", fallback)
+    if stale_value is not None:
+        return stale_value
+
+    return fallback
 
 
 def load_settings():
@@ -395,11 +404,13 @@ def asset_data(table, column, key_column, key_value):
     cache_key = (
         f"asset:{table}:{column}:{key_column}:{key_value}"
     )
+    stale_item = RUNTIME_CACHE.get(cache_key)
+    stale_value = stale_item[1] if stale_item else None
+
     cached = cache_get(cache_key, ASSET_DATA_TTL)
     if cached is not None:
         return cached
 
-    value = ""
     try:
         rows = sb_get(
             table,
@@ -409,12 +420,18 @@ def asset_data(table, column, key_column, key_value):
                 "limit": "1",
             },
         )
-        if rows:
-            value = rows[0].get(column) or ""
-    except Exception:
-        pass
-
-    return cache_set(cache_key, value)
+        value = rows[0].get(column) or "" if rows else ""
+        return cache_set(cache_key, value)
+    except Exception as exc:
+        app.logger.warning(
+            "Asset Supabase indisponível table=%s column=%s: %s",
+            table,
+            column,
+            exc,
+        )
+        if stale_value is not None:
+            return stale_value
+        return ""
 
 
 def binary_response(raw, mime, max_age=3600):
@@ -660,6 +677,9 @@ def load_users():
     if not SUPABASE_WRITE_TOKEN:
         return []
 
+    stale_item = RUNTIME_CACHE.get("users")
+    stale_value = stale_item[1] if stale_item else None
+
     cached = cache_get("users", USERS_TTL)
     if cached is not None:
         return [dict(row) for row in cached]
@@ -668,7 +688,13 @@ def load_users():
         rows = sb_rpc("operahub_list_users", {}) or []
         cache_set("users", rows)
         return [dict(row) for row in rows]
-    except Exception:
+    except Exception as exc:
+        app.logger.warning(
+            "Lista de usuários indisponível: %s",
+            exc,
+        )
+        if stale_value is not None:
+            return [dict(row) for row in stale_value]
         return []
 
 
@@ -1458,13 +1484,17 @@ def configuracoes():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     next_url = request.args.get("next") or url_for("index")
-    if not next_url.startswith("/"):
+    if (
+        not next_url.startswith("/")
+        or next_url.startswith("//")
+    ):
         next_url = url_for("index")
 
     if request.method == "POST":
         login_id = request.form.get("login", "").strip()
         password = request.form.get("password", "")
 
+        auth_error = False
         try:
             rows = sb_rpc_public(
                 "operahub_auth_user",
@@ -1473,8 +1503,13 @@ def login():
                     "p_password": password,
                 },
             )
-        except Exception:
+        except Exception as exc:
             rows = []
+            auth_error = True
+            app.logger.warning(
+                "Falha no serviço de autenticação: %s",
+                exc,
+            )
 
         if rows:
             user = rows[0]
@@ -1507,10 +1542,17 @@ def login():
             )
             return redirect(next_url)
 
-        flash(
-            "Usuário ou senha inválidos.",
-            "error",
-        )
+        if auth_error:
+            flash(
+                "O serviço de autenticação demorou para responder. "
+                "Tente novamente em alguns instantes.",
+                "error",
+            )
+        else:
+            flash(
+                "Usuário ou senha inválidos.",
+                "error",
+            )
 
     settings = load_settings()
     return render_template(
@@ -1578,9 +1620,11 @@ def add_server_timing(response):
 def healthz():
     return {
         "status": "ok",
-        "storage": "supabase",
+        "service": "opera-hub",
+        "supabase_configured": bool(
+            SUPABASE_URL and SUPABASE_KEY
+        ),
         "admin_auth_configured": admin_enabled(),
-        "user_auth_configured": auth_users_exist(),
     }
 
 
