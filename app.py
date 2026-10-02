@@ -41,6 +41,7 @@ HERO_IMAGE = (
 
 HERO_CACHE = {}
 APP_IMAGE_CACHE = {}
+BRAND_IMAGE_CACHE = {}
 RUNTIME_CACHE = {}
 
 HTTP = requests.Session()
@@ -488,6 +489,62 @@ def optimize_app_icon_data_uri(data_uri):
         return data_uri
 
 
+def optimize_brand_data_uri(data_uri, favicon=False):
+    mime, raw = data_uri_parts(data_uri)
+    if not mime or raw is None:
+        return data_uri
+
+    if mime == "image/svg+xml":
+        return data_uri
+
+    try:
+        with Image.open(BytesIO(raw)) as image:
+            image = ImageOps.exif_transpose(image)
+            max_size = (192, 192) if favicon else (720, 260)
+            image.thumbnail(
+                max_size,
+                Image.Resampling.LANCZOS,
+            )
+
+            has_alpha = (
+                image.mode in {"RGBA", "LA"}
+                or (
+                    image.mode == "P"
+                    and "transparency" in image.info
+                )
+            )
+
+            output = BytesIO()
+
+            if favicon:
+                image = image.convert("RGBA" if has_alpha else "RGB")
+                image.save(
+                    output,
+                    format="PNG",
+                    optimize=True,
+                )
+                out_mime = "image/png"
+            else:
+                image = image.convert("RGBA" if has_alpha else "RGB")
+                image.save(
+                    output,
+                    format="WEBP",
+                    quality=88,
+                    method=6,
+                )
+                out_mime = "image/webp"
+
+            optimized = output.getvalue()
+
+        if len(optimized) >= len(raw):
+            return data_uri
+
+        encoded = base64.b64encode(optimized).decode("ascii")
+        return f"data:{out_mime};base64,{encoded}"
+    except Exception:
+        return data_uri
+
+
 def file_to_data_uri(
     file_storage,
     max_bytes,
@@ -593,29 +650,81 @@ def admin_authorized():
 
 @app.route("/assets/logo")
 def logo_asset():
+    version = request.args.get("v", "current")
+    cache_key = f"logo:{version}"
+
+    cached = BRAND_IMAGE_CACHE.get(cache_key)
+    if cached:
+        raw, mime = cached
+        return binary_response(raw, mime, max_age=2592000)
+
     data = asset_data(
         "operahub_settings",
         "logo_data",
         "id",
         "main",
     )
-    response = data_uri_response(data, max_age=2592000)
-    if response is not None:
-        return response
+
+    if data:
+        optimized = optimize_brand_data_uri(data, favicon=False)
+        mime, raw = data_uri_parts(optimized)
+        if mime and raw is not None:
+            BRAND_IMAGE_CACHE[cache_key] = (raw, mime)
+
+            if optimized != data and SUPABASE_WRITE_TOKEN:
+                try:
+                    sb_rpc(
+                        "operahub_store_optimized_brand_assets",
+                        {
+                            "p_logo_data": optimized,
+                            "p_favicon_data": None,
+                        },
+                    )
+                except Exception:
+                    pass
+
+            return binary_response(raw, mime, max_age=2592000)
+
     return redirect(url_for("static", filename="favicon.svg"))
 
 
 @app.route("/assets/favicon")
 def favicon_asset():
+    version = request.args.get("v", "current")
+    cache_key = f"favicon:{version}"
+
+    cached = BRAND_IMAGE_CACHE.get(cache_key)
+    if cached:
+        raw, mime = cached
+        return binary_response(raw, mime, max_age=2592000)
+
     data = asset_data(
         "operahub_settings",
         "favicon_data",
         "id",
         "main",
     )
-    response = data_uri_response(data)
-    if response is not None:
-        return response
+
+    if data:
+        optimized = optimize_brand_data_uri(data, favicon=True)
+        mime, raw = data_uri_parts(optimized)
+        if mime and raw is not None:
+            BRAND_IMAGE_CACHE[cache_key] = (raw, mime)
+
+            if optimized != data and SUPABASE_WRITE_TOKEN:
+                try:
+                    sb_rpc(
+                        "operahub_store_optimized_brand_assets",
+                        {
+                            "p_logo_data": None,
+                            "p_favicon_data": optimized,
+                        },
+                    )
+                except Exception:
+                    pass
+
+            return binary_response(raw, mime, max_age=2592000)
+
     return redirect(url_for("static", filename="favicon.svg"))
 
 
@@ -1056,6 +1165,11 @@ def configuracoes():
                 request.files.get("logo_upload"),
                 10 * 1024 * 1024,
             )
+            if new_logo:
+                new_logo = optimize_brand_data_uri(
+                    new_logo,
+                    favicon=False,
+                )
             update_logo = remove_logo or new_logo is not None
 
             remove_favicon = (
@@ -1065,6 +1179,11 @@ def configuracoes():
                 request.files.get("favicon_upload"),
                 10 * 1024 * 1024,
             )
+            if new_favicon:
+                new_favicon = optimize_brand_data_uri(
+                    new_favicon,
+                    favicon=True,
+                )
             update_favicon = (
                 remove_favicon or new_favicon is not None
             )
