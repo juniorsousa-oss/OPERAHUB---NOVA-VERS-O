@@ -9,6 +9,7 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   {% endif %}
   <title>Entrar | Opera Hub</title>
+  <link rel="preload" as="image" href="{{ login_image }}" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -18,7 +19,12 @@
   <div class="login-shell">
     <section
       class="login-visual"
-      style="--login-hero:url('{{ url_for('hero_asset', v=settings['updated_at']) }}')"
+      style="
+        --login-hero:url('{{ login_image }}');
+        --login-pos-x:{{ settings['login_pos_x'] }}%;
+        --login-pos-y:{{ settings['login_pos_y'] }}%;
+        --login-zoom:{{ settings['login_zoom'] }}%;
+      "
     >
       <div class="brand">
         {% if settings and settings['has_logo'] %}
@@ -48,6 +54,7 @@
     </section>
 
     <section class="login-form-panel">
+      <div class="login-form-inner">
       <div class="login-badge">OPERA HUB • ACESSO</div>
       <h2>Entrar na plataforma</h2>
       <p>Informe seu usuário ou e-mail e sua senha para continuar.</p>
@@ -101,8 +108,10 @@
       </form>
 
       <a class="login-back" href="{{ url_for('index') }}">
-        ← Voltar para a página inicial
+        <i class="fa-solid fa-arrow-left"></i>
+        Voltar para a página inicial
       </a>
+      </div>
     </section>
   </div>
 
