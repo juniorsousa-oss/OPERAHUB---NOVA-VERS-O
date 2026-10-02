@@ -2290,3 +2290,248 @@ button,input{font:inherit}
     height:52px;
   }
 }
+
+
+/* =========================================================
+   OPERA HUB — LOGIN MOBILE V2
+   Layout dedicado a smartphones / iOS Safari.
+   ========================================================= */
+@media (max-width:600px){
+  body.login-page{
+    display:block;
+    min-height:100vh;
+    min-height:100svh;
+    padding:0;
+    overflow-x:hidden;
+    background:#FFFFFF;
+  }
+
+  .login-page .login-shell{
+    width:100%;
+    min-height:100vh;
+    min-height:100svh;
+    height:auto;
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(178px,31svh) auto;
+    overflow:visible;
+    border:0;
+    border-radius:0;
+    box-shadow:none;
+  }
+
+  .login-page .login-visual{
+    height:100%;
+    min-height:0;
+    padding:
+      max(16px,env(safe-area-inset-top))
+      20px
+      18px;
+    border-radius:0;
+    justify-content:space-between;
+  }
+
+  .login-page .login-visual::after{
+    background:
+      linear-gradient(
+        180deg,
+        rgba(8,25,43,.72) 0%,
+        rgba(8,25,43,.58) 42%,
+        rgba(8,25,43,.90) 100%
+      );
+  }
+
+  .login-page .login-visual .brand{
+    min-height:34px;
+    height:34px;
+  }
+
+  .login-page .login-visual .brand-logo-img{
+    width:auto;
+    max-width:158px;
+    max-height:32px;
+    object-fit:contain;
+  }
+
+  .login-page .login-copy-panel{
+    width:100%;
+    max-width:100%;
+  }
+
+  .login-page .login-copy-panel span{
+    margin-bottom:7px;
+    font-size:7px;
+    letter-spacing:3.2px;
+  }
+
+  .login-page .login-copy-panel h1{
+    max-width:330px;
+    font-size:22px;
+    line-height:1.08;
+    letter-spacing:-.35px;
+  }
+
+  .login-page .login-copy-panel h1 strong{
+    margin-top:3px;
+  }
+
+  .login-page .login-copy-panel p{
+    display:none;
+  }
+
+  .login-page .login-form-panel{
+    height:auto;
+    min-height:0;
+    align-items:flex-start;
+    justify-content:center;
+    padding:
+      22px
+      20px
+      max(22px,env(safe-area-inset-bottom));
+    background:#FFFFFF;
+  }
+
+  .login-page .login-form-inner{
+    width:100%;
+    max-width:390px;
+    margin:0 auto;
+  }
+
+  .login-page .login-form-panel .login-badge{
+    padding:6px 9px;
+    font-size:8px;
+    letter-spacing:.45px;
+  }
+
+  .login-page .login-form-panel h2{
+    margin:13px 0 4px;
+    font-size:22px;
+    line-height:1.12;
+    letter-spacing:-.3px;
+  }
+
+  .login-page .login-form-inner>p{
+    margin:0 0 16px;
+    font-size:10.5px;
+    line-height:1.35;
+  }
+
+  .login-page .flash{
+    margin:0 0 11px;
+    padding:9px 11px;
+    font-size:9.5px;
+    border-radius:9px;
+  }
+
+  .login-page .login-form-panel form{
+    gap:7px;
+  }
+
+  .login-page .login-form-panel label{
+    font-size:10px;
+  }
+
+  .login-page .login-password input{
+    height:43px;
+    border-radius:11px;
+    padding:0 42px 0 12px;
+    font-size:14px;
+  }
+
+  .login-page .login-password i,
+  .login-page .login-password svg{
+    right:13px;
+    font-size:14px;
+  }
+
+  .login-page .login-form-panel button{
+    height:44px;
+    margin-top:2px;
+    border-radius:11px;
+    font-size:13px;
+  }
+
+  .login-page .login-back{
+    margin-top:12px;
+    gap:6px;
+    font-size:10px;
+  }
+}
+
+@media (max-width:380px){
+  .login-page .login-shell{
+    grid-template-rows:minmax(164px,29svh) auto;
+  }
+
+  .login-page .login-visual{
+    padding:
+      max(13px,env(safe-area-inset-top))
+      16px
+      15px;
+  }
+
+  .login-page .login-visual .brand-logo-img{
+    max-width:145px;
+    max-height:29px;
+  }
+
+  .login-page .login-copy-panel h1{
+    max-width:300px;
+    font-size:20px;
+  }
+
+  .login-page .login-form-panel{
+    padding-left:16px;
+    padding-right:16px;
+    padding-top:18px;
+  }
+
+  .login-page .login-form-panel h2{
+    font-size:20px;
+  }
+
+  .login-page .login-form-inner>p{
+    margin-bottom:13px;
+  }
+}
+
+@media (max-height:720px) and (max-width:600px){
+  .login-page .login-shell{
+    grid-template-rows:168px auto;
+  }
+
+  .login-page .login-visual{
+    padding-top:max(12px,env(safe-area-inset-top));
+    padding-bottom:14px;
+  }
+
+  .login-page .login-copy-panel h1{
+    font-size:19px;
+  }
+
+  .login-page .login-form-panel{
+    padding-top:16px;
+    padding-bottom:max(16px,env(safe-area-inset-bottom));
+  }
+
+  .login-page .login-form-panel .login-badge{
+    padding:5px 8px;
+  }
+
+  .login-page .login-form-panel h2{
+    margin-top:10px;
+  }
+
+  .login-page .login-form-inner>p{
+    margin-bottom:11px;
+  }
+
+  .login-page .login-password input,
+  .login-page .login-form-panel button{
+    height:40px;
+  }
+
+  .login-page .login-back{
+    margin-top:9px;
+  }
+}
