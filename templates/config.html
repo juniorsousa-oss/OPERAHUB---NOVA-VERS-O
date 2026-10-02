@@ -68,7 +68,16 @@
 
         <div class="nav-user">
           {% if current_user %}
-            <div class="avatar">{{ current_user['initials'] }}</div>
+            <div class="avatar {{ 'has-photo' if current_user['has_avatar'] else '' }}">
+              {% if current_user['has_avatar'] %}
+                <img
+                  src="{{ url_for('user_avatar_asset', user_id=current_user['id']) }}"
+                  alt="{{ current_user['name'] }}"
+                >
+              {% else %}
+                {{ current_user['initials'] }}
+              {% endif %}
+            </div>
             <div>
               <strong>{{ current_user['name'] }}</strong>
               <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
@@ -108,7 +117,16 @@
           {% if current_user %}
           <div class="user-session">
             <div class="user-chip">
-              <div class="avatar small">{{ current_user['initials'] }}</div>
+              <div class="avatar small {{ 'has-photo' if current_user['has_avatar'] else '' }}">
+                {% if current_user['has_avatar'] %}
+                  <img
+                    src="{{ url_for('user_avatar_asset', user_id=current_user['id']) }}"
+                    alt="{{ current_user['name'] }}"
+                  >
+                {% else %}
+                  {{ current_user['initials'] }}
+                {% endif %}
+              </div>
               <div class="user-copy">
                 <strong>{{ current_user['name'] }}</strong>
                 <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
@@ -167,6 +185,7 @@
       </div>
 
       <form method="post" enctype="multipart/form-data" id="settingsForm">
+        <input type="hidden" name="user_avatar_target" value="">
 
         <!-- IDENTIDADE VISUAL -->
         <section class="config-tab-panel active" data-tab-panel="identity">
@@ -398,10 +417,7 @@
                   {% for app_item in applications %}
                   <article
                     class="app-config-card"
-                    style="
-                      --preview-accent: {{ app_item['accent_color'] or '#F4B400' }};
-                      --preview-icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};
-                    "
+                    style="--preview-icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};"
                     data-app-config
                   >
                     <div class="app-config-head">
@@ -450,17 +466,41 @@
                         </div>
                       </label>
 
-                      <label class="field-label color-field">
-                        Cor do card
-                        <div class="color-control">
-                          <input
-                            class="color-input"
-                            type="color"
-                            name="app_color_{{ app_item['key'] }}"
-                            value="{{ app_item['accent_color'] or '#F4B400' }}"
-                            data-color-input
+                      <label class="field-label">
+                        Status do módulo
+                        <div class="status-control">
+                          <select
+                            class="url-input status-select"
+                            name="app_status_{{ app_item['key'] }}"
+                            data-status-select
                           >
-                          <span>{{ app_item['accent_color'] or '#F4B400' }}</span>
+                            <option value="online" {% if app_item['status'] == 'online' %}selected{% endif %}>
+                              Online
+                            </option>
+                            <option value="development" {% if app_item['status'] == 'development' %}selected{% endif %}>
+                              Em desenvolvimento
+                            </option>
+                            <option value="maintenance" {% if app_item['status'] == 'maintenance' %}selected{% endif %}>
+                              Em manutenção
+                            </option>
+                          </select>
+
+                          {% set status_key = app_item['status'] or 'online' %}
+                          <span
+                            class="status-pill status-{{ status_key }}"
+                            data-status-preview
+                          >
+                            <span></span>
+                            <b data-status-label>
+                              {% if status_key == 'development' %}
+                                Em desenvolvimento
+                              {% elif status_key == 'maintenance' %}
+                                Em manutenção
+                              {% else %}
+                                Online
+                              {% endif %}
+                            </b>
+                          </span>
                         </div>
                       </label>
 
@@ -710,6 +750,17 @@
                     autocomplete="new-password"
                   >
                 </label>
+
+                <label class="field-label user-avatar-field">
+                  Foto do usuário
+                  <input
+                    class="file-input"
+                    type="file"
+                    name="user_avatar"
+                    accept=".png,.jpg,.jpeg,.webp,image/*"
+                  >
+                  <small>Opcional. Até 5 MB; a imagem será exibida em formato circular.</small>
+                </label>
               </div>
 
               <div class="user-create-actions">
@@ -745,8 +796,15 @@
               <div class="users-list">
                 {% for user in users %}
                 <article class="user-row">
-                  <div class="user-row-avatar">
-                    {{ (user['full_name'][:1] ~ (user['full_name'].split()[-1][:1] if user['full_name'].split()|length > 1 else ''))|upper }}
+                  <div class="user-row-avatar {{ 'has-photo' if user['has_avatar'] else '' }}">
+                    {% if user['has_avatar'] %}
+                      <img
+                        src="{{ url_for('user_avatar_asset', user_id=user['id'], v=user['updated_at']) }}"
+                        alt="{{ user['full_name'] }}"
+                      >
+                    {% else %}
+                      {{ (user['full_name'][:1] ~ (user['full_name'].split()[-1][:1] if user['full_name'].split()|length > 1 else ''))|upper }}
+                    {% endif %}
                   </div>
 
                   <div class="user-row-main">
@@ -775,6 +833,37 @@
                         Nunca
                       {% endif %}
                     </strong>
+                  </div>
+
+                  <div class="user-avatar-actions">
+                    <input
+                      class="user-avatar-input"
+                      type="file"
+                      name="user_avatar_{{ user['id'] }}"
+                      accept=".png,.jpg,.jpeg,.webp,image/*"
+                    >
+
+                    {% if user['has_avatar'] %}
+                    <label class="user-avatar-remove">
+                      <input
+                        type="checkbox"
+                        name="remove_user_avatar_{{ user['id'] }}"
+                      >
+                      Remover
+                    </label>
+                    {% endif %}
+
+                    <button
+                      class="btn btn-secondary user-avatar-save"
+                      type="submit"
+                      name="config_action"
+                      value="update_user_avatar"
+                      formaction="{{ url_for('configuracoes') }}#login"
+                      onclick="this.form.user_avatar_target.value='{{ user['id'] }}'"
+                    >
+                      <i class="fa-regular fa-image"></i>
+                      Foto
+                    </button>
                   </div>
                 </article>
                 {% endfor %}
@@ -890,16 +979,6 @@
     } catch (_) {}
 
     document.querySelectorAll("[data-app-config]").forEach((card) => {
-      const picker = card.querySelector("[data-color-input]");
-      const label = card.querySelector(".color-control span");
-
-      if (picker) {
-        picker.addEventListener("input", () => {
-          card.style.setProperty("--preview-accent", picker.value);
-          if (label) label.textContent = picker.value.toUpperCase();
-        });
-      }
-
       const zoom = card.querySelector("[data-app-zoom]");
       const zoomValue = card.querySelector("[data-app-zoom-value]");
 
@@ -911,6 +990,32 @@
           );
           if (zoomValue) zoomValue.textContent = zoom.value + "%";
         });
+      }
+
+      const statusSelect = card.querySelector("[data-status-select]");
+      const statusPreview = card.querySelector("[data-status-preview]");
+      const statusLabel = card.querySelector("[data-status-label]");
+
+      if (statusSelect && statusPreview && statusLabel) {
+        const updateStatusPreview = () => {
+          const value = statusSelect.value;
+          const labels = {
+            online: "Online",
+            development: "Em desenvolvimento",
+            maintenance: "Em manutenção",
+          };
+
+          statusPreview.classList.remove(
+            "status-online",
+            "status-development",
+            "status-maintenance"
+          );
+          statusPreview.classList.add("status-" + value);
+          statusLabel.textContent = labels[value] || "Online";
+        };
+
+        statusSelect.addEventListener("change", updateStatusPreview);
+        updateStatusPreview();
       }
     });
 
