@@ -1,11 +1,13 @@
 import base64
 import os
 import re
+import time
 import unicodedata
 from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
+from requests.adapters import HTTPAdapter
 from PIL import Image, ImageOps
 from flask import (
     Flask,
@@ -39,6 +41,25 @@ HERO_IMAGE = (
 
 HERO_CACHE = {}
 APP_IMAGE_CACHE = {}
+RUNTIME_CACHE = {}
+
+HTTP = requests.Session()
+HTTP.mount("https://", HTTPAdapter(pool_connections=20, pool_maxsize=20))
+HTTP.mount("http://", HTTPAdapter(pool_connections=10, pool_maxsize=10))
+
+BOOTSTRAP_TTL = 120
+USERS_TTL = 45
+ASSET_DATA_TTL = 900
+
+WRITE_RPCS = {
+    "operahub_create_user_v2",
+    "operahub_update_user_avatar",
+    "operahub_set_login_required",
+    "operahub_save_login_visual",
+    "operahub_save_settings_v3",
+    "operahub_save_nav",
+    "operahub_save_apps_v4",
+}
 
 
 DEFAULT_SETTINGS = {
@@ -85,6 +106,30 @@ DEFAULT_APPLICATIONS = [
 ]
 
 
+def cache_get(key, ttl):
+    item = RUNTIME_CACHE.get(key)
+    if not item:
+        return None
+
+    created_at, value = item
+    if (time.monotonic() - created_at) > ttl:
+        RUNTIME_CACHE.pop(key, None)
+        return None
+
+    return value
+
+
+def cache_set(key, value):
+    RUNTIME_CACHE[key] = (time.monotonic(), value)
+    return value
+
+
+def invalidate_runtime_caches():
+    RUNTIME_CACHE.clear()
+    HERO_CACHE.clear()
+    APP_IMAGE_CACHE.clear()
+
+
 def sb_headers():
     return {
         "apikey": SUPABASE_KEY,
@@ -94,7 +139,7 @@ def sb_headers():
 
 
 def sb_get(table, params):
-    response = requests.get(
+    response = HTTP.get(
         f"{SUPABASE_URL}/rest/v1/{table}",
         headers=sb_headers(),
         params=params,
@@ -109,7 +154,7 @@ def sb_rpc(name, payload):
         raise RuntimeError(
             "SUPABASE_WRITE_TOKEN não configurado no Render."
         )
-    response = requests.post(
+    response = HTTP.post(
         f"{SUPABASE_URL}/rest/v1/rpc/{name}",
         headers=sb_headers(),
         json={"p_token": SUPABASE_WRITE_TOKEN, **payload},
@@ -117,12 +162,18 @@ def sb_rpc(name, payload):
     )
     response.raise_for_status()
     if not response.content:
-        return None
-    return response.json()
+        result = None
+    else:
+        result = response.json()
+
+    if name in WRITE_RPCS:
+        invalidate_runtime_caches()
+
+    return result
 
 
 def sb_rpc_public(name, payload=None):
-    response = requests.post(
+    response = HTTP.post(
         f"{SUPABASE_URL}/rest/v1/rpc/{name}",
         headers=sb_headers(),
         json=payload or {},
@@ -134,88 +185,43 @@ def sb_rpc_public(name, payload=None):
     return response.json()
 
 
-def load_settings():
-    try:
-        rows = sb_get(
-            "operahub_settings",
-            {
-                "id": "eq.main",
-                "select": (
-                    "id,logo_width,has_logo,has_favicon,"
-                    "has_hero,hero_pos_x,hero_pos_y,hero_zoom,"
-                    "login_required,has_login_image,login_pos_x,"
-                    "login_pos_y,login_zoom,updated_at"
-                ),
-                "limit": "1",
-            },
-        )
-        if rows:
-            data = dict(DEFAULT_SETTINGS)
-            data.update(rows[0])
-            data["logo_width"] = max(
-                80,
-                min(240, int(data.get("logo_width") or 190)),
-            )
-            data["hero_pos_x"] = max(
-                0,
-                min(100, int(data.get("hero_pos_x") or 50)),
-            )
-            data["hero_pos_y"] = max(
-                0,
-                min(100, int(data.get("hero_pos_y") or 50)),
-            )
-            data["hero_zoom"] = max(
-                100,
-                min(220, int(data.get("hero_zoom") or 100)),
-            )
-            data["login_pos_x"] = max(
-                0,
-                min(100, int(data.get("login_pos_x") or 50)),
-            )
-            data["login_pos_y"] = max(
-                0,
-                min(100, int(data.get("login_pos_y") or 50)),
-            )
-            data["login_zoom"] = max(
-                100,
-                min(220, int(data.get("login_zoom") or 100)),
-            )
-            return data
-    except Exception:
-        pass
-    return dict(DEFAULT_SETTINGS)
+def normalize_settings(row):
+    data = dict(DEFAULT_SETTINGS)
+    if isinstance(row, dict):
+        data.update(row)
+
+    data["logo_width"] = max(
+        80,
+        min(240, int(data.get("logo_width") or 190)),
+    )
+    data["hero_pos_x"] = max(
+        0,
+        min(100, int(data.get("hero_pos_x") or 50)),
+    )
+    data["hero_pos_y"] = max(
+        0,
+        min(100, int(data.get("hero_pos_y") or 50)),
+    )
+    data["hero_zoom"] = max(
+        100,
+        min(220, int(data.get("hero_zoom") or 100)),
+    )
+    data["login_pos_x"] = max(
+        0,
+        min(100, int(data.get("login_pos_x") or 50)),
+    )
+    data["login_pos_y"] = max(
+        0,
+        min(100, int(data.get("login_pos_y") or 50)),
+    )
+    data["login_zoom"] = max(
+        100,
+        min(220, int(data.get("login_zoom") or 100)),
+    )
+    return data
 
 
-def load_nav():
-    try:
-        rows = sb_get(
-            "operahub_nav_items",
-            {"select": "*", "order": "sort_order.asc"},
-        )
-        if rows:
-            return rows
-    except Exception:
-        pass
-    return [dict(item) for item in DEFAULT_NAV_ITEMS]
-
-
-def load_apps():
-    try:
-        rows = sb_get(
-            "operahub_applications",
-            {
-                "select": (
-                    "key,name,description,icon,status,url,"
-                    "sort_order,new_tab,has_image,image_zoom,updated_at"
-                ),
-                "order": "sort_order.asc",
-            },
-        )
-        if rows:
-            return rows
-    except Exception:
-        pass
-
+def fallback_apps():
     items = []
     for item in DEFAULT_APPLICATIONS:
         data = dict(item)
@@ -224,6 +230,58 @@ def load_apps():
         data["updated_at"] = ""
         items.append(data)
     return items
+
+
+def load_bootstrap():
+    cached = cache_get("bootstrap", BOOTSTRAP_TTL)
+    if cached is not None:
+        return cached
+
+    fallback = {
+        "settings": dict(DEFAULT_SETTINGS),
+        "nav": [dict(item) for item in DEFAULT_NAV_ITEMS],
+        "applications": fallback_apps(),
+        "has_users": False,
+    }
+
+    try:
+        payload = sb_rpc_public("operahub_bootstrap")
+        if isinstance(payload, dict):
+            settings = normalize_settings(payload.get("settings") or {})
+            nav_items = payload.get("nav") or fallback["nav"]
+            applications = (
+                payload.get("applications")
+                or fallback["applications"]
+            )
+            result = {
+                "settings": settings,
+                "nav": nav_items,
+                "applications": applications,
+                "has_users": bool(payload.get("has_users")),
+            }
+            return cache_set("bootstrap", result)
+    except Exception:
+        pass
+
+    return cache_set("bootstrap", fallback)
+
+
+def load_settings():
+    return dict(load_bootstrap()["settings"])
+
+
+def load_nav():
+    return [
+        dict(item)
+        for item in load_bootstrap()["nav"]
+    ]
+
+
+def load_apps():
+    return [
+        dict(item)
+        for item in load_bootstrap()["applications"]
+    ]
 
 
 def safe_url(value):
@@ -294,6 +352,14 @@ def humanize_save_error(exc):
 
 
 def asset_data(table, column, key_column, key_value):
+    cache_key = (
+        f"asset:{table}:{column}:{key_column}:{key_value}"
+    )
+    cached = cache_get(cache_key, ASSET_DATA_TTL)
+    if cached is not None:
+        return cached
+
+    value = ""
     try:
         rows = sb_get(
             table,
@@ -304,10 +370,11 @@ def asset_data(table, column, key_column, key_value):
             },
         )
         if rows:
-            return rows[0].get(column) or ""
+            value = rows[0].get(column) or ""
     except Exception:
         pass
-    return ""
+
+    return cache_set(cache_key, value)
 
 
 def binary_response(raw, mime, max_age=3600):
@@ -458,19 +525,21 @@ def admin_enabled():
 
 
 def auth_users_exist():
-    try:
-        result = sb_rpc_public("operahub_has_users")
-        return bool(result)
-    except Exception:
-        return False
+    return bool(load_bootstrap().get("has_users"))
 
 
 def load_users():
     if not SUPABASE_WRITE_TOKEN:
         return []
+
+    cached = cache_get("users", USERS_TTL)
+    if cached is not None:
+        return [dict(row) for row in cached]
+
     try:
-        rows = sb_rpc("operahub_list_users", {})
-        return rows or []
+        rows = sb_rpc("operahub_list_users", {}) or []
+        cache_set("users", rows)
+        return [dict(row) for row in rows]
     except Exception:
         return []
 
@@ -530,7 +599,7 @@ def logo_asset():
         "id",
         "main",
     )
-    response = data_uri_response(data)
+    response = data_uri_response(data, max_age=2592000)
     if response is not None:
         return response
     return redirect(url_for("static", filename="favicon.svg"))
@@ -606,7 +675,7 @@ def login_image_asset():
     )
     response = data_uri_response(
         data,
-        max_age=604800,
+        max_age=2592000,
     )
     if response is not None:
         return response
@@ -676,15 +745,24 @@ def user_avatar_asset(user_id):
     if not is_logged_in():
         return ("", 403)
 
-    try:
-        data = sb_rpc_public(
-            "operahub_get_user_avatar",
-            {"p_user_id": user_id},
-        )
-    except Exception:
-        data = ""
+    version = request.args.get("v", "current")
+    cache_key = f"user-avatar:{user_id}:{version}"
+    data = cache_get(cache_key, ASSET_DATA_TTL)
 
-    response = data_uri_response(data, max_age=300)
+    if data is None:
+        try:
+            data = sb_rpc_public(
+                "operahub_get_user_avatar",
+                {"p_user_id": user_id},
+            ) or ""
+        except Exception:
+            data = ""
+        cache_set(cache_key, data)
+
+    response = data_uri_response(
+        data,
+        max_age=2592000,
+    )
     if response is not None:
         return response
     return ("", 404)
