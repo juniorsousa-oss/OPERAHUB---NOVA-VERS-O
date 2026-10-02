@@ -381,7 +381,7 @@
               <span class="settings-accordion-icon"><i class="fa-regular fa-image"></i></span>
               <span class="settings-accordion-copy">
                 <strong>Imagem da tela de login</strong>
-                <small>Personalize a imagem lateral e ajuste o enquadramento</small>
+                <small>A imagem preenche toda a área automaticamente; ajuste apenas zoom e posição horizontal</small>
               </span>
               <span class="settings-accordion-status">
                 {{ 'Personalizada' if settings['has_login_image'] else 'Usando banner principal' }}
@@ -397,8 +397,7 @@
                   style="
                     --login-preview-image:url('{{ url_for('login_image_asset', v=settings['updated_at']) if settings['has_login_image'] else url_for('hero_asset', v=settings['updated_at']) }}');
                     --login-preview-x:{{ settings['login_pos_x'] }}%;
-                    --login-preview-y:{{ settings['login_pos_y'] }}%;
-                    --login-preview-zoom:{{ settings['login_zoom'] }}%;
+                    --login-preview-scale:{{ settings['login_zoom'] / 100 }};
                   "
                 >
                   <div class="login-preview-logo">
@@ -465,22 +464,6 @@
                       >
                     </label>
 
-                    <label class="hero-adjust-control">
-                      <span>
-                        Posição vertical
-                        <strong><span id="loginPosYValue">{{ settings['login_pos_y'] }}</span>%</strong>
-                      </span>
-                      <input
-                        id="login_pos_y"
-                        class="range-input"
-                        type="range"
-                        name="login_pos_y"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value="{{ settings['login_pos_y'] }}"
-                      >
-                    </label>
                   </div>
 
                   <div class="login-visual-actions">
@@ -1199,18 +1182,16 @@
     const loginImageUpload = document.getElementById("loginImageUpload");
     const loginZoom = document.getElementById("login_zoom");
     const loginPosX = document.getElementById("login_pos_x");
-    const loginPosY = document.getElementById("login_pos_y");
     const loginZoomValue = document.getElementById("loginZoomValue");
     const loginPosXValue = document.getElementById("loginPosXValue");
-    const loginPosYValue = document.getElementById("loginPosYValue");
 
     function updateLoginVisualPreview() {
       if (!loginVisualPreview) return;
 
       if (loginZoom) {
         loginVisualPreview.style.setProperty(
-          "--login-preview-zoom",
-          loginZoom.value + "%"
+          "--login-preview-scale",
+          String(Number(loginZoom.value) / 100)
         );
         if (loginZoomValue) loginZoomValue.textContent = loginZoom.value;
       }
@@ -1223,16 +1204,9 @@
         if (loginPosXValue) loginPosXValue.textContent = loginPosX.value;
       }
 
-      if (loginPosY) {
-        loginVisualPreview.style.setProperty(
-          "--login-preview-y",
-          loginPosY.value + "%"
-        );
-        if (loginPosYValue) loginPosYValue.textContent = loginPosY.value;
-      }
     }
 
-    [loginZoom, loginPosX, loginPosY].forEach((control) => {
+    [loginZoom, loginPosX].forEach((control) => {
       if (control) {
         control.addEventListener("input", updateLoginVisualPreview);
       }
