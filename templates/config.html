@@ -772,26 +772,6 @@
             </article>
           </div>
 
-          
-
-          <div class="login-visual-shortcut">
-            <div class="login-visual-shortcut-icon">
-              <i class="fa-regular fa-image"></i>
-            </div>
-            <div class="login-visual-shortcut-copy">
-              <strong>Imagem da tela de login</strong>
-              <span>A personalização visual fica em Identidade visual.</span>
-            </div>
-            <button
-              class="btn btn-secondary btn-compact"
-              type="button"
-              data-open-login-visual
-            >
-              <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              Personalizar imagem
-            </button>
-          </div>
-
           <details class="settings-accordion" {% if not auth_users_exist %}open{% endif %}>
             <summary>
               <span class="settings-accordion-icon"><i class="fa-solid fa-user-plus"></i></span>
@@ -1068,19 +1048,6 @@
         activateConfigTab(button.dataset.configTab);
       });
     });
-
-    document.querySelectorAll("[data-open-login-visual]").forEach((button) => {
-      button.addEventListener("click", () => {
-        activateConfigTab("identity");
-
-        const visualSettings = document.getElementById("loginVisualSettings");
-        if (visualSettings) {
-          visualSettings.open = true;
-          window.requestAnimationFrame(() => {
-            visualSettings.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
           });
         }
       });
