@@ -64,15 +64,15 @@ DEFAULT_NAV_ITEMS = [
 ]
 
 DEFAULT_APPLICATIONS = [
-    {"key": "gestao-equipes", "name": "GESTÃO DE EQUIPES", "description": "Acompanhamento de indicadores e equipes.", "icon": "fa-solid fa-people-group", "accent": "gold", "status": "ONLINE", "url": "", "sort_order": 1, "new_tab": True},
-    {"key": "conversor-mrp", "name": "CONVERSOR MRP", "description": "Conversor de relatórios para alimentação MRP.", "icon": "fa-solid fa-file-circle-check", "accent": "blue", "status": "ONLINE", "url": "", "sort_order": 2, "new_tab": True},
-    {"key": "mrp", "name": "MRP", "description": "Demanda e necessidade de materiais.", "icon": "fa-solid fa-clipboard-list", "accent": "amber", "status": "ONLINE", "url": "", "sort_order": 3, "new_tab": True},
-    {"key": "gestao-entregas", "name": "GESTÃO DE ENTREGAS", "description": "Controle de entrega de OPs e cronograma.", "icon": "fa-solid fa-truck-fast", "accent": "orange", "status": "ONLINE", "url": "", "sort_order": 4, "new_tab": True},
-    {"key": "inventario-rotativo", "name": "INVENTÁRIO ROTATIVO", "description": "Acompanhamento e geração de inventários.", "icon": "fa-solid fa-boxes-stacked", "accent": "green", "status": "WORK", "url": "", "sort_order": 5, "new_tab": True},
-    {"key": "smtc", "name": "SMTC", "description": "Acompanhamento, armazenamento e reposição de parafusos, porcas e arruelas.", "icon": "fa-solid fa-screwdriver-wrench", "accent": "steel", "status": "WORK", "url": "", "sort_order": 6, "new_tab": True},
-    {"key": "gestao-nfs", "name": "GESTÃO DE NFS", "description": "Controle de realização e envio de NFs para lançamento.", "icon": "fa-solid fa-file-invoice-dollar", "accent": "violet", "status": "ONLINE", "url": "", "sort_order": 7, "new_tab": True},
-    {"key": "fechamento-mensal", "name": "FECHAMENTO MENSAL", "description": "Auditoria de baixas, acompanhamento da evolução de estoque mês a mês.", "icon": "fa-solid fa-chart-simple", "accent": "peach", "status": "WORK", "url": "", "sort_order": 8, "new_tab": True},
-    {"key": "monitor-apis", "name": "MONITOR DE APIs", "description": "Painel de verificação de status de conexão de APIs.", "icon": "fa-solid fa-network-wired", "accent": "sky", "status": "WORK", "url": "", "sort_order": 9, "new_tab": True},
+    {"key": "gestao-equipes", "name": "GESTÃO DE EQUIPES", "description": "Acompanhamento de indicadores e equipes.", "icon": "fa-solid fa-people-group", "status": "online", "url": "", "sort_order": 1, "new_tab": True},
+    {"key": "conversor-mrp", "name": "CONVERSOR MRP", "description": "Conversor de relatórios para alimentação MRP.", "icon": "fa-solid fa-file-circle-check", "status": "online", "url": "", "sort_order": 2, "new_tab": True},
+    {"key": "mrp", "name": "MRP", "description": "Demanda e necessidade de materiais.", "icon": "fa-solid fa-clipboard-list", "status": "online", "url": "", "sort_order": 3, "new_tab": True},
+    {"key": "gestao-entregas", "name": "GESTÃO DE ENTREGAS", "description": "Controle de entrega de OPs e cronograma.", "icon": "fa-solid fa-truck-fast", "status": "online", "url": "", "sort_order": 4, "new_tab": True},
+    {"key": "inventario-rotativo", "name": "INVENTÁRIO ROTATIVO", "description": "Acompanhamento e geração de inventários.", "icon": "fa-solid fa-boxes-stacked", "status": "development", "url": "", "sort_order": 5, "new_tab": True},
+    {"key": "smtc", "name": "SMTC", "description": "Acompanhamento, armazenamento e reposição de parafusos, porcas e arruelas.", "icon": "fa-solid fa-screwdriver-wrench", "status": "development", "url": "", "sort_order": 6, "new_tab": True},
+    {"key": "gestao-nfs", "name": "GESTÃO DE NFS", "description": "Controle de realização e envio de NFs para lançamento.", "icon": "fa-solid fa-file-invoice-dollar", "status": "online", "url": "", "sort_order": 7, "new_tab": True},
+    {"key": "fechamento-mensal", "name": "FECHAMENTO MENSAL", "description": "Auditoria de baixas, acompanhamento da evolução de estoque mês a mês.", "icon": "fa-solid fa-chart-simple", "status": "development", "url": "", "sort_order": 8, "new_tab": True},
+    {"key": "monitor-apis", "name": "MONITOR DE APIs", "description": "Painel de verificação de status de conexão de APIs.", "icon": "fa-solid fa-network-wired", "status": "development", "url": "", "sort_order": 9, "new_tab": True},
 ]
 
 
@@ -183,8 +183,8 @@ def load_apps():
             "operahub_applications",
             {
                 "select": (
-                    "key,name,description,icon,accent,status,url,"
-                    "sort_order,new_tab,accent_color,has_image,image_zoom,updated_at"
+                    "key,name,description,icon,status,url,"
+                    "sort_order,new_tab,has_image,image_zoom,updated_at"
                 ),
                 "order": "sort_order.asc",
             },
@@ -194,24 +194,9 @@ def load_apps():
     except Exception:
         pass
 
-    fallback_colors = {
-        "gold": "#F4B400",
-        "blue": "#4F7FE8",
-        "amber": "#F2A11B",
-        "orange": "#F58B38",
-        "green": "#36B66F",
-        "steel": "#6998CF",
-        "violet": "#8B67E8",
-        "peach": "#EF9A54",
-        "sky": "#5F9FDB",
-    }
     items = []
     for item in DEFAULT_APPLICATIONS:
         data = dict(item)
-        data["accent_color"] = fallback_colors.get(
-            data.get("accent"),
-            "#F4B400",
-        )
         data["has_image"] = False
         data["image_zoom"] = 142
         data["updated_at"] = ""
@@ -284,17 +269,6 @@ def humanize_save_error(exc):
         )
 
     return "Não foi possível concluir a alteração. Revise os dados e tente novamente."
-
-
-def safe_hex_color(value, fallback="#F4B400"):
-    value = (value or "").strip()
-    if (
-        len(value) == 7
-        and value.startswith("#")
-        and all(ch in "0123456789abcdefABCDEF" for ch in value[1:])
-    ):
-        return value.upper()
-    return fallback
 
 
 def asset_data(table, column, key_column, key_value):
@@ -389,6 +363,7 @@ def current_user():
             "email": session.get("user_email") or "",
             "role": session.get("user_role") or "user",
             "initials": initials,
+            "has_avatar": bool(session.get("user_has_avatar")),
             "legacy": False,
         }
 
@@ -400,6 +375,7 @@ def current_user():
             "email": "",
             "role": "admin",
             "initials": "AD",
+            "has_avatar": False,
             "legacy": True,
         }
 
@@ -477,6 +453,25 @@ def application_asset(app_key):
     return ("", 404)
 
 
+@app.route("/assets/user/<user_id>")
+def user_avatar_asset(user_id):
+    if not is_logged_in():
+        return ("", 403)
+
+    try:
+        data = sb_rpc_public(
+            "operahub_get_user_avatar",
+            {"p_user_id": user_id},
+        )
+    except Exception:
+        data = ""
+
+    response = data_uri_response(data, max_age=300)
+    if response is not None:
+        return response
+    return ("", 404)
+
+
 @app.route("/")
 def index():
     settings = load_settings()
@@ -528,6 +523,10 @@ def configuracoes():
                 email = request.form.get("user_email", "").strip()
                 password = request.form.get("user_password", "")
                 role = request.form.get("user_role", "user")
+                avatar_data = file_to_data_uri(
+                    request.files.get("user_avatar"),
+                    5 * 1024 * 1024,
+                ) or ""
 
                 if not username or not full_name or not password:
                     raise ValueError(
@@ -535,16 +534,64 @@ def configuracoes():
                     )
 
                 sb_rpc(
-                    "operahub_create_user",
+                    "operahub_create_user_v2",
                     {
                         "p_username": username,
                         "p_full_name": full_name,
                         "p_email": email,
                         "p_password": password,
                         "p_role": role,
+                        "p_avatar_data": avatar_data,
                     },
                 )
                 flash("Usuário criado com sucesso.", "success")
+                return redirect(
+                    url_for("configuracoes", _anchor="login")
+                )
+
+            if config_action == "update_user_avatar":
+                target_user_id = request.form.get(
+                    "user_avatar_target",
+                    "",
+                ).strip()
+                if not target_user_id:
+                    raise ValueError("Usuário não identificado.")
+
+                avatar_file = request.files.get(
+                    f"user_avatar_{target_user_id}"
+                )
+                remove_avatar = request.form.get(
+                    f"remove_user_avatar_{target_user_id}"
+                ) == "on"
+                avatar_data = (
+                    ""
+                    if remove_avatar
+                    else (
+                        file_to_data_uri(
+                            avatar_file,
+                            5 * 1024 * 1024,
+                        )
+                        or ""
+                    )
+                )
+
+                if not remove_avatar and not avatar_data:
+                    raise ValueError(
+                        "Selecione uma foto antes de salvar."
+                    )
+
+                sb_rpc(
+                    "operahub_update_user_avatar",
+                    {
+                        "p_user_id": target_user_id,
+                        "p_avatar_data": avatar_data,
+                    },
+                )
+
+                if session.get("user_id") == target_user_id:
+                    session["user_has_avatar"] = bool(avatar_data)
+
+                flash("Foto do usuário atualizada.", "success")
                 return redirect(
                     url_for("configuracoes", _anchor="login")
                 )
@@ -589,6 +636,11 @@ def configuracoes():
                 )
 
             app_payload = []
+            valid_statuses = {
+                "online",
+                "development",
+                "maintenance",
+            }
             for item in applications:
                 key = item["key"]
                 image_file = request.files.get(
@@ -602,10 +654,12 @@ def configuracoes():
                     10 * 1024 * 1024,
                 )
                 update_image = remove_image or new_image is not None
-                current_color = item.get(
-                    "accent_color",
-                    "#F4B400",
+                app_status = request.form.get(
+                    f"app_status_{key}",
+                    item.get("status", "online"),
                 )
+                if app_status not in valid_statuses:
+                    app_status = "online"
 
                 app_payload.append(
                     {
@@ -616,13 +670,7 @@ def configuracoes():
                         "new_tab": request.form.get(
                             f"app_new_tab_{key}"
                         ) == "on",
-                        "accent_color": safe_hex_color(
-                            request.form.get(
-                                f"app_color_{key}",
-                                current_color,
-                            ),
-                            current_color,
-                        ),
+                        "status": app_status,
                         "image_zoom": max(
                             100,
                             min(
@@ -748,7 +796,7 @@ def configuracoes():
             )
             sb_rpc("operahub_save_nav", {"p_items": nav_payload})
             sb_rpc(
-                "operahub_save_apps_v3",
+                "operahub_save_apps_v4",
                 {"p_items": app_payload},
             )
 
@@ -802,6 +850,9 @@ def login():
             session["user_name"] = user["full_name"]
             session["user_email"] = user.get("email") or ""
             session["user_role"] = user["role"]
+            session["user_has_avatar"] = bool(
+                user.get("has_avatar")
+            )
             session.permanent = True
             flash(
                 f"Bem-vindo, {user['full_name']}.",
