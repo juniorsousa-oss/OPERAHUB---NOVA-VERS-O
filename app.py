@@ -38,6 +38,7 @@ HERO_IMAGE = (
 )
 
 HERO_CACHE = {}
+APP_IMAGE_CACHE = {}
 
 
 DEFAULT_SETTINGS = {
@@ -360,7 +361,55 @@ def optimize_banner_data_uri(data_uri):
         return data_uri
 
 
-def file_to_data_uri(file_storage, max_bytes, optimize_banner=False):
+def optimize_app_icon_data_uri(data_uri):
+    mime, raw = data_uri_parts(data_uri)
+    if not mime or raw is None:
+        return data_uri
+
+    if mime == "image/svg+xml":
+        return data_uri
+
+    try:
+        with Image.open(BytesIO(raw)) as image:
+            image = ImageOps.exif_transpose(image)
+            image.thumbnail(
+                (320, 320),
+                Image.Resampling.LANCZOS,
+            )
+
+            has_alpha = (
+                image.mode in {"RGBA", "LA"}
+                or (
+                    image.mode == "P"
+                    and "transparency" in image.info
+                )
+            )
+            image = image.convert("RGBA" if has_alpha else "RGB")
+
+            output = BytesIO()
+            image.save(
+                output,
+                format="WEBP",
+                quality=84,
+                method=6,
+            )
+            optimized = output.getvalue()
+
+        if len(optimized) >= len(raw):
+            return data_uri
+
+        encoded = base64.b64encode(optimized).decode("ascii")
+        return f"data:image/webp;base64,{encoded}"
+    except Exception:
+        return data_uri
+
+
+def file_to_data_uri(
+    file_storage,
+    max_bytes,
+    optimize_banner=False,
+    optimize_app_icon=False,
+):
     if not file_storage or not file_storage.filename:
         return None
 
@@ -380,6 +429,9 @@ def file_to_data_uri(file_storage, max_bytes, optimize_banner=False):
 
     if optimize_banner:
         data_uri = optimize_banner_data_uri(data_uri)
+
+    if optimize_app_icon:
+        data_uri = optimize_app_icon_data_uri(data_uri)
 
     return data_uri
 
@@ -529,15 +581,58 @@ def hero_asset():
 
 @app.route("/assets/app/<app_key>")
 def application_asset(app_key):
+    version = request.args.get("v", "current")
+    cache_key = f"{app_key}:{version}"
+
+    cached = APP_IMAGE_CACHE.get(cache_key)
+    if cached:
+        raw, mime = cached
+        return binary_response(
+            raw,
+            mime,
+            max_age=2592000,
+        )
+
     data = asset_data(
         "operahub_applications",
         "image_data",
         "key",
         app_key,
     )
-    response = data_uri_response(data)
-    if response is not None:
-        return response
+
+    if data:
+        optimized = optimize_app_icon_data_uri(data)
+        mime, raw = data_uri_parts(optimized)
+
+        if mime and raw is not None:
+            # Keep cache small and invalidate old versions of this module.
+            stale_keys = [
+                key for key in APP_IMAGE_CACHE
+                if key.startswith(f"{app_key}:")
+            ]
+            for key in stale_keys:
+                APP_IMAGE_CACHE.pop(key, None)
+
+            APP_IMAGE_CACHE[cache_key] = (raw, mime)
+
+            if optimized != data and SUPABASE_WRITE_TOKEN:
+                try:
+                    sb_rpc(
+                        "operahub_store_optimized_app_image",
+                        {
+                            "p_key": app_key,
+                            "p_image_data": optimized,
+                        },
+                    )
+                except Exception:
+                    pass
+
+            return binary_response(
+                raw,
+                mime,
+                max_age=2592000,
+            )
+
     return ("", 404)
 
 
@@ -740,6 +835,7 @@ def configuracoes():
                 new_image = file_to_data_uri(
                     image_file,
                     10 * 1024 * 1024,
+                    optimize_app_icon=True,
                 )
                 update_image = remove_image or new_image is not None
                 app_status = request.form.get(
