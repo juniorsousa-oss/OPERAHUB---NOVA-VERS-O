@@ -864,18 +864,7 @@ def configuracoes():
                         ),
                     ),
                 )
-                login_pos_y = max(
-                    0,
-                    min(
-                        100,
-                        int(
-                            request.form.get(
-                                "login_pos_y",
-                                settings.get("login_pos_y", 50),
-                            )
-                        ),
-                    ),
-                )
+                login_pos_y = 50
                 login_zoom = max(
                     100,
                     min(
