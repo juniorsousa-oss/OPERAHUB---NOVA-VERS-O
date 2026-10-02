@@ -9,6 +9,17 @@
 
   let toastTimer = null;
 
+  const flashToasts = Array.from(
+    document.querySelectorAll(".toast-flash.show")
+  );
+
+  flashToasts.forEach((flashToast) => {
+    window.setTimeout(() => {
+      flashToast.classList.remove("show");
+      window.setTimeout(() => flashToast.remove(), 280);
+    }, 3200);
+  });
+
   const showToast = (message) => {
     if (!toast) return;
     toast.textContent = message;
