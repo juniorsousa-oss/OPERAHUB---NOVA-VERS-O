@@ -20,6 +20,19 @@
     }, 3200);
   });
 
+  const successFlashes = Array.from(
+    document.querySelectorAll(".flash.success")
+  );
+
+  successFlashes.forEach((flashMessage) => {
+    window.setTimeout(() => {
+      flashMessage.style.transition = "opacity .25s ease, transform .25s ease";
+      flashMessage.style.opacity = "0";
+      flashMessage.style.transform = "translateY(-4px)";
+      window.setTimeout(() => flashMessage.remove(), 280);
+    }, 3600);
+  });
+
   const showToast = (message) => {
     if (!toast) return;
     toast.textContent = message;
