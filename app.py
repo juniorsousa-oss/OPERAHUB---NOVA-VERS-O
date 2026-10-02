@@ -51,6 +51,10 @@ DEFAULT_SETTINGS = {
     "hero_pos_y": 50,
     "hero_zoom": 100,
     "login_required": False,
+    "has_login_image": False,
+    "login_pos_x": 50,
+    "login_pos_y": 50,
+    "login_zoom": 100,
     "updated_at": "",
 }
 
@@ -139,7 +143,8 @@ def load_settings():
                 "select": (
                     "id,logo_width,has_logo,has_favicon,"
                     "has_hero,hero_pos_x,hero_pos_y,hero_zoom,"
-                    "login_required,updated_at"
+                    "login_required,has_login_image,login_pos_x,"
+                    "login_pos_y,login_zoom,updated_at"
                 ),
                 "limit": "1",
             },
@@ -162,6 +167,18 @@ def load_settings():
             data["hero_zoom"] = max(
                 100,
                 min(220, int(data.get("hero_zoom") or 100)),
+            )
+            data["login_pos_x"] = max(
+                0,
+                min(100, int(data.get("login_pos_x") or 50)),
+            )
+            data["login_pos_y"] = max(
+                0,
+                min(100, int(data.get("login_pos_y") or 50)),
+            )
+            data["login_zoom"] = max(
+                100,
+                min(220, int(data.get("login_zoom") or 100)),
             )
             return data
     except Exception:
@@ -579,6 +596,24 @@ def hero_asset():
     return redirect(HERO_IMAGE)
 
 
+@app.route("/assets/login-image")
+def login_image_asset():
+    data = asset_data(
+        "operahub_settings",
+        "login_image_data",
+        "id",
+        "main",
+    )
+    response = data_uri_response(
+        data,
+        max_age=604800,
+    )
+    if response is not None:
+        return response
+
+    return redirect(url_for("hero_asset"))
+
+
 @app.route("/assets/app/<app_key>")
 def application_asset(app_key):
     version = request.args.get("v", "current")
@@ -797,6 +832,79 @@ def configuracoes():
                 )
                 flash(
                     "Configuração de acesso atualizada.",
+                    "success",
+                )
+                return redirect(
+                    url_for("configuracoes", _anchor="login")
+                )
+
+            if config_action == "save_login_visual":
+                remove_login_image = (
+                    request.form.get("remove_login_image") == "on"
+                )
+                new_login_image = file_to_data_uri(
+                    request.files.get("login_image_upload"),
+                    10 * 1024 * 1024,
+                    optimize_banner=True,
+                )
+                update_login_image = (
+                    remove_login_image
+                    or new_login_image is not None
+                )
+
+                login_pos_x = max(
+                    0,
+                    min(
+                        100,
+                        int(
+                            request.form.get(
+                                "login_pos_x",
+                                settings.get("login_pos_x", 50),
+                            )
+                        ),
+                    ),
+                )
+                login_pos_y = max(
+                    0,
+                    min(
+                        100,
+                        int(
+                            request.form.get(
+                                "login_pos_y",
+                                settings.get("login_pos_y", 50),
+                            )
+                        ),
+                    ),
+                )
+                login_zoom = max(
+                    100,
+                    min(
+                        220,
+                        int(
+                            request.form.get(
+                                "login_zoom",
+                                settings.get("login_zoom", 100),
+                            )
+                        ),
+                    ),
+                )
+
+                sb_rpc(
+                    "operahub_save_login_visual",
+                    {
+                        "p_login_image_data": (
+                            ""
+                            if remove_login_image
+                            else (new_login_image or "")
+                        ),
+                        "p_update_login_image": update_login_image,
+                        "p_login_pos_x": login_pos_x,
+                        "p_login_pos_y": login_pos_y,
+                        "p_login_zoom": login_zoom,
+                    },
+                )
+                flash(
+                    "Imagem da tela de login atualizada.",
                     "success",
                 )
                 return redirect(
@@ -1063,12 +1171,24 @@ def login():
             "error",
         )
 
+    settings = load_settings()
     return render_template(
         "login.html",
-        settings=load_settings(),
+        settings=settings,
         admin_enabled=admin_enabled(),
         auth_users_exist=auth_users_exist(),
         next_url=next_url,
+        login_image=(
+            url_for(
+                "login_image_asset",
+                v=settings.get("updated_at", ""),
+            )
+            if settings.get("has_login_image")
+            else url_for(
+                "hero_asset",
+                v=settings.get("updated_at", ""),
+            )
+        ),
     )
 
 
