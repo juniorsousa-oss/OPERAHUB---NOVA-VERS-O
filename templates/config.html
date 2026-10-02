@@ -661,6 +661,134 @@
             </article>
           </div>
 
+          <details class="settings-accordion">
+            <summary>
+              <span class="settings-accordion-icon"><i class="fa-regular fa-image"></i></span>
+              <span class="settings-accordion-copy">
+                <strong>Imagem da tela de login</strong>
+                <small>Personalize a imagem lateral e ajuste o enquadramento</small>
+              </span>
+              <span class="settings-accordion-status">
+                {{ 'Personalizada' if settings['has_login_image'] else 'Usando banner principal' }}
+              </span>
+              <i class="fa-solid fa-chevron-down settings-accordion-chevron"></i>
+            </summary>
+
+            <div class="settings-accordion-body">
+              <div class="login-visual-settings">
+                <div
+                  id="loginVisualPreview"
+                  class="login-visual-preview"
+                  style="
+                    --login-preview-image:url('{{ url_for('login_image_asset', v=settings['updated_at']) if settings['has_login_image'] else url_for('hero_asset', v=settings['updated_at']) }}');
+                    --login-preview-x:{{ settings['login_pos_x'] }}%;
+                    --login-preview-y:{{ settings['login_pos_y'] }}%;
+                    --login-preview-zoom:{{ settings['login_zoom'] }}%;
+                  "
+                >
+                  <div class="login-preview-logo">
+                    {% if settings['has_logo'] %}
+                      <img
+                        src="{{ url_for('logo_asset', v=settings['updated_at']) }}"
+                        alt="Opera Hub"
+                      >
+                    {% else %}
+                      <span>∞ OPERA HUB</span>
+                    {% endif %}
+                  </div>
+                  <div class="login-preview-copy">
+                    <span>OPERAÇÕES CONECTADAS</span>
+                    <strong>Conecta processos.</strong>
+                    <b>Impulsiona resultados.</b>
+                  </div>
+                </div>
+
+                <div class="login-visual-controls">
+                  <label class="field-label">
+                    Nova imagem
+                    <input
+                      id="loginImageUpload"
+                      class="file-input"
+                      type="file"
+                      name="login_image_upload"
+                      accept=".png,.jpg,.jpeg,.webp,image/*"
+                    >
+                  </label>
+
+                  <div class="hero-adjust-grid">
+                    <label class="hero-adjust-control">
+                      <span>
+                        Zoom
+                        <strong><span id="loginZoomValue">{{ settings['login_zoom'] }}</span>%</strong>
+                      </span>
+                      <input
+                        id="login_zoom"
+                        class="range-input"
+                        type="range"
+                        name="login_zoom"
+                        min="100"
+                        max="220"
+                        step="1"
+                        value="{{ settings['login_zoom'] }}"
+                      >
+                    </label>
+
+                    <label class="hero-adjust-control">
+                      <span>
+                        Posição horizontal
+                        <strong><span id="loginPosXValue">{{ settings['login_pos_x'] }}</span>%</strong>
+                      </span>
+                      <input
+                        id="login_pos_x"
+                        class="range-input"
+                        type="range"
+                        name="login_pos_x"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value="{{ settings['login_pos_x'] }}"
+                      >
+                    </label>
+
+                    <label class="hero-adjust-control">
+                      <span>
+                        Posição vertical
+                        <strong><span id="loginPosYValue">{{ settings['login_pos_y'] }}</span>%</strong>
+                      </span>
+                      <input
+                        id="login_pos_y"
+                        class="range-input"
+                        type="range"
+                        name="login_pos_y"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value="{{ settings['login_pos_y'] }}"
+                      >
+                    </label>
+                  </div>
+
+                  <div class="login-visual-actions">
+                    <label class="check-wrap">
+                      <input type="checkbox" name="remove_login_image">
+                      Voltar a usar o banner principal
+                    </label>
+
+                    <button
+                      class="btn btn-primary"
+                      type="submit"
+                      name="config_action"
+                      value="save_login_visual"
+                    >
+                      <i class="fa-solid fa-floppy-disk"></i>
+                      Salvar imagem do login
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
           <details class="settings-accordion" {% if not auth_users_exist %}open{% endif %}>
             <summary>
               <span class="settings-accordion-icon"><i class="fa-solid fa-user-plus"></i></span>
@@ -1029,6 +1157,67 @@
         submitUserAvatarAction(button.dataset.userId, true);
       });
     });
+
+        const loginVisualPreview = document.getElementById("loginVisualPreview");
+    const loginImageUpload = document.getElementById("loginImageUpload");
+    const loginZoom = document.getElementById("login_zoom");
+    const loginPosX = document.getElementById("login_pos_x");
+    const loginPosY = document.getElementById("login_pos_y");
+    const loginZoomValue = document.getElementById("loginZoomValue");
+    const loginPosXValue = document.getElementById("loginPosXValue");
+    const loginPosYValue = document.getElementById("loginPosYValue");
+
+    function updateLoginVisualPreview() {
+      if (!loginVisualPreview) return;
+
+      if (loginZoom) {
+        loginVisualPreview.style.setProperty(
+          "--login-preview-zoom",
+          loginZoom.value + "%"
+        );
+        if (loginZoomValue) loginZoomValue.textContent = loginZoom.value;
+      }
+
+      if (loginPosX) {
+        loginVisualPreview.style.setProperty(
+          "--login-preview-x",
+          loginPosX.value + "%"
+        );
+        if (loginPosXValue) loginPosXValue.textContent = loginPosX.value;
+      }
+
+      if (loginPosY) {
+        loginVisualPreview.style.setProperty(
+          "--login-preview-y",
+          loginPosY.value + "%"
+        );
+        if (loginPosYValue) loginPosYValue.textContent = loginPosY.value;
+      }
+    }
+
+    [loginZoom, loginPosX, loginPosY].forEach((control) => {
+      if (control) {
+        control.addEventListener("input", updateLoginVisualPreview);
+      }
+    });
+
+    if (loginImageUpload) {
+      loginImageUpload.addEventListener("change", () => {
+        const file = loginImageUpload.files && loginImageUpload.files[0];
+        if (!file || !loginVisualPreview) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          loginVisualPreview.style.setProperty(
+            "--login-preview-image",
+            "url('" + reader.result + "')"
+          );
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    updateLoginVisualPreview();
 
         const heroPreview = document.getElementById("heroPreview");
     const heroUpload = document.getElementById("heroUpload");
