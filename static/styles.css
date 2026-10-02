@@ -1993,3 +1993,300 @@ button,input{font:inherit}
   }
 }
 
+
+
+/* =========================================================
+   OPERA HUB — MOBILE HOME V2
+   Refinamento dedicado a smartphones sem alterar desktop.
+   ========================================================= */
+@media (max-width:600px){
+  .home-page{
+    background:#F3F6FA;
+  }
+
+  .home-page .main-area{
+    padding:0 8px 14px;
+  }
+
+  /* Topo mais compacto e com melhor proporção */
+  .home-page .top-bar{
+    height:56px;
+    gap:7px;
+    margin:0 -8px;
+    padding:0 10px;
+  }
+  .home-page .mobile-menu{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(18,32,58,.06);
+    font-size:17px;
+  }
+  .home-page .search-wrap{
+    height:38px;
+    min-width:0;
+    padding:0 11px;
+    gap:8px;
+    border-radius:11px;
+  }
+  .home-page .search-wrap i{
+    font-size:15px;
+  }
+  .home-page .search-wrap input{
+    font-size:11.5px;
+  }
+  .home-page .top-actions{
+    gap:3px;
+  }
+  .home-page .user-chip{
+    padding:2px;
+    border-left:0;
+    background:transparent;
+  }
+  .home-page .avatar.small{
+    width:34px;
+    height:34px;
+  }
+  .home-page .logout-button{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    font-size:16px;
+  }
+
+  /* Banner pensado como peça mobile e não como desktop espremido */
+  .home-page .hero{
+    height:176px;
+    min-height:176px;
+    margin-top:8px;
+    padding:20px 20px 18px;
+    border-radius:14px;
+    align-items:flex-end;
+    background-size:cover,cover;
+    background-position:center,var(--hero-pos-x,50%) center;
+    box-shadow:0 9px 24px rgba(15,27,45,.10);
+  }
+  .home-page .hero::before{
+    background:
+      linear-gradient(
+        90deg,
+        rgba(7,23,41,.92) 0%,
+        rgba(7,23,41,.72) 62%,
+        rgba(7,23,41,.28) 100%
+      );
+  }
+  .home-page .hero-content{
+    max-width:100%;
+    width:100%;
+  }
+  .home-page .hero-kicker{
+    font-size:7.5px;
+    letter-spacing:3.2px;
+  }
+  .home-page .hero h1{
+    max-width:330px;
+    margin:9px 0 0;
+    font-size:22px;
+    line-height:1.12;
+    font-weight:500;
+    letter-spacing:-.25px;
+  }
+  .home-page .hero-line{
+    width:56px;
+    height:3px;
+    margin-top:11px;
+  }
+  .home-page .hero-message{
+    display:none;
+  }
+
+  /* KPIs mais densos para não dominar a primeira dobra */
+  .home-page .kpi-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    margin-top:8px;
+  }
+  .home-page .kpi-card{
+    height:72px;
+    min-height:72px;
+    padding:9px 10px;
+    gap:8px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(18,32,58,.045);
+  }
+  .home-page .kpi-icon{
+    width:38px;
+    height:38px;
+    flex-basis:38px;
+    border-radius:10px;
+    font-size:17px;
+  }
+  .home-page .kpi-card span{
+    font-size:9.5px;
+    line-height:1.2;
+  }
+  .home-page .kpi-card strong{
+    margin:3px 0 0;
+    font-size:17px;
+  }
+  .home-page .kpi-card small{
+    display:none;
+  }
+
+  /* Cabeçalho de aplicações mais curto */
+  .home-page .apps-section{
+    padding-top:12px;
+  }
+  .home-page .section-head{
+    gap:3px;
+    margin-bottom:8px;
+  }
+  .home-page .section-head h2{
+    font-size:11.5px;
+    letter-spacing:3.5px;
+  }
+  .home-page .section-head span{
+    font-size:9.5px;
+    line-height:1.3;
+  }
+
+  /* Cards mobile como lista operacional compacta */
+  .home-page .apps-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .home-page .app-card{
+    height:auto;
+    min-height:88px;
+    padding:10px 11px;
+    border-radius:13px;
+    box-shadow:0 5px 16px rgba(18,32,58,.045);
+  }
+  .home-page .app-card:hover{
+    transform:none;
+  }
+  .home-page .app-main{
+    display:grid;
+    grid-template-columns:56px minmax(0,1fr);
+    grid-template-rows:auto auto;
+    column-gap:11px;
+    row-gap:5px;
+    align-items:center;
+    width:100%;
+  }
+  .home-page .app-icon{
+    grid-column:1;
+    grid-row:1 / span 2;
+    width:56px;
+    height:56px;
+    border-radius:13px;
+  }
+  .home-page .app-copy{
+    grid-column:2;
+    grid-row:1;
+    align-self:end;
+    padding-top:0;
+  }
+  .home-page .app-copy h3{
+    margin:0 0 3px;
+    font-size:12.5px;
+    line-height:1.12;
+  }
+  .home-page .app-copy p{
+    font-size:9.5px;
+    line-height:1.25;
+    -webkit-line-clamp:1;
+  }
+  .home-page .status-pill{
+    grid-column:2;
+    grid-row:2;
+    justify-self:start;
+    align-self:start;
+    height:20px;
+    margin:0;
+    padding:0 7px;
+    gap:5px;
+    font-size:6.8px;
+  }
+  .home-page .status-pill>span{
+    width:6px;
+    height:6px;
+  }
+  .home-page .app-footer{
+    display:none;
+  }
+
+  /* Drawer mais confortável no telefone */
+  .home-page .side-nav{
+    width:min(82vw,290px);
+    left:calc(-82vw - 24px);
+    padding:16px 11px 14px;
+  }
+  .home-page .side-nav.open{
+    left:0;
+  }
+  .home-page .side-nav .brand{
+    min-height:54px;
+    padding:0 9px 12px;
+  }
+  .home-page .side-nav .brand-logo-img{
+    width:min(calc(var(--brand-user-width,190px) * 1.1),100%);
+    max-height:50px;
+  }
+  .home-page .nav-link{
+    min-height:40px;
+    padding:8px 10px;
+    gap:10px;
+    border-radius:9px;
+    font-size:12px;
+  }
+  .home-page .nav-link i{
+    font-size:15px;
+  }
+}
+
+@media (max-width:380px){
+  .home-page .main-area{
+    padding-left:6px;
+    padding-right:6px;
+  }
+  .home-page .top-bar{
+    margin-left:-6px;
+    margin-right:-6px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .home-page .hero{
+    height:164px;
+    min-height:164px;
+    padding:17px 16px 15px;
+  }
+  .home-page .hero h1{
+    max-width:285px;
+    font-size:20px;
+  }
+  .home-page .kpi-card{
+    height:68px;
+    min-height:68px;
+    padding:8px;
+  }
+  .home-page .kpi-icon{
+    width:35px;
+    height:35px;
+    flex-basis:35px;
+    font-size:16px;
+  }
+  .home-page .app-card{
+    min-height:84px;
+    padding:9px 10px;
+  }
+  .home-page .app-main{
+    grid-template-columns:52px minmax(0,1fr);
+    column-gap:10px;
+  }
+  .home-page .app-icon{
+    width:52px;
+    height:52px;
+  }
+}
