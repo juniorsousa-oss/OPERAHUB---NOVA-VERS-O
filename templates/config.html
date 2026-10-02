@@ -191,7 +191,7 @@
                 <div class="identity-field identity-field-single">
                   <div class="asset-preview asset-preview-logo">
                     {% if settings['has_logo'] %}
-                      <img src="{{ url_for('logo_asset', v=settings['updated_at']) }}" alt="Logo atual">
+                      <img src="{{ url_for('logo_asset', v=settings['updated_at']) }}" alt="Logo atual" decoding="async">
                     {% else %}
                       <span>∞ <strong>OPERA HUB</strong></span>
                     {% endif %}
@@ -247,7 +247,7 @@
                 <div class="identity-field identity-field-single">
                   <div class="asset-preview asset-preview-favicon">
                     {% if settings['has_favicon'] %}
-                      <img src="{{ url_for('favicon_asset', v=settings['updated_at']) }}" alt="Favicon atual">
+                      <img src="{{ url_for('favicon_asset', v=settings['updated_at']) }}" alt="Favicon atual" decoding="async">
                     {% else %}
                       <span>∞</span>
                     {% endif %}
