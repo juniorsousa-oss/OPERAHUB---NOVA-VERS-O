@@ -12,6 +12,7 @@ from PIL import Image, ImageOps
 from flask import (
     Flask,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -42,6 +43,7 @@ HERO_IMAGE = (
 HERO_CACHE = {}
 APP_IMAGE_CACHE = {}
 BRAND_IMAGE_CACHE = {}
+LOGIN_IMAGE_CACHE = {}
 RUNTIME_CACHE = {}
 
 HTTP = requests.Session()
@@ -51,6 +53,10 @@ HTTP.mount("http://", HTTPAdapter(pool_connections=10, pool_maxsize=10))
 BOOTSTRAP_TTL = 120
 USERS_TTL = 45
 ASSET_DATA_TTL = 900
+SUPABASE_CONNECT_TIMEOUT = 3.05
+SUPABASE_READ_TIMEOUT = 8
+SUPABASE_WRITE_TIMEOUT = 12
+SLOW_BACKEND_SECONDS = 0.8
 
 WRITE_RPCS = {
     "operahub_create_user_v2",
@@ -60,6 +66,7 @@ WRITE_RPCS = {
     "operahub_save_settings_v3",
     "operahub_save_nav",
     "operahub_save_apps_v4",
+    "operahub_save_general_v1",
 }
 
 
@@ -131,6 +138,16 @@ def invalidate_runtime_caches():
     RUNTIME_CACHE.clear()
 
 
+def log_slow_backend(label, started_at):
+    elapsed = time.perf_counter() - started_at
+    if elapsed >= SLOW_BACKEND_SECONDS:
+        app.logger.warning(
+            "PERF backend=%s duration_ms=%d",
+            label,
+            round(elapsed * 1000),
+        )
+
+
 def sb_headers():
     return {
         "apikey": SUPABASE_KEY,
@@ -140,14 +157,21 @@ def sb_headers():
 
 
 def sb_get(table, params):
-    response = HTTP.get(
-        f"{SUPABASE_URL}/rest/v1/{table}",
-        headers=sb_headers(),
-        params=params,
-        timeout=15,
-    )
-    response.raise_for_status()
-    return response.json()
+    started_at = time.perf_counter()
+    try:
+        response = HTTP.get(
+            f"{SUPABASE_URL}/rest/v1/{table}",
+            headers=sb_headers(),
+            params=params,
+            timeout=(
+                SUPABASE_CONNECT_TIMEOUT,
+                SUPABASE_READ_TIMEOUT,
+            ),
+        )
+        response.raise_for_status()
+        return response.json()
+    finally:
+        log_slow_backend(f"GET:{table}", started_at)
 
 
 def sb_rpc(name, payload):
@@ -155,17 +179,25 @@ def sb_rpc(name, payload):
         raise RuntimeError(
             "SUPABASE_WRITE_TOKEN não configurado no Render."
         )
-    response = HTTP.post(
-        f"{SUPABASE_URL}/rest/v1/rpc/{name}",
-        headers=sb_headers(),
-        json={"p_token": SUPABASE_WRITE_TOKEN, **payload},
-        timeout=20,
-    )
-    response.raise_for_status()
-    if not response.content:
-        result = None
-    else:
-        result = response.json()
+
+    started_at = time.perf_counter()
+    try:
+        response = HTTP.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/{name}",
+            headers=sb_headers(),
+            json={"p_token": SUPABASE_WRITE_TOKEN, **payload},
+            timeout=(
+                SUPABASE_CONNECT_TIMEOUT,
+                SUPABASE_WRITE_TIMEOUT,
+            ),
+        )
+        response.raise_for_status()
+        if not response.content:
+            result = None
+        else:
+            result = response.json()
+    finally:
+        log_slow_backend(f"RPC:{name}", started_at)
 
     if name in WRITE_RPCS:
         invalidate_runtime_caches()
@@ -174,16 +206,23 @@ def sb_rpc(name, payload):
 
 
 def sb_rpc_public(name, payload=None):
-    response = HTTP.post(
-        f"{SUPABASE_URL}/rest/v1/rpc/{name}",
-        headers=sb_headers(),
-        json=payload or {},
-        timeout=20,
-    )
-    response.raise_for_status()
-    if not response.content:
-        return None
-    return response.json()
+    started_at = time.perf_counter()
+    try:
+        response = HTTP.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/{name}",
+            headers=sb_headers(),
+            json=payload or {},
+            timeout=(
+                SUPABASE_CONNECT_TIMEOUT,
+                SUPABASE_READ_TIMEOUT,
+            ),
+        )
+        response.raise_for_status()
+        if not response.content:
+            return None
+        return response.json()
+    finally:
+        log_slow_backend(f"RPC_PUBLIC:{name}", started_at)
 
 
 def normalize_settings(row):
@@ -409,7 +448,13 @@ def data_uri_response(data_uri, max_age=3600):
     return binary_response(raw, mime, max_age=max_age)
 
 
-def optimize_banner_data_uri(data_uri):
+def optimize_banner_data_uri(data_uri, force=False):
+    if (
+        not force
+        and str(data_uri).startswith("data:image/webp;base64,")
+    ):
+        return data_uri
+
     mime, raw = data_uri_parts(data_uri)
     if not mime or raw is None:
         return data_uri
@@ -446,7 +491,13 @@ def optimize_banner_data_uri(data_uri):
         return data_uri
 
 
-def optimize_app_icon_data_uri(data_uri):
+def optimize_app_icon_data_uri(data_uri, force=False):
+    if (
+        not force
+        and str(data_uri).startswith("data:image/webp;base64,")
+    ):
+        return data_uri
+
     mime, raw = data_uri_parts(data_uri)
     if not mime or raw is None:
         return data_uri
@@ -489,7 +540,21 @@ def optimize_app_icon_data_uri(data_uri):
         return data_uri
 
 
-def optimize_brand_data_uri(data_uri, favicon=False):
+def optimize_brand_data_uri(data_uri, favicon=False, force=False):
+    raw_value = str(data_uri)
+    if not force:
+        if (
+            not favicon
+            and raw_value.startswith("data:image/webp;base64,")
+        ):
+            return data_uri
+        if (
+            favicon
+            and raw_value.startswith("data:image/png;base64,")
+            and len(raw_value) <= 120000
+        ):
+            return data_uri
+
     mime, raw = data_uri_parts(data_uri)
     if not mime or raw is None:
         return data_uri
@@ -569,10 +634,16 @@ def file_to_data_uri(
     data_uri = f"data:{mime};base64,{encoded}"
 
     if optimize_banner:
-        data_uri = optimize_banner_data_uri(data_uri)
+        data_uri = optimize_banner_data_uri(
+            data_uri,
+            force=True,
+        )
 
     if optimize_app_icon:
-        data_uri = optimize_app_icon_data_uri(data_uri)
+        data_uri = optimize_app_icon_data_uri(
+            data_uri,
+            force=True,
+        )
 
     return data_uri
 
@@ -776,20 +847,38 @@ def hero_asset():
 
 @app.route("/assets/login-image")
 def login_image_asset():
+    version = request.args.get("v", "current")
+    cache_key = f"login-image:{version}"
+
+    cached = LOGIN_IMAGE_CACHE.get(cache_key)
+    if cached:
+        raw, mime = cached
+        return binary_response(
+            raw,
+            mime,
+            max_age=2592000,
+        )
+
     data = asset_data(
         "operahub_settings",
         "login_image_data",
         "id",
         "main",
     )
-    response = data_uri_response(
-        data,
-        max_age=2592000,
-    )
-    if response is not None:
-        return response
+    mime, raw = data_uri_parts(data)
 
-    return redirect(url_for("hero_asset"))
+    if mime and raw is not None:
+        LOGIN_IMAGE_CACHE.clear()
+        LOGIN_IMAGE_CACHE[cache_key] = (raw, mime)
+        return binary_response(
+            raw,
+            mime,
+            max_age=2592000,
+        )
+
+    return redirect(
+        url_for("hero_asset", v=version)
+    )
 
 
 @app.route("/assets/app/<app_key>")
@@ -906,12 +995,9 @@ def index():
 @app.route("/configuracoes", methods=["GET", "POST"])
 def configuracoes():
     if not admin_authorized():
-        return redirect(url_for("login", next=url_for("configuracoes")))
-
-    nav_items = load_nav()
-    applications = load_apps()
-    settings = load_settings()
-    users = load_users()
+        return redirect(
+            url_for("login", next=url_for("configuracoes"))
+        )
 
     if request.method == "POST":
         try:
@@ -924,10 +1010,22 @@ def configuracoes():
                 username = normalize_username(
                     request.form.get("user_username", "")
                 )
-                full_name = request.form.get("user_full_name", "").strip()
-                email = request.form.get("user_email", "").strip()
-                password = request.form.get("user_password", "")
-                role = request.form.get("user_role", "user")
+                full_name = request.form.get(
+                    "user_full_name",
+                    "",
+                ).strip()
+                email = request.form.get(
+                    "user_email",
+                    "",
+                ).strip()
+                password = request.form.get(
+                    "user_password",
+                    "",
+                )
+                role = request.form.get(
+                    "user_role",
+                    "user",
+                )
                 avatar_data = file_to_data_uri(
                     request.files.get("user_avatar"),
                     5 * 1024 * 1024,
@@ -949,7 +1047,10 @@ def configuracoes():
                         "p_avatar_data": avatar_data,
                     },
                 )
-                flash("Usuário criado com sucesso.", "success")
+                flash(
+                    "Usuário criado com sucesso.",
+                    "success",
+                )
                 return redirect(
                     url_for("configuracoes", _anchor="login")
                 )
@@ -968,6 +1069,7 @@ def configuracoes():
                 remove_avatar = request.form.get(
                     f"remove_user_avatar_{target_user_id}"
                 ) == "on"
+
                 avatar_data = (
                     ""
                     if remove_avatar
@@ -996,7 +1098,10 @@ def configuracoes():
                 if session.get("user_id") == target_user_id:
                     session["user_has_avatar"] = bool(avatar_data)
 
-                flash("Foto do usuário atualizada.", "success")
+                flash(
+                    "Foto do usuário atualizada.",
+                    "success",
+                )
                 return redirect(
                     url_for("configuracoes", _anchor="login")
                 )
@@ -1026,6 +1131,7 @@ def configuracoes():
                 )
 
             if config_action == "save_login_visual":
+                settings = load_settings()
                 remove_login_image = (
                     request.form.get("remove_login_image") == "on"
                 )
@@ -1084,8 +1190,19 @@ def configuracoes():
                     "success",
                 )
                 return redirect(
-                    url_for("configuracoes", _anchor="login")
+                    url_for("configuracoes", _anchor="identity")
                 )
+
+            bootstrap = load_bootstrap()
+            settings = dict(bootstrap["settings"])
+            nav_items = [
+                dict(item)
+                for item in bootstrap["nav"]
+            ]
+            applications = [
+                dict(item)
+                for item in bootstrap["applications"]
+            ]
 
             nav_payload = []
             for item in nav_items:
@@ -1108,6 +1225,7 @@ def configuracoes():
                 "development",
                 "maintenance",
             }
+
             for item in applications:
                 key = item["key"]
                 image_file = request.files.get(
@@ -1121,7 +1239,10 @@ def configuracoes():
                     10 * 1024 * 1024,
                     optimize_app_icon=True,
                 )
-                update_image = remove_image or new_image is not None
+                update_image = (
+                    remove_image
+                    or new_image is not None
+                )
                 app_status = request.form.get(
                     f"app_status_{key}",
                     item.get("status", "online"),
@@ -1133,7 +1254,10 @@ def configuracoes():
                     {
                         "key": key,
                         "url": safe_url(
-                            request.form.get(f"app_url_{key}", "")
+                            request.form.get(
+                                f"app_url_{key}",
+                                "",
+                            )
                         ),
                         "new_tab": request.form.get(
                             f"app_new_tab_{key}"
@@ -1146,7 +1270,10 @@ def configuracoes():
                                 int(
                                     request.form.get(
                                         f"app_zoom_{key}",
-                                        item.get("image_zoom", 142),
+                                        item.get(
+                                            "image_zoom",
+                                            142,
+                                        ),
                                     )
                                 ),
                             ),
@@ -1160,7 +1287,9 @@ def configuracoes():
                     }
                 )
 
-            remove_logo = request.form.get("remove_logo") == "on"
+            remove_logo = request.form.get(
+                "remove_logo"
+            ) == "on"
             new_logo = file_to_data_uri(
                 request.files.get("logo_upload"),
                 10 * 1024 * 1024,
@@ -1169,8 +1298,12 @@ def configuracoes():
                 new_logo = optimize_brand_data_uri(
                     new_logo,
                     favicon=False,
+                    force=True,
                 )
-            update_logo = remove_logo or new_logo is not None
+            update_logo = (
+                remove_logo
+                or new_logo is not None
+            )
 
             remove_favicon = (
                 request.form.get("remove_favicon") == "on"
@@ -1183,18 +1316,25 @@ def configuracoes():
                 new_favicon = optimize_brand_data_uri(
                     new_favicon,
                     favicon=True,
+                    force=True,
                 )
             update_favicon = (
-                remove_favicon or new_favicon is not None
+                remove_favicon
+                or new_favicon is not None
             )
 
-            remove_hero = request.form.get("remove_hero") == "on"
+            remove_hero = request.form.get(
+                "remove_hero"
+            ) == "on"
             new_hero = file_to_data_uri(
                 request.files.get("hero_upload"),
                 10 * 1024 * 1024,
                 optimize_banner=True,
             )
-            update_hero = remove_hero or new_hero is not None
+            update_hero = (
+                remove_hero
+                or new_hero is not None
+            )
 
             logo_width = max(
                 80,
@@ -1208,7 +1348,6 @@ def configuracoes():
                     ),
                 ),
             )
-
             hero_pos_x = max(
                 0,
                 min(
@@ -1246,37 +1385,38 @@ def configuracoes():
                 ),
             )
 
+            settings_payload = {
+                "logo_data": (
+                    ""
+                    if remove_logo
+                    else (new_logo or "")
+                ),
+                "favicon_data": (
+                    ""
+                    if remove_favicon
+                    else (new_favicon or "")
+                ),
+                "logo_width": logo_width,
+                "hero_data": (
+                    ""
+                    if remove_hero
+                    else (new_hero or "")
+                ),
+                "update_logo": update_logo,
+                "update_favicon": update_favicon,
+                "update_hero": update_hero,
+                "hero_pos_x": hero_pos_x,
+                "hero_pos_y": hero_pos_y,
+                "hero_zoom": hero_zoom,
+            }
+
             sb_rpc(
-                "operahub_save_settings_v3",
+                "operahub_save_general_v1",
                 {
-                    "p_logo_data": (
-                        ""
-                        if remove_logo
-                        else (new_logo or "")
-                    ),
-                    "p_favicon_data": (
-                        ""
-                        if remove_favicon
-                        else (new_favicon or "")
-                    ),
-                    "p_logo_width": logo_width,
-                    "p_hero_data": (
-                        ""
-                        if remove_hero
-                        else (new_hero or "")
-                    ),
-                    "p_update_logo": update_logo,
-                    "p_update_favicon": update_favicon,
-                    "p_update_hero": update_hero,
-                    "p_hero_pos_x": hero_pos_x,
-                    "p_hero_pos_y": hero_pos_y,
-                    "p_hero_zoom": hero_zoom,
+                    "p_settings": settings_payload,
+                    "p_nav": nav_payload,
+                    "p_apps": app_payload,
                 },
-            )
-            sb_rpc("operahub_save_nav", {"p_items": nav_payload})
-            sb_rpc(
-                "operahub_save_apps_v4",
-                {"p_items": app_payload},
             )
 
             flash(
@@ -1285,7 +1425,22 @@ def configuracoes():
             )
             return redirect(url_for("configuracoes"))
         except Exception as exc:
-            flash(humanize_save_error(exc), "error")
+            flash(
+                humanize_save_error(exc),
+                "error",
+            )
+
+    bootstrap = load_bootstrap()
+    nav_items = [
+        dict(item)
+        for item in bootstrap["nav"]
+    ]
+    applications = [
+        dict(item)
+        for item in bootstrap["applications"]
+    ]
+    settings = dict(bootstrap["settings"])
+    users = load_users()
 
     return render_template(
         "config.html",
@@ -1293,7 +1448,7 @@ def configuracoes():
         applications=applications,
         settings=settings,
         admin_enabled=admin_enabled(),
-        auth_users_exist=auth_users_exist(),
+        auth_users_exist=bool(bootstrap.get("has_users")),
         users=users,
         current_user=current_user(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
@@ -1382,6 +1537,41 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("index"))
+
+
+@app.before_request
+def start_request_timer():
+    g.request_started_at = time.perf_counter()
+
+
+@app.after_request
+def add_server_timing(response):
+    started_at = getattr(
+        g,
+        "request_started_at",
+        None,
+    )
+    if started_at is None:
+        return response
+
+    elapsed = time.perf_counter() - started_at
+    elapsed_ms = round(elapsed * 1000)
+    response.headers["Server-Timing"] = (
+        f'app;dur={elapsed_ms}'
+    )
+
+    if (
+        elapsed >= 1.0
+        and request.path != "/healthz"
+    ):
+        app.logger.warning(
+            "PERF request=%s method=%s duration_ms=%d",
+            request.path,
+            request.method,
+            elapsed_ms,
+        )
+
+    return response
 
 
 @app.route("/healthz")
