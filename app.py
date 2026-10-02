@@ -6,6 +6,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
+from PIL import Image, ImageOps
 from flask import (
     Flask,
     flash,
@@ -35,6 +36,9 @@ HERO_IMAGE = (
     "https://images.unsplash.com/photo-1769701000453-e306362a7d03"
     "?auto=format&fit=crop&fm=jpg&q=82&w=2400"
 )
+
+HERO_CACHE = {}
+
 
 DEFAULT_SETTINGS = {
     "id": "main",
@@ -288,28 +292,75 @@ def asset_data(table, column, key_column, key_value):
     return ""
 
 
-def data_uri_response(data_uri, max_age=3600):
-    if not data_uri or "," not in data_uri:
-        return None
-    try:
-        header, encoded = data_uri.split(",", 1)
-        mime = header.split(":", 1)[1].split(";", 1)[0]
-        raw = base64.b64decode(encoded)
-    except Exception:
-        return None
-
+def binary_response(raw, mime, max_age=3600):
     response = send_file(
         BytesIO(raw),
         mimetype=mime,
         max_age=max_age,
     )
     response.headers["Cache-Control"] = (
-        f"public, max-age={max_age}"
+        f"public, max-age={max_age}, immutable"
     )
     return response
 
 
-def file_to_data_uri(file_storage, max_bytes):
+def data_uri_parts(data_uri):
+    if not data_uri or "," not in data_uri:
+        return None, None
+    try:
+        header, encoded = data_uri.split(",", 1)
+        mime = header.split(":", 1)[1].split(";", 1)[0]
+        raw = base64.b64decode(encoded)
+        return mime, raw
+    except Exception:
+        return None, None
+
+
+def data_uri_response(data_uri, max_age=3600):
+    mime, raw = data_uri_parts(data_uri)
+    if not mime or raw is None:
+        return None
+    return binary_response(raw, mime, max_age=max_age)
+
+
+def optimize_banner_data_uri(data_uri):
+    mime, raw = data_uri_parts(data_uri)
+    if not mime or raw is None:
+        return data_uri
+
+    if mime == "image/svg+xml":
+        return data_uri
+
+    try:
+        with Image.open(BytesIO(raw)) as image:
+            image = ImageOps.exif_transpose(image)
+            image.thumbnail(
+                (2200, 1400),
+                Image.Resampling.LANCZOS,
+            )
+
+            if image.mode not in {"RGB", "RGBA"}:
+                image = image.convert("RGB")
+
+            output = BytesIO()
+            image.save(
+                output,
+                format="WEBP",
+                quality=82,
+                method=6,
+            )
+            optimized = output.getvalue()
+
+        if len(optimized) >= len(raw):
+            return data_uri
+
+        encoded = base64.b64encode(optimized).decode("ascii")
+        return f"data:image/webp;base64,{encoded}"
+    except Exception:
+        return data_uri
+
+
+def file_to_data_uri(file_storage, max_bytes, optimize_banner=False):
     if not file_storage or not file_storage.filename:
         return None
 
@@ -325,7 +376,12 @@ def file_to_data_uri(file_storage, max_bytes):
         )
 
     encoded = base64.b64encode(raw).decode("ascii")
-    return f"data:{mime};base64,{encoded}"
+    data_uri = f"data:{mime};base64,{encoded}"
+
+    if optimize_banner:
+        data_uri = optimize_banner_data_uri(data_uri)
+
+    return data_uri
 
 
 def admin_enabled():
@@ -427,15 +483,47 @@ def favicon_asset():
 
 @app.route("/assets/hero")
 def hero_asset():
+    version = request.args.get("v", "current")
+
+    cached = HERO_CACHE.get(version)
+    if cached:
+        raw, mime = cached
+        return binary_response(
+            raw,
+            mime,
+            max_age=604800,
+        )
+
     data = asset_data(
         "operahub_settings",
         "hero_data",
         "id",
         "main",
     )
-    response = data_uri_response(data)
-    if response is not None:
-        return response
+
+    if data:
+        optimized = optimize_banner_data_uri(data)
+        mime, raw = data_uri_parts(optimized)
+
+        if mime and raw is not None:
+            HERO_CACHE.clear()
+            HERO_CACHE[version] = (raw, mime)
+
+            if optimized != data and SUPABASE_WRITE_TOKEN:
+                try:
+                    sb_rpc(
+                        "operahub_store_optimized_hero",
+                        {"p_hero_data": optimized},
+                    )
+                except Exception:
+                    pass
+
+            return binary_response(
+                raw,
+                mime,
+                max_age=604800,
+            )
+
     return redirect(HERO_IMAGE)
 
 
@@ -714,6 +802,7 @@ def configuracoes():
             new_hero = file_to_data_uri(
                 request.files.get("hero_upload"),
                 10 * 1024 * 1024,
+                optimize_banner=True,
             )
             update_hero = remove_hero or new_hero is not None
 
