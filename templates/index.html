@@ -246,6 +246,10 @@
                     <img
                       src="{{ url_for('application_asset', app_key=app_item['key'], v=app_item['updated_at']) }}"
                       alt=""
+                      width="64"
+                      height="64"
+                      decoding="async"
+                      loading="eager"
                     >
                   {% else %}
                     <i class="{{ app_item['icon'] }}"></i>
