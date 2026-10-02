@@ -16,9 +16,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="admin-body">
-  <div class="admin-shell">
-    <aside class="admin-side">
+<body class="home-page config-page">
+  <div class="app-shell config-shell">
+    <aside class="side-nav" id="sideNav">
       <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
         {% if settings['has_logo'] %}
           <img
@@ -33,20 +33,104 @@
         {% endif %}
       </a>
 
-      <a class="back-home" href="{{ url_for('index') }}">
-        <i class="fa-solid fa-arrow-left"></i>
-        Voltar ao início
-      </a>
+      <nav class="nav-primary">
+        {% for item in nav_items[:9] %}
+          {% set configured = item['url']|length > 0 %}
+          {% set href = item['url'] if configured else (url_for('index') if item['key'] == 'inicio' else '#') %}
+          <a
+            class="nav-link {{ 'disabled' if not configured and item['key'] != 'inicio' else '' }}"
+            href="{{ href }}"
+            {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
+          >
+            <i class="{{ item['icon'] }}"></i>
+            <span>{{ item['label'] }}</span>
+          </a>
+        {% endfor %}
+      </nav>
 
-      {% if current_user %}
-      <a class="back-home" href="{{ url_for('logout') }}">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Sair
-      </a>
-      {% endif %}
+      <div class="nav-secondary">
+        {% for item in nav_items[9:] %}
+          {% set configured = item['url']|length > 0 %}
+          <a
+            class="nav-link {{ 'disabled' if not configured else '' }}"
+            href="{{ item['url'] if configured else '#' }}"
+            {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
+          >
+            <i class="{{ item['icon'] }}"></i>
+            <span>{{ item['label'] }}</span>
+          </a>
+        {% endfor %}
+
+        <a class="nav-link config-link active" href="{{ url_for('configuracoes') }}">
+          <i class="fa-solid fa-gear"></i>
+          <span>Configurações</span>
+        </a>
+
+        <div class="nav-user">
+          {% if current_user %}
+            <div class="avatar">{{ current_user['initials'] }}</div>
+            <div>
+              <strong>{{ current_user['name'] }}</strong>
+              <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
+            </div>
+          {% else %}
+            <div class="avatar">OH</div>
+            <div>
+              <strong>Opera Hub</strong>
+              <span>Operações</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </aside>
 
-    <main class="admin-main">
+    <main class="main-area config-main-area">
+      <header class="top-bar">
+        <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="search-wrap config-search-wrap">
+          <i class="fa-solid fa-gear"></i>
+          <input
+            type="text"
+            value="Configurações do Opera Hub"
+            readonly
+            aria-label="Configurações do Opera Hub"
+          >
+        </div>
+
+        <div class="top-actions">
+          <a class="icon-button" href="{{ url_for('index') }}" aria-label="Voltar ao início" title="Voltar ao início">
+            <i class="fa-solid fa-house"></i>
+          </a>
+
+          {% if current_user %}
+          <div class="user-session">
+            <div class="user-chip">
+              <div class="avatar small">{{ current_user['initials'] }}</div>
+              <div class="user-copy">
+                <strong>{{ current_user['name'] }}</strong>
+                <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
+              </div>
+            </div>
+            <a class="logout-button" href="{{ url_for('logout') }}" title="Sair">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </a>
+          </div>
+          {% else %}
+          <div class="user-chip">
+            <div class="avatar small">OH</div>
+            <div class="user-copy">
+              <strong>Opera Hub</strong>
+              <span>Configurações</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </header>
+
+      <div class="config-content">
       <div class="admin-title">
         <div>
           <h1>Configurações</h1>
@@ -591,8 +675,7 @@
                     class="url-input"
                     type="text"
                     name="user_username"
-                    placeholder="Ex.: junior.andrade"
-                    pattern="[A-Za-z0-9._-]{3,50}"
+                    placeholder="Ex.: junior.andrade ou Junior Andrade"
                     autocomplete="off"
                   >
                 </label>
@@ -745,9 +828,13 @@
           </button>
         </div>
       </form>
+      </div>
     </main>
   </div>
 
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script>
     const range = document.getElementById("logo_width");
     const value = document.getElementById("logoWidthValue");
