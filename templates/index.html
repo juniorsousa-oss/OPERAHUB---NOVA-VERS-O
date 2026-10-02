@@ -73,7 +73,16 @@
 
         <div class="nav-user">
           {% if current_user %}
-            <div class="avatar">{{ current_user['initials'] }}</div>
+            <div class="avatar {{ 'has-photo' if current_user['has_avatar'] else '' }}">
+              {% if current_user['has_avatar'] %}
+                <img
+                  src="{{ url_for('user_avatar_asset', user_id=current_user['id']) }}"
+                  alt="{{ current_user['name'] }}"
+                >
+              {% else %}
+                {{ current_user['initials'] }}
+              {% endif %}
+            </div>
             <div>
               <strong>{{ current_user['name'] }}</strong>
               <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
@@ -113,7 +122,16 @@
             {% else %}
             <div class="user-chip" title="Usuário conectado">
             {% endif %}
-              <div class="avatar small">{{ current_user['initials'] }}</div>
+              <div class="avatar small {{ 'has-photo' if current_user['has_avatar'] else '' }}">
+                {% if current_user['has_avatar'] %}
+                  <img
+                    src="{{ url_for('user_avatar_asset', user_id=current_user['id']) }}"
+                    alt="{{ current_user['name'] }}"
+                  >
+                {% else %}
+                  {{ current_user['initials'] }}
+                {% endif %}
+              </div>
               <div class="user-copy">
                 <strong>{{ current_user['name'] }}</strong>
                 <span>{{ 'Administrador' if current_user['role'] == 'admin' else 'Usuário' }}</span>
@@ -209,11 +227,8 @@
           {% for app_item in applications %}
             {% set configured = app_item['url']|length > 0 %}
             <a
-              class="app-card accent-{{ app_item['accent'] }} {{ 'app-disabled' if not configured else '' }}"
-              style="
-                --card-accent: {{ app_item['accent_color'] or '#F4B400' }};
-                --icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};
-              "
+              class="app-card {{ 'app-disabled' if not configured else '' }}"
+              style="--icon-zoom: {{ (app_item['image_zoom'] or 142) / 100 }};"
               href="{{ app_item['url'] if configured else '#' }}"
               data-search="{{ (app_item['name'] ~ ' ' ~ app_item['description'])|lower }}"
               {% if configured and app_item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
@@ -234,8 +249,16 @@
                   <h3>{{ app_item['name'] }}</h3>
                   <p>{{ app_item['description'] }}</p>
                 </div>
-                <div class="status-pill">
-                  <span></span>{{ app_item['status'] }}
+                {% set status_key = app_item['status'] or 'online' %}
+                <div class="status-pill status-{{ status_key }}">
+                  <span></span>
+                  {% if status_key == 'development' %}
+                    Em desenvolvimento
+                  {% elif status_key == 'maintenance' %}
+                    Em manutenção
+                  {% else %}
+                    Online
+                  {% endif %}
                 </div>
               </div>
               <div class="app-footer">
