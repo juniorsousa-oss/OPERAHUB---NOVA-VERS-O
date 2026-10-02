@@ -125,9 +125,9 @@ def cache_set(key, value):
 
 
 def invalidate_runtime_caches():
+    # Invalida apenas dados leves. As imagens usam URLs versionadas,
+    # então manter o cache binário evita reprocessamento desnecessário.
     RUNTIME_CACHE.clear()
-    HERO_CACHE.clear()
-    APP_IMAGE_CACHE.clear()
 
 
 def sb_headers():
