@@ -796,74 +796,72 @@
               <div class="users-list">
                 {% for user in users %}
                 <article class="user-row">
-                  <div class="user-row-avatar {{ 'has-photo' if user['has_avatar'] else '' }}">
-                    {% if user['has_avatar'] %}
-                      <img
-                        src="{{ url_for('user_avatar_asset', user_id=user['id'], v=user['updated_at']) }}"
-                        alt="{{ user['full_name'] }}"
+                  <div class="user-photo-wrap">
+                    <div class="user-row-avatar {{ 'has-photo' if user['has_avatar'] else '' }}">
+                      {% if user['has_avatar'] %}
+                        <img
+                          src="{{ url_for('user_avatar_asset', user_id=user['id'], v=user['updated_at']) }}"
+                          alt="{{ user['full_name'] }}"
+                        >
+                      {% else %}
+                        {{ (user['full_name'][:1] ~ (user['full_name'].split()[-1][:1] if user['full_name'].split()|length > 1 else ''))|upper }}
+                      {% endif %}
+                    </div>
+
+                    <label
+                      class="user-photo-edit"
+                      title="{{ 'Alterar foto' if user['has_avatar'] else 'Adicionar foto' }}"
+                    >
+                      <i class="fa-solid fa-camera"></i>
+                      <input
+                        type="file"
+                        name="user_avatar_{{ user['id'] }}"
+                        accept=".png,.jpg,.jpeg,.webp,image/*"
+                        data-user-avatar-input
+                        data-user-id="{{ user['id'] }}"
                       >
-                    {% else %}
-                      {{ (user['full_name'][:1] ~ (user['full_name'].split()[-1][:1] if user['full_name'].split()|length > 1 else ''))|upper }}
-                    {% endif %}
+                    </label>
                   </div>
 
                   <div class="user-row-main">
                     <strong>{{ user['full_name'] }}</strong>
-                    <span>
+                    <span class="user-primary-meta">
                       @{{ user['username'] }}
                       {% if user['email'] %} • {{ user['email'] }}{% endif %}
                     </span>
-                  </div>
-
-                  <div class="user-role-pill {{ user['role'] }}">
-                    {{ 'Administrador' if user['role'] == 'admin' else 'Usuário' }}
-                  </div>
-
-                  <div class="user-status-pill {{ 'active' if user['is_active'] else 'inactive' }}">
-                    <span></span>
-                    {{ 'Ativo' if user['is_active'] else 'Inativo' }}
-                  </div>
-
-                  <div class="user-last-login">
-                    <small>Último acesso</small>
-                    <strong>
+                    <span class="user-secondary-meta">
+                      Último acesso:
                       {% if user['last_login'] %}
                         {{ user['last_login'][:16].replace('T',' ') }}
                       {% else %}
                         Nunca
                       {% endif %}
-                    </strong>
+                    </span>
                   </div>
 
-                  <div class="user-avatar-actions">
-                    <input
-                      class="user-avatar-input"
-                      type="file"
-                      name="user_avatar_{{ user['id'] }}"
-                      accept=".png,.jpg,.jpeg,.webp,image/*"
-                    >
+                  <div class="user-row-side">
+                    <div class="user-row-badges">
+                      <div class="user-role-pill {{ user['role'] }}">
+                        {{ 'Administrador' if user['role'] == 'admin' else 'Usuário' }}
+                      </div>
+
+                      <div class="user-status-pill {{ 'active' if user['is_active'] else 'inactive' }}">
+                        <span></span>
+                        {{ 'Ativo' if user['is_active'] else 'Inativo' }}
+                      </div>
+                    </div>
 
                     {% if user['has_avatar'] %}
-                    <label class="user-avatar-remove">
-                      <input
-                        type="checkbox"
-                        name="remove_user_avatar_{{ user['id'] }}"
-                      >
-                      Remover
-                    </label>
-                    {% endif %}
-
                     <button
-                      class="btn btn-secondary user-avatar-save"
-                      type="submit"
-                      name="config_action"
-                      value="update_user_avatar"
-                      formaction="{{ url_for('configuracoes') }}#login"
-                      onclick="this.form.user_avatar_target.value='{{ user['id'] }}'"
+                      class="user-photo-remove-button"
+                      type="button"
+                      title="Remover foto"
+                      data-remove-user-avatar
+                      data-user-id="{{ user['id'] }}"
                     >
-                      <i class="fa-regular fa-image"></i>
-                      Foto
+                      <i class="fa-regular fa-trash-can"></i>
                     </button>
+                    {% endif %}
                   </div>
                 </article>
                 {% endfor %}
@@ -1019,7 +1017,45 @@
       }
     });
 
-    const heroPreview = document.getElementById("heroPreview");
+    function submitUserAvatarAction(userId, removeAvatar = false) {
+      const form = document.getElementById("settingsForm");
+      if (!form) return;
+
+      const target = form.querySelector('input[name="user_avatar_target"]');
+      if (target) target.value = userId;
+
+      const actionInput = document.createElement("input");
+      actionInput.type = "hidden";
+      actionInput.name = "config_action";
+      actionInput.value = "update_user_avatar";
+      form.appendChild(actionInput);
+
+      if (removeAvatar) {
+        const removeInput = document.createElement("input");
+        removeInput.type = "hidden";
+        removeInput.name = "remove_user_avatar_" + userId;
+        removeInput.value = "on";
+        form.appendChild(removeInput);
+      }
+
+      form.requestSubmit();
+    }
+
+    document.querySelectorAll("[data-user-avatar-input]").forEach((input) => {
+      input.addEventListener("change", () => {
+        if (input.files && input.files.length) {
+          submitUserAvatarAction(input.dataset.userId, false);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-remove-user-avatar]").forEach((button) => {
+      button.addEventListener("click", () => {
+        submitUserAvatarAction(button.dataset.userId, true);
+      });
+    });
+
+        const heroPreview = document.getElementById("heroPreview");
     const heroUpload = document.getElementById("heroUpload");
     const heroZoom = document.getElementById("hero_zoom");
     const heroPosX = document.getElementById("hero_pos_x");
