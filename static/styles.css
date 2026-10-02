@@ -560,6 +560,9 @@ button,input{font:inherit}
 .status-pill.status-maintenance>span{
   background:#E14B55;
 }
+.app-mobile-chevron{
+  display:none;
+}
 .app-footer{
   margin-top:auto;
   padding-top:7px;
@@ -2533,5 +2536,220 @@ button,input{font:inherit}
 
   .login-page .login-back{
     margin-top:9px;
+  }
+}
+
+
+/* =========================================================
+   OPERA HUB — MOBILE HOME V3
+   Acabamento final: densidade, cards e hierarquia visual.
+   ========================================================= */
+@media (max-width:600px){
+  /* Cabeçalho */
+  .home-page .top-bar{
+    height:54px;
+    gap:8px;
+    padding-left:9px;
+    padding-right:9px;
+  }
+  .home-page .mobile-menu{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+  }
+  .home-page .search-wrap{
+    height:36px;
+    flex:1 1 auto;
+    padding:0 10px;
+  }
+  .home-page .avatar.small,
+  .home-page .logout-button{
+    width:32px;
+    height:32px;
+  }
+
+  /* Banner: mantém a proporção aprovada e mascara a marca gráfica
+     incorporada no canto direito da imagem no mobile. */
+  .home-page .hero{
+    height:170px;
+    min-height:170px;
+    margin-top:7px;
+    padding:18px 18px 16px;
+  }
+  .home-page .hero::before{
+    background:
+      linear-gradient(
+        90deg,
+        rgba(7,23,41,.94) 0%,
+        rgba(7,23,41,.76) 58%,
+        rgba(7,23,41,.48) 78%,
+        rgba(7,23,41,.82) 100%
+      );
+  }
+  .home-page .hero::after{
+    content:"";
+    position:absolute;
+    z-index:1;
+    top:0;
+    right:0;
+    bottom:0;
+    width:35%;
+    font-size:0 !important;
+    opacity:1;
+    pointer-events:none;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(7,23,41,0) 0%,
+        rgba(7,23,41,.42) 42%,
+        rgba(7,23,41,.88) 100%
+      );
+  }
+  .home-page .hero h1{
+    max-width:320px;
+    font-size:21px;
+  }
+
+  /* KPIs */
+  .home-page .kpi-grid{
+    gap:6px;
+    margin-top:7px;
+  }
+  .home-page .kpi-card{
+    height:68px;
+    min-height:68px;
+    padding:8px 9px;
+    gap:7px;
+  }
+  .home-page .kpi-icon{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+    font-size:16px;
+  }
+  .home-page .kpi-card span{
+    font-size:9px;
+  }
+  .home-page .kpi-card strong{
+    margin-top:1px;
+    font-size:16px;
+    line-height:1;
+  }
+
+  /* Aplicações */
+  .home-page .apps-section{
+    padding-top:10px;
+  }
+  .home-page .section-head{
+    margin-bottom:7px;
+  }
+  .home-page .section-head h2{
+    font-size:11px;
+  }
+  .home-page .section-head span{
+    font-size:9px;
+  }
+
+  .home-page .apps-grid{
+    gap:7px;
+  }
+  .home-page .app-card{
+    min-height:80px;
+    padding:9px 10px;
+    overflow:hidden;
+  }
+  .home-page .app-main{
+    display:grid;
+    grid-template-columns:54px minmax(0,1fr) auto;
+    grid-template-rows:auto auto;
+    column-gap:10px;
+    row-gap:4px;
+    align-items:center;
+  }
+  .home-page .app-icon{
+    grid-column:1;
+    grid-row:1 / span 2;
+    width:54px;
+    height:54px;
+    border-radius:12px;
+  }
+  .home-page .app-copy{
+    grid-column:2;
+    grid-row:1 / span 2;
+    align-self:center;
+    min-width:0;
+  }
+  .home-page .app-copy h3{
+    margin-bottom:3px;
+    font-size:12px;
+    line-height:1.1;
+  }
+  .home-page .app-copy p{
+    max-width:100%;
+    font-size:9.2px;
+    line-height:1.22;
+    -webkit-line-clamp:1;
+  }
+  .home-page .status-pill{
+    grid-column:3;
+    grid-row:1;
+    justify-self:end;
+    align-self:start;
+    height:19px;
+    margin:0;
+    padding:0 6px;
+    gap:4px;
+    font-size:6.4px;
+  }
+  .home-page .status-pill>span{
+    width:5px;
+    height:5px;
+  }
+  .home-page .app-mobile-chevron{
+    display:grid;
+    grid-column:3;
+    grid-row:2;
+    justify-self:end;
+    align-self:end;
+    width:20px;
+    height:20px;
+    place-items:center;
+    color:#9AA8BA;
+    font-size:9px;
+  }
+}
+
+@media (max-width:390px){
+  .home-page .hero{
+    height:160px;
+    min-height:160px;
+  }
+  .home-page .hero h1{
+    max-width:285px;
+    font-size:19.5px;
+  }
+  .home-page .kpi-card{
+    height:64px;
+    min-height:64px;
+  }
+  .home-page .app-card{
+    min-height:78px;
+    padding:8px 9px;
+  }
+  .home-page .app-main{
+    grid-template-columns:50px minmax(0,1fr) auto;
+    column-gap:9px;
+  }
+  .home-page .app-icon{
+    width:50px;
+    height:50px;
+  }
+  .home-page .app-copy h3{
+    font-size:11.5px;
+  }
+  .home-page .status-pill{
+    font-size:6px;
+    padding-left:5px;
+    padding-right:5px;
   }
 }
