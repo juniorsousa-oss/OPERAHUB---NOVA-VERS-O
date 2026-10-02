@@ -321,17 +321,6 @@ button,input{font:inherit}
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.10));
   pointer-events:none;
 }
-.hero::after{
-  content:"∞";
-  position:absolute;
-  right:5.5%;
-  bottom:-28px;
-  font-size:150px;
-  line-height:1;
-  color:rgba(244,180,0,.11);
-  font-weight:900;
-  transform:rotate(-4deg);
-}
 .hero-content{
   position:relative;
   z-index:2;
