@@ -1023,42 +1023,6 @@ button,input{font:inherit}
   opacity:.45;
   cursor:not-allowed;
 }
-.login-visual-shortcut{
-  display:grid;
-  grid-template-columns:42px minmax(0,1fr) auto;
-  gap:12px;
-  align-items:center;
-  margin:0 0 14px;
-  padding:12px 14px;
-  border:1px solid #E1E8F1;
-  border-radius:14px;
-  background:#FFFFFF;
-  box-shadow:0 5px 16px rgba(18,32,58,.04);
-}
-.login-visual-shortcut-icon{
-  width:42px;
-  height:42px;
-  border-radius:11px;
-  display:grid;
-  place-items:center;
-  background:#FFF5D9;
-  color:#9A6A00;
-  font-size:16px;
-}
-.login-visual-shortcut-copy{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-}
-.login-visual-shortcut-copy strong{
-  color:#10203A;
-  font-size:12px;
-}
-.login-visual-shortcut-copy span{
-  color:#7A89A0;
-  font-size:10px;
-}
 
 
 .users-list{
@@ -1688,7 +1652,9 @@ button,input{font:inherit}
   color:#fff;
 }
 .toast-flash.toast-success{
-  background:#137643;
+  background:linear-gradient(90deg,var(--yellow),var(--yellow-2));
+  color:#10223A;
+  box-shadow:0 10px 24px rgba(244,180,0,.24);
 }
 .toast-flash.toast-error{
   background:#A82828;
@@ -2027,12 +1993,3 @@ button,input{font:inherit}
   }
 }
 
-@media (max-width:680px){
-  .login-visual-shortcut{
-    grid-template-columns:42px minmax(0,1fr);
-  }
-  .login-visual-shortcut .btn{
-    grid-column:1/-1;
-    justify-content:center;
-  }
-}
