@@ -151,6 +151,17 @@ button,input{font:inherit}
   color:#fff;
   font-weight:700;
   flex:0 0 auto;
+  overflow:hidden;
+}
+.avatar.has-photo{
+  background:#E8EDF3;
+}
+.avatar.has-photo img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
 }
 
 /* MAIN */
@@ -526,15 +537,47 @@ button,input{font:inherit}
   display:flex;
   align-items:center;
   gap:6px;
-  background:#E7F8EE;
-  color:#148244;
   border-radius:999px;
   padding:0 8px;
   font-size:8px;
   font-weight:850;
-  white-space:nowrap
+  white-space:nowrap;
+  border:1px solid transparent;
 }
-.status-pill span{width:7px;height:7px;border-radius:50%;background:#0CB158}
+.status-pill>span{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  flex:0 0 auto;
+}
+.status-pill b{
+  font:inherit;
+  font-weight:850;
+}
+.status-pill.status-online{
+  background:#E7F8EE;
+  color:#148244;
+  border-color:#D7F2E2;
+}
+.status-pill.status-online>span{
+  background:#0CB158;
+}
+.status-pill.status-development{
+  background:#FFF5D9;
+  color:#8A6500;
+  border-color:#F7E7B0;
+}
+.status-pill.status-development>span{
+  background:#F4B400;
+}
+.status-pill.status-maintenance{
+  background:#FDEBEC;
+  color:#A52B33;
+  border-color:#F7D6D9;
+}
+.status-pill.status-maintenance>span{
+  background:#E14B55;
+}
 .app-footer{
   margin-top:auto;
   padding-top:7px;
@@ -553,19 +596,15 @@ button,input{font:inherit}
   background:#fff;border:1px dashed #CFD9E6;border-radius:12px
 }
 
-.accent-gold,.accent-blue,.accent-amber,.accent-orange,
-.accent-green,.accent-steel,.accent-violet,.accent-peach,.accent-sky{
-  --icon-bg-1:#F6F8FB;
-  --icon-bg-2:#F6F8FB;
-  --icon-color:#173A67;
-}
-
 .toast{
   position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);
   background:#11243B;color:#fff;border-radius:10px;padding:12px 18px;font-size:13px;
   opacity:0;pointer-events:none;transition:.2s ease;z-index:100
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.toast-flash{
+  transition:opacity .25s ease,transform .25s ease;
+}
 .nav-overlay{display:none}
 
 /* Monitor grande */
@@ -960,6 +999,14 @@ button,input{font:inherit}
 .user-password-field{
   grid-column:1/-1;
 }
+.user-avatar-field{
+  grid-column:1/-1;
+}
+.user-avatar-field small{
+  color:#8593A7;
+  font-size:9.5px;
+  font-weight:500;
+}
 .user-create-actions{
   margin-top:14px;
   display:flex;
@@ -1020,6 +1067,45 @@ button,input{font:inherit}
   color:#FFFFFF;
   font-size:11px;
   font-weight:900;
+}
+.user-row-avatar{
+  overflow:hidden;
+}
+.user-row-avatar.has-photo{
+  background:#E8EDF3;
+}
+.user-row-avatar.has-photo img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
+}
+.user-avatar-actions{
+  grid-column:2/-1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-top:2px;
+}
+.user-avatar-input{
+  flex:1;
+  min-width:160px;
+  max-width:320px;
+  font-size:9px;
+  color:#6F8098;
+}
+.user-avatar-remove{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:#7C899B;
+  font-size:9px;
+}
+.user-avatar-save{
+  height:30px;
+  padding:0 10px;
+  font-size:9px;
 }
 .user-row-main{
   min-width:0;
@@ -1287,30 +1373,6 @@ button,input{font:inherit}
   font-weight:700;
 }
 .app-url-field{grid-column:1/-1}
-.color-control{
-  min-height:40px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  border:1px solid #D8E1EC;
-  border-radius:8px;
-  background:#fff;
-  padding:5px 8px;
-}
-.color-input{
-  width:34px;
-  height:28px;
-  padding:0;
-  border:0;
-  background:transparent;
-  cursor:pointer;
-}
-.color-control span{
-  font-size:10px;
-  color:#65758D;
-  font-weight:800;
-  text-transform:uppercase;
-}
 .app-zoom-control{
   min-height:40px;
   display:grid;
@@ -1326,6 +1388,24 @@ button,input{font:inherit}
   text-align:right;
   color:#10203A;
   font-size:10px;
+}
+.status-control{
+  min-height:40px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+.status-select{
+  min-width:0;
+  height:40px;
+  font-size:10px;
+  font-weight:700;
+  color:#455A75;
+}
+.status-control .status-pill{
+  height:30px;
+  font-size:7.5px;
 }
 .app-config-checks{
   grid-column:1/-1;
@@ -1567,6 +1647,15 @@ button,input{font:inherit}
 /* Responsividade das telas administrativas */
 @media (max-width:860px){
   .user-create-grid{grid-template-columns:1fr}
+  .user-avatar-field{grid-column:auto}
+  .user-avatar-actions{
+    grid-column:2/-1;
+    flex-wrap:wrap;
+  }
+  .user-avatar-input{
+    min-width:180px;
+    max-width:none;
+  }
   .user-password-field{grid-column:auto}
   .user-create-actions{
     align-items:stretch;
