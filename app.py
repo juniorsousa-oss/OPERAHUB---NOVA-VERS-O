@@ -1,5 +1,7 @@
 import base64
 import os
+import re
+import unicodedata
 from io import BytesIO
 from urllib.parse import urlparse
 
@@ -225,6 +227,63 @@ def safe_url(value):
     if parsed.scheme in {"http", "https"} and parsed.netloc:
         return value
     return ""
+
+
+def normalize_username(value):
+    raw = unicodedata.normalize(
+        "NFKD",
+        (value or "").strip().lower(),
+    )
+    ascii_value = "".join(
+        ch for ch in raw
+        if not unicodedata.combining(ch)
+    )
+    ascii_value = ascii_value.encode(
+        "ascii",
+        "ignore",
+    ).decode("ascii")
+    ascii_value = re.sub(
+        r"[^a-z0-9._-]+",
+        ".",
+        ascii_value,
+    )
+    ascii_value = re.sub(r"\.{2,}", ".", ascii_value)
+    return ascii_value.strip(".")
+
+
+def humanize_save_error(exc):
+    detail = str(exc)
+    response = getattr(exc, "response", None)
+    if response is not None:
+        try:
+            payload = response.json()
+            detail = " ".join(
+                str(payload.get(key, ""))
+                for key in ("message", "details", "hint")
+            ).strip() or detail
+        except Exception:
+            detail = getattr(response, "text", "") or detail
+
+    lowered = detail.lower()
+
+    if "username_invalid" in lowered:
+        return (
+            "O nome de usuário precisa ter pelo menos 3 caracteres. "
+            "Use letras, números, ponto, hífen ou sublinhado."
+        )
+    if "password_too_short" in lowered:
+        return "A senha precisa ter pelo menos 6 caracteres."
+    if "name_invalid" in lowered:
+        return "Informe um nome válido para o usuário."
+    if "user_or_email_already_exists" in lowered:
+        return "Já existe um usuário ou e-mail com esses dados."
+    if "unauthorized" in lowered:
+        return (
+            "O token de gravação do Supabase não foi aceito. "
+            "Verifique SUPABASE_WRITE_TOKEN no Render."
+        )
+
+    return "Não foi possível concluir a alteração. Revise os dados e tente novamente."
 
 
 def safe_hex_color(value, fallback="#F4B400"):
@@ -462,7 +521,9 @@ def configuracoes():
             )
 
             if config_action == "create_user":
-                username = request.form.get("user_username", "").strip()
+                username = normalize_username(
+                    request.form.get("user_username", "")
+                )
                 full_name = request.form.get("user_full_name", "").strip()
                 email = request.form.get("user_email", "").strip()
                 password = request.form.get("user_password", "")
@@ -697,7 +758,7 @@ def configuracoes():
             )
             return redirect(url_for("configuracoes"))
         except Exception as exc:
-            flash(f"Não foi possível salvar: {exc}", "error")
+            flash(humanize_save_error(exc), "error")
 
     return render_template(
         "config.html",
