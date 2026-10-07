@@ -1,0 +1,53 @@
+name: Validate Opera Hub
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        organization:
+          - setta
+          - opera-hub-demo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile Python
+        run: python -m py_compile app.py
+
+      - name: Smoke test Flask
+        env:
+          OPERAHUB_DEFAULT_ORG: ${{ matrix.organization }}
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_KEY: test-publishable-key
+          SUPABASE_WRITE_TOKEN: ""
+          SECRET_KEY: ci-test-key
+          ADMIN_PASSWORD: ""
+        run: |
+          python - <<'PY'
+          from app import app
+
+          app.config["TESTING"] = True
+          client = app.test_client()
+
+          for path in ("/healthz", "/", "/login"):
+              response = client.get(path)
+              assert response.status_code == 200, (path, response.status_code)
+
+          print("Smoke test OK")
+          PY
