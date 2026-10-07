@@ -317,7 +317,7 @@ def fallback_organization(slug):
     if slug == "opera-hub-demo":
         return {
             "id": 2,
-            "name": "Opera Hub Demo",
+            "name": "Opera Hub",
             "slug": "opera-hub-demo",
             "mode": "demo",
         }
