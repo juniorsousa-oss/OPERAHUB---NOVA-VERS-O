@@ -321,10 +321,19 @@ def fallback_organization(slug):
             "slug": "opera-hub-demo",
             "mode": "demo",
         }
+    if slug == "setta":
+        return {
+            "id": 1,
+            "name": "Setta",
+            "slug": "setta",
+            "mode": "client",
+        }
+
+    # Fail closed: um slug desconhecido nunca herda dados de outro tenant.
     return {
-        "id": 1,
-        "name": "Setta",
-        "slug": "setta",
+        "id": 0,
+        "name": "Ambiente não configurado",
+        "slug": slug,
         "mode": "client",
     }
 
