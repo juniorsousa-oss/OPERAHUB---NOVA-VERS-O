@@ -35,6 +35,13 @@ SUPABASE_KEY = os.getenv(
 ).strip()
 SUPABASE_WRITE_TOKEN = os.getenv("SUPABASE_WRITE_TOKEN", "").strip()
 
+# Cada deploy aponta para uma organização. O ambiente atual continua em
+# "setta" por compatibilidade; o deploy comercial/demo usa "opera-hub-demo".
+OPERAHUB_DEFAULT_ORG = (
+    os.getenv("OPERAHUB_DEFAULT_ORG", "setta").strip()
+    or "setta"
+)
+
 HERO_IMAGE = (
     "https://images.unsplash.com/photo-1769701000453-e306362a7d03"
     "?auto=format&fit=crop&fm=jpg&q=82&w=2400"
@@ -59,14 +66,14 @@ SUPABASE_WRITE_TIMEOUT = 12
 SLOW_BACKEND_SECONDS = 0.8
 
 WRITE_RPCS = {
-    "operahub_create_user_v2",
-    "operahub_update_user_avatar",
-    "operahub_set_login_required",
-    "operahub_save_login_visual",
-    "operahub_save_settings_v3",
-    "operahub_save_nav",
-    "operahub_save_apps_v4",
-    "operahub_save_general_v1",
+    "operahub_create_user_v3",
+    "operahub_update_user_avatar_v2",
+    "operahub_set_login_required_v2",
+    "operahub_save_login_visual_v2",
+    "operahub_save_general_v2",
+    "operahub_store_optimized_brand_assets_v2",
+    "operahub_store_optimized_hero_v2",
+    "operahub_store_optimized_app_image_v2",
 }
 
 
@@ -261,34 +268,96 @@ def normalize_settings(row):
     return data
 
 
-def fallback_apps():
-    items = []
-    for item in DEFAULT_APPLICATIONS:
+def fallback_apps(items=None):
+    result = []
+    for item in (items or DEFAULT_APPLICATIONS):
         data = dict(item)
         data["has_image"] = False
         data["image_zoom"] = 142
         data["updated_at"] = ""
-        items.append(data)
-    return items
+        result.append(data)
+    return result
 
 
-def load_bootstrap():
-    stale_item = RUNTIME_CACHE.get("bootstrap")
+DEMO_NAV_ITEMS = [
+    {"key": "inicio", "label": "Início", "icon": "fa-solid fa-house", "url": "", "sort_order": 1, "new_tab": False},
+    {"key": "planejamento", "label": "Planejamento", "icon": "fa-regular fa-file-lines", "url": "", "sort_order": 2, "new_tab": True},
+    {"key": "estoque", "label": "Estoque", "icon": "fa-solid fa-box-open", "url": "", "sort_order": 3, "new_tab": True},
+    {"key": "inventario", "label": "Inventário", "icon": "fa-regular fa-clipboard", "url": "", "sort_order": 4, "new_tab": True},
+    {"key": "entregas", "label": "Entregas", "icon": "fa-solid fa-truck", "url": "", "sort_order": 5, "new_tab": True},
+    {"key": "documentos", "label": "Documentos", "icon": "fa-regular fa-file-lines", "url": "", "sort_order": 6, "new_tab": True},
+    {"key": "indicadores", "label": "Indicadores", "icon": "fa-solid fa-chart-column", "url": "", "sort_order": 7, "new_tab": True},
+    {"key": "projetos", "label": "Projetos", "icon": "fa-solid fa-bullseye", "url": "", "sort_order": 8, "new_tab": True},
+    {"key": "integracoes", "label": "Integrações", "icon": "fa-solid fa-network-wired", "url": "", "sort_order": 9, "new_tab": True},
+    {"key": "notificacoes", "label": "Notificações", "icon": "fa-regular fa-bell", "url": "", "sort_order": 10, "new_tab": True},
+    {"key": "ajuda", "label": "Ajuda", "icon": "fa-regular fa-circle-question", "url": "", "sort_order": 11, "new_tab": True},
+]
+
+DEMO_APPLICATIONS = [
+    {"key": "gestao-operacional", "name": "GESTÃO OPERACIONAL", "description": "Visão integrada de rotinas, equipes e indicadores.", "icon": "fa-solid fa-people-group", "status": "development", "url": "", "sort_order": 1, "new_tab": True},
+    {"key": "planejamento", "name": "PLANEJAMENTO", "description": "Planejamento de demanda, materiais e produção.", "icon": "fa-solid fa-clipboard-list", "status": "development", "url": "", "sort_order": 2, "new_tab": True},
+    {"key": "estoque", "name": "ESTOQUE", "description": "Saldos, movimentações e cobertura de estoque.", "icon": "fa-solid fa-boxes-stacked", "status": "development", "url": "", "sort_order": 3, "new_tab": True},
+    {"key": "entregas", "name": "ENTREGAS", "description": "Acompanhamento de prazos e entregas.", "icon": "fa-solid fa-truck-fast", "status": "development", "url": "", "sort_order": 4, "new_tab": True},
+    {"key": "inventario", "name": "INVENTÁRIO", "description": "Contagens, divergências e ajustes de inventário.", "icon": "fa-regular fa-clipboard", "status": "development", "url": "", "sort_order": 5, "new_tab": True},
+    {"key": "notas-fiscais", "name": "NOTAS FISCAIS", "description": "Controle de documentos fiscais e pendências.", "icon": "fa-solid fa-file-invoice-dollar", "status": "development", "url": "", "sort_order": 6, "new_tab": True},
+    {"key": "indicadores", "name": "INDICADORES", "description": "Painéis e indicadores operacionais.", "icon": "fa-solid fa-chart-simple", "status": "development", "url": "", "sort_order": 7, "new_tab": True},
+    {"key": "projetos", "name": "PROJETOS", "description": "Gestão de projetos, tarefas e cronogramas.", "icon": "fa-solid fa-bullseye", "status": "development", "url": "", "sort_order": 8, "new_tab": True},
+    {"key": "integracoes", "name": "INTEGRAÇÕES", "description": "Monitoramento de APIs e integrações.", "icon": "fa-solid fa-network-wired", "status": "development", "url": "", "sort_order": 9, "new_tab": True},
+]
+
+
+def active_organization_slug():
+    return (
+        str(session.get("organization_slug") or OPERAHUB_DEFAULT_ORG).strip()
+        or OPERAHUB_DEFAULT_ORG
+    )
+
+
+def fallback_organization(slug):
+    if slug == "opera-hub-demo":
+        return {
+            "id": 2,
+            "name": "Opera Hub Demo",
+            "slug": "opera-hub-demo",
+            "mode": "demo",
+        }
+    return {
+        "id": 1,
+        "name": "Setta",
+        "slug": "setta",
+        "mode": "client",
+    }
+
+
+def load_bootstrap(organization_slug=None):
+    slug = (organization_slug or active_organization_slug()).strip()
+    cache_key = f"bootstrap:{slug}"
+    stale_item = RUNTIME_CACHE.get(cache_key)
     stale_value = stale_item[1] if stale_item else None
 
-    cached = cache_get("bootstrap", BOOTSTRAP_TTL)
+    cached = cache_get(cache_key, BOOTSTRAP_TTL)
     if cached is not None:
         return cached
 
+    is_demo = slug == "opera-hub-demo"
     fallback = {
+        "organization": fallback_organization(slug),
         "settings": dict(DEFAULT_SETTINGS),
-        "nav": [dict(item) for item in DEFAULT_NAV_ITEMS],
-        "applications": fallback_apps(),
+        "nav": [
+            dict(item)
+            for item in (DEMO_NAV_ITEMS if is_demo else DEFAULT_NAV_ITEMS)
+        ],
+        "applications": fallback_apps(
+            DEMO_APPLICATIONS if is_demo else DEFAULT_APPLICATIONS
+        ),
         "has_users": False,
     }
 
     try:
-        payload = sb_rpc_public("operahub_bootstrap")
+        payload = sb_rpc(
+            "operahub_bootstrap_v2",
+            {"p_organization_slug": slug},
+        )
         if isinstance(payload, dict):
             settings = normalize_settings(payload.get("settings") or {})
             nav_items = payload.get("nav") or fallback["nav"]
@@ -296,16 +365,22 @@ def load_bootstrap():
                 payload.get("applications")
                 or fallback["applications"]
             )
+            organization = (
+                payload.get("organization")
+                or fallback["organization"]
+            )
             result = {
+                "organization": organization,
                 "settings": settings,
                 "nav": nav_items,
                 "applications": applications,
                 "has_users": bool(payload.get("has_users")),
             }
-            return cache_set("bootstrap", result)
+            return cache_set(cache_key, result)
     except Exception as exc:
         app.logger.warning(
-            "Bootstrap Supabase indisponível: %s",
+            "Bootstrap multiempresa indisponível org=%s: %s",
+            slug,
             exc,
         )
 
@@ -313,6 +388,14 @@ def load_bootstrap():
         return stale_value
 
     return fallback
+
+
+def current_organization():
+    return dict(load_bootstrap()["organization"])
+
+
+def current_organization_id():
+    return int(current_organization()["id"])
 
 
 def load_settings():
@@ -400,10 +483,9 @@ def humanize_save_error(exc):
     return "Não foi possível concluir a alteração. Revise os dados e tente novamente."
 
 
-def asset_data(table, column, key_column, key_value):
-    cache_key = (
-        f"asset:{table}:{column}:{key_column}:{key_value}"
-    )
+def asset_data(asset_type, key=None):
+    organization_id = current_organization_id()
+    cache_key = f"asset:{organization_id}:{asset_type}:{key or ''}"
     stale_item = RUNTIME_CACHE.get(cache_key)
     stale_value = stale_item[1] if stale_item else None
 
@@ -412,21 +494,21 @@ def asset_data(table, column, key_column, key_value):
         return cached
 
     try:
-        rows = sb_get(
-            table,
+        value = sb_rpc(
+            "operahub_get_asset_v2",
             {
-                key_column: f"eq.{key_value}",
-                "select": column,
-                "limit": "1",
+                "p_organization_id": organization_id,
+                "p_asset_type": asset_type,
+                "p_key": key,
             },
-        )
-        value = rows[0].get(column) or "" if rows else ""
+        ) or ""
         return cache_set(cache_key, value)
     except Exception as exc:
         app.logger.warning(
-            "Asset Supabase indisponível table=%s column=%s: %s",
-            table,
-            column,
+            "Asset multiempresa indisponível org=%s type=%s key=%s: %s",
+            organization_id,
+            asset_type,
+            key,
             exc,
         )
         if stale_value is not None:
@@ -677,20 +759,26 @@ def load_users():
     if not SUPABASE_WRITE_TOKEN:
         return []
 
-    stale_item = RUNTIME_CACHE.get("users")
+    organization_id = current_organization_id()
+    cache_key = f"users:{organization_id}"
+    stale_item = RUNTIME_CACHE.get(cache_key)
     stale_value = stale_item[1] if stale_item else None
 
-    cached = cache_get("users", USERS_TTL)
+    cached = cache_get(cache_key, USERS_TTL)
     if cached is not None:
         return [dict(row) for row in cached]
 
     try:
-        rows = sb_rpc("operahub_list_users", {}) or []
-        cache_set("users", rows)
+        rows = sb_rpc(
+            "operahub_list_users_v2",
+            {"p_organization_id": organization_id},
+        ) or []
+        cache_set(cache_key, rows)
         return [dict(row) for row in rows]
     except Exception as exc:
         app.logger.warning(
-            "Lista de usuários indisponível: %s",
+            "Lista de usuários indisponível org=%s: %s",
+            organization_id,
             exc,
         )
         if stale_value is not None:
@@ -712,6 +800,10 @@ def current_user():
             "role": session.get("user_role") or "user",
             "initials": initials,
             "has_avatar": bool(session.get("user_has_avatar")),
+            "organization_id": session.get("organization_id"),
+            "organization_slug": session.get("organization_slug"),
+            "organization_name": session.get("organization_name"),
+            "organization_mode": session.get("organization_mode"),
             "legacy": False,
         }
 
@@ -748,19 +840,15 @@ def admin_authorized():
 @app.route("/assets/logo")
 def logo_asset():
     version = request.args.get("v", "current")
-    cache_key = f"logo:{version}"
+    organization_id = current_organization_id()
+    cache_key = f"{organization_id}:logo:{version}"
 
     cached = BRAND_IMAGE_CACHE.get(cache_key)
     if cached:
         raw, mime = cached
         return binary_response(raw, mime, max_age=2592000)
 
-    data = asset_data(
-        "operahub_settings",
-        "logo_data",
-        "id",
-        "main",
-    )
+    data = asset_data("logo")
 
     if data:
         optimized = optimize_brand_data_uri(data, favicon=False)
@@ -771,8 +859,9 @@ def logo_asset():
             if optimized != data and SUPABASE_WRITE_TOKEN:
                 try:
                     sb_rpc(
-                        "operahub_store_optimized_brand_assets",
+                        "operahub_store_optimized_brand_assets_v2",
                         {
+                            "p_organization_id": organization_id,
                             "p_logo_data": optimized,
                             "p_favicon_data": None,
                         },
@@ -788,19 +877,15 @@ def logo_asset():
 @app.route("/assets/favicon")
 def favicon_asset():
     version = request.args.get("v", "current")
-    cache_key = f"favicon:{version}"
+    organization_id = current_organization_id()
+    cache_key = f"{organization_id}:favicon:{version}"
 
     cached = BRAND_IMAGE_CACHE.get(cache_key)
     if cached:
         raw, mime = cached
         return binary_response(raw, mime, max_age=2592000)
 
-    data = asset_data(
-        "operahub_settings",
-        "favicon_data",
-        "id",
-        "main",
-    )
+    data = asset_data("favicon")
 
     if data:
         optimized = optimize_brand_data_uri(data, favicon=True)
@@ -811,8 +896,9 @@ def favicon_asset():
             if optimized != data and SUPABASE_WRITE_TOKEN:
                 try:
                     sb_rpc(
-                        "operahub_store_optimized_brand_assets",
+                        "operahub_store_optimized_brand_assets_v2",
                         {
+                            "p_organization_id": organization_id,
                             "p_logo_data": None,
                             "p_favicon_data": optimized,
                         },
@@ -828,8 +914,10 @@ def favicon_asset():
 @app.route("/assets/hero")
 def hero_asset():
     version = request.args.get("v", "current")
+    organization_id = current_organization_id()
+    cache_key = f"{organization_id}:hero:{version}"
 
-    cached = HERO_CACHE.get(version)
+    cached = HERO_CACHE.get(cache_key)
     if cached:
         raw, mime = cached
         return binary_response(
@@ -838,12 +926,7 @@ def hero_asset():
             max_age=604800,
         )
 
-    data = asset_data(
-        "operahub_settings",
-        "hero_data",
-        "id",
-        "main",
-    )
+    data = asset_data("hero")
 
     if data:
         optimized = optimize_banner_data_uri(data)
@@ -851,13 +934,16 @@ def hero_asset():
 
         if mime and raw is not None:
             HERO_CACHE.clear()
-            HERO_CACHE[version] = (raw, mime)
+            HERO_CACHE[cache_key] = (raw, mime)
 
             if optimized != data and SUPABASE_WRITE_TOKEN:
                 try:
                     sb_rpc(
-                        "operahub_store_optimized_hero",
-                        {"p_hero_data": optimized},
+                        "operahub_store_optimized_hero_v2",
+                        {
+                            "p_organization_id": organization_id,
+                            "p_hero_data": optimized,
+                        },
                     )
                 except Exception:
                     pass
@@ -874,7 +960,8 @@ def hero_asset():
 @app.route("/assets/login-image")
 def login_image_asset():
     version = request.args.get("v", "current")
-    cache_key = f"login-image:{version}"
+    organization_id = current_organization_id()
+    cache_key = f"{organization_id}:login-image:{version}"
 
     cached = LOGIN_IMAGE_CACHE.get(cache_key)
     if cached:
@@ -885,12 +972,7 @@ def login_image_asset():
             max_age=2592000,
         )
 
-    data = asset_data(
-        "operahub_settings",
-        "login_image_data",
-        "id",
-        "main",
-    )
+    data = asset_data("login")
     mime, raw = data_uri_parts(data)
 
     if mime and raw is not None:
@@ -910,7 +992,8 @@ def login_image_asset():
 @app.route("/assets/app/<app_key>")
 def application_asset(app_key):
     version = request.args.get("v", "current")
-    cache_key = f"{app_key}:{version}"
+    organization_id = current_organization_id()
+    cache_key = f"{organization_id}:{app_key}:{version}"
 
     cached = APP_IMAGE_CACHE.get(cache_key)
     if cached:
@@ -921,12 +1004,7 @@ def application_asset(app_key):
             max_age=2592000,
         )
 
-    data = asset_data(
-        "operahub_applications",
-        "image_data",
-        "key",
-        app_key,
-    )
+    data = asset_data("app_image", app_key)
 
     if data:
         optimized = optimize_app_icon_data_uri(data)
@@ -936,7 +1014,7 @@ def application_asset(app_key):
             # Keep cache small and invalidate old versions of this module.
             stale_keys = [
                 key for key in APP_IMAGE_CACHE
-                if key.startswith(f"{app_key}:")
+                if key.startswith(f"{organization_id}:{app_key}:")
             ]
             for key in stale_keys:
                 APP_IMAGE_CACHE.pop(key, None)
@@ -946,8 +1024,9 @@ def application_asset(app_key):
             if optimized != data and SUPABASE_WRITE_TOKEN:
                 try:
                     sb_rpc(
-                        "operahub_store_optimized_app_image",
+                        "operahub_store_optimized_app_image_v2",
                         {
+                            "p_organization_id": organization_id,
                             "p_key": app_key,
                             "p_image_data": optimized,
                         },
@@ -970,15 +1049,13 @@ def user_avatar_asset(user_id):
         return ("", 403)
 
     version = request.args.get("v", "current")
-    cache_key = f"user-avatar:{user_id}:{version}"
+    organization_id = current_organization_id()
+    cache_key = f"user-avatar:{organization_id}:{user_id}:{version}"
     data = cache_get(cache_key, ASSET_DATA_TTL)
 
     if data is None:
         try:
-            data = sb_rpc_public(
-                "operahub_get_user_avatar",
-                {"p_user_id": user_id},
-            ) or ""
+            data = asset_data("user_avatar", user_id)
         except Exception:
             data = ""
         cache_set(cache_key, data)
@@ -1011,6 +1088,7 @@ def index():
         logged_in=is_logged_in(),
         current_user=current_user(),
         can_admin=admin_authorized(),
+        organization=current_organization(),
         hero_image=url_for(
             "hero_asset",
             v=settings.get("updated_at", ""),
@@ -1063,8 +1141,9 @@ def configuracoes():
                     )
 
                 sb_rpc(
-                    "operahub_create_user_v2",
+                    "operahub_create_user_v3",
                     {
+                        "p_organization_id": current_organization_id(),
                         "p_username": username,
                         "p_full_name": full_name,
                         "p_email": email,
@@ -1114,8 +1193,9 @@ def configuracoes():
                     )
 
                 sb_rpc(
-                    "operahub_update_user_avatar",
+                    "operahub_update_user_avatar_v2",
                     {
+                        "p_organization_id": current_organization_id(),
                         "p_user_id": target_user_id,
                         "p_avatar_data": avatar_data,
                     },
@@ -1143,8 +1223,9 @@ def configuracoes():
                     )
 
                 sb_rpc(
-                    "operahub_set_login_required",
+                    "operahub_set_login_required_v2",
                     {
+                        "p_organization_id": current_organization_id(),
                         "p_login_required": require_login,
                     },
                 )
@@ -1198,8 +1279,9 @@ def configuracoes():
                 )
 
                 sb_rpc(
-                    "operahub_save_login_visual",
+                    "operahub_save_login_visual_v2",
                     {
+                        "p_organization_id": current_organization_id(),
                         "p_login_image_data": (
                             ""
                             if remove_login_image
@@ -1437,8 +1519,9 @@ def configuracoes():
             }
 
             sb_rpc(
-                "operahub_save_general_v1",
+                "operahub_save_general_v2",
                 {
+                    "p_organization_id": current_organization_id(),
                     "p_settings": settings_payload,
                     "p_nav": nav_payload,
                     "p_apps": app_payload,
@@ -1477,6 +1560,7 @@ def configuracoes():
         auth_users_exist=bool(bootstrap.get("has_users")),
         users=users,
         current_user=current_user(),
+        organization=current_organization(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
     )
 
@@ -1490,15 +1574,18 @@ def login():
     ):
         next_url = url_for("index")
 
+    organization = current_organization()
+
     if request.method == "POST":
         login_id = request.form.get("login", "").strip()
         password = request.form.get("password", "")
 
         auth_error = False
         try:
-            rows = sb_rpc_public(
-                "operahub_auth_user",
+            rows = sb_rpc(
+                "operahub_auth_user_v3",
                 {
+                    "p_organization_slug": organization["slug"],
                     "p_login": login_id,
                     "p_password": password,
                 },
@@ -1522,6 +1609,10 @@ def login():
             session["user_has_avatar"] = bool(
                 user.get("has_avatar")
             )
+            session["organization_id"] = int(user["organization_id"])
+            session["organization_slug"] = user["organization_slug"]
+            session["organization_name"] = user["organization_name"]
+            session["organization_mode"] = user["organization_mode"]
             session.permanent = True
             flash(
                 f"Bem-vindo, {user['full_name']}.",
@@ -1561,6 +1652,7 @@ def login():
         admin_enabled=admin_enabled(),
         auth_users_exist=auth_users_exist(),
         next_url=next_url,
+        organization=organization,
         login_image=(
             url_for(
                 "login_image_asset",
@@ -1625,6 +1717,8 @@ def healthz():
             SUPABASE_URL and SUPABASE_KEY
         ),
         "admin_auth_configured": admin_enabled(),
+        "default_organization": OPERAHUB_DEFAULT_ORG,
+        "active_organization": active_organization_slug(),
     }
 
 
