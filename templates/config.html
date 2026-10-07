@@ -751,19 +751,35 @@
 
               <div class="login-settings-copy">
                 <span class="login-settings-label">PROTEÇÃO DO APP</span>
-                <strong>{{ 'Login obrigatório' if settings['login_required'] else 'Acesso público' }}</strong>
+                <strong>
+                  {% if organization['mode'] == 'demo' %}
+                    Login obrigatório
+                  {% else %}
+                    {{ 'Login obrigatório' if settings['login_required'] else 'Acesso público' }}
+                  {% endif %}
+                </strong>
                 <p>
-                  Defina se a tela inicial exige autenticação antes de liberar os módulos.
+                  {% if organization['mode'] == 'demo' %}
+                    No Opera Hub base, o acesso aos módulos exige usuário e senha.
+                  {% else %}
+                    Defina se a tela inicial exige autenticação antes de liberar os módulos.
+                  {% endif %}
                 </p>
 
                 <label class="login-required-toggle">
                   <input
                     type="checkbox"
                     name="login_required"
-                    {% if settings['login_required'] %}checked{% endif %}
-                    {% if not auth_users_exist %}disabled{% endif %}
+                    {% if organization['mode'] == 'demo' or settings['login_required'] %}checked{% endif %}
+                    {% if organization['mode'] == 'demo' or not auth_users_exist %}disabled{% endif %}
                   >
-                  <span>Exigir login para acessar o Opera Hub</span>
+                  <span>
+                    {% if organization['mode'] == 'demo' %}
+                      Usuário e senha obrigatórios no Opera Hub
+                    {% else %}
+                      Exigir login para acessar o Opera Hub
+                    {% endif %}
+                  </span>
                 </label>
 
                 <button
@@ -771,10 +787,10 @@
                   type="submit"
                   name="config_action"
                   value="save_login_settings"
-                  {% if not auth_users_exist %}disabled{% endif %}
+                  {% if organization['mode'] == 'demo' or not auth_users_exist %}disabled{% endif %}
                 >
                   <i class="fa-solid fa-floppy-disk"></i>
-                  Salvar acesso
+                  {{ 'Regra fixa' if organization['mode'] == 'demo' else 'Salvar acesso' }}
                 </button>
               </div>
             </article>
@@ -814,6 +830,7 @@
                   >
                 </label>
 
+                {% if organization['mode'] != 'demo' %}
                 <label class="field-label">
                   E-mail
                   <input
@@ -824,6 +841,7 @@
                     autocomplete="off"
                   >
                 </label>
+                {% endif %}
 
                 <label class="field-label">
                   Perfil
@@ -859,7 +877,11 @@
 
               <div class="user-create-actions">
                 <span>
-                  O usuário poderá entrar usando o nome de usuário ou o e-mail cadastrado.
+                  {% if organization['mode'] == 'demo' %}
+                    O acesso ao Opera Hub será realizado com usuário e senha.
+                  {% else %}
+                    O usuário poderá entrar usando o nome de usuário ou o e-mail cadastrado.
+                  {% endif %}
                 </span>
                 <button
                   class="btn btn-primary"
