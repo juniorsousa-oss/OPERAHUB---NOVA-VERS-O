@@ -349,9 +349,13 @@ def load_bootstrap(organization_slug=None):
         return cached
 
     is_demo = slug == "opera-hub-demo"
+    fallback_settings = dict(DEFAULT_SETTINGS)
+    if is_demo:
+        fallback_settings["login_required"] = True
+
     fallback = {
         "organization": fallback_organization(slug),
-        "settings": dict(DEFAULT_SETTINGS),
+        "settings": fallback_settings,
         "nav": [
             dict(item)
             for item in (DEMO_NAV_ITEMS if is_demo else DEFAULT_NAV_ITEMS)
@@ -369,6 +373,8 @@ def load_bootstrap(organization_slug=None):
         )
         if isinstance(payload, dict):
             settings = normalize_settings(payload.get("settings") or {})
+            if is_demo:
+                settings["login_required"] = True
             nav_items = payload.get("nav") or fallback["nav"]
             applications = (
                 payload.get("applications")
@@ -764,6 +770,21 @@ def auth_users_exist():
     return bool(load_bootstrap().get("has_users"))
 
 
+def base_mode_requires_credentials():
+    return current_organization().get("mode") == "demo"
+
+
+def login_required_for_current_tenant(settings=None):
+    if base_mode_requires_credentials():
+        return True
+
+    settings = settings or load_settings()
+    return bool(
+        settings.get("login_required")
+        and auth_users_exist()
+    )
+
+
 def load_users():
     if not SUPABASE_WRITE_TOKEN:
         return []
@@ -839,6 +860,9 @@ def admin_authorized():
     user = current_user()
     if user and user.get("role") == "admin":
         return True
+
+    if base_mode_requires_credentials():
+        return False
 
     if not auth_users_exist() and not admin_enabled():
         return True
@@ -1083,8 +1107,7 @@ def index():
     settings = load_settings()
 
     if (
-        settings.get("login_required")
-        and auth_users_exist()
+        login_required_for_current_tenant(settings)
         and not is_logged_in()
     ):
         return redirect(url_for("login", next=url_for("index")))
@@ -1223,7 +1246,9 @@ def configuracoes():
 
             if config_action == "save_login_settings":
                 require_login = (
-                    request.form.get("login_required") == "on"
+                    True
+                    if base_mode_requires_credentials()
+                    else request.form.get("login_required") == "on"
                 )
 
                 if require_login and not auth_users_exist():
@@ -1629,10 +1654,17 @@ def login():
             )
             return redirect(next_url)
 
-        if (
+        legacy_admin_match = (
             admin_enabled()
             and password == app.config["ADMIN_PASSWORD"]
-        ):
+        )
+        if organization.get("mode") == "demo":
+            legacy_admin_match = (
+                legacy_admin_match
+                and normalize_username(login_id) == "admin"
+            )
+
+        if legacy_admin_match:
             session.clear()
             session["admin_ok"] = True
             session.permanent = True
