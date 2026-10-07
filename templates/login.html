@@ -62,7 +62,11 @@
         {% endif %}
       </div>
       <h2>Entrar na plataforma</h2>
+      {% if organization['mode'] == 'demo' %}
+      <p>Informe seu usuário e sua senha para continuar.</p>
+      {% else %}
       <p>Informe seu usuário ou e-mail e sua senha para continuar.</p>
+      {% endif %}
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -72,18 +76,24 @@
 
       {% if not auth_users_exist and not admin_enabled %}
       <div class="flash error">
-        Nenhum usuário foi criado ainda. Acesse Configurações → Login para cadastrar o primeiro acesso.
+        {% if organization['mode'] == 'demo' %}
+          Nenhum usuário foi criado para o Opera Hub e não há acesso administrativo configurado.
+        {% else %}
+          Nenhum usuário foi criado ainda. Acesse Configurações → Login para cadastrar o primeiro acesso.
+        {% endif %}
       </div>
       {% endif %}
 
       <form method="post" action="{{ url_for('login', next=next_url) }}">
-        <label for="login">Usuário ou e-mail</label>
+        <label for="login">
+          {{ 'Usuário' if organization['mode'] == 'demo' else 'Usuário ou e-mail' }}
+        </label>
         <div class="login-password login-field">
           <input
             id="login"
             type="text"
             name="login"
-            placeholder="Digite seu usuário ou e-mail"
+            placeholder="{{ 'Digite seu usuário' if organization['mode'] == 'demo' else 'Digite seu usuário ou e-mail' }}"
             autocomplete="username"
             required
             autofocus
