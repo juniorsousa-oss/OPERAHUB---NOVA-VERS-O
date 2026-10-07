@@ -11,6 +11,7 @@ from requests.adapters import HTTPAdapter
 from PIL import Image, ImageOps
 from flask import (
     Flask,
+    abort,
     flash,
     g,
     redirect,
@@ -35,12 +36,29 @@ SUPABASE_KEY = os.getenv(
 ).strip()
 SUPABASE_WRITE_TOKEN = os.getenv("SUPABASE_WRITE_TOKEN", "").strip()
 
-# Cada deploy aponta para uma organização. O ambiente atual continua em
-# "setta" por compatibilidade; o deploy comercial/demo usa "opera-hub-demo".
+# A organização padrão continua existindo para compatibilidade com o domínio
+# raiz atual. Clientes adicionais são resolvidos dinamicamente pelo subdomínio.
 OPERAHUB_DEFAULT_ORG = (
     os.getenv("OPERAHUB_DEFAULT_ORG", "setta").strip()
     or "setta"
 )
+OPERAHUB_TENANT_DOMAIN = (
+    os.getenv(
+        "OPERAHUB_TENANT_DOMAIN",
+        os.getenv("OPERA_HUB_DOMAIN", "operahub.nexonlabs.com.br"),
+    )
+    .strip()
+    .lower()
+    .split(":", 1)[0]
+    .strip(".")
+    or "operahub.nexonlabs.com.br"
+)
+
+TENANT_HOST_ALIASES = {
+    "demo": "opera-hub-demo",
+    "base": "opera-hub-demo",
+    "opera-hub-demo": "opera-hub-demo",
+}
 
 HERO_IMAGE = (
     "https://images.unsplash.com/photo-1769701000453-e306362a7d03"
@@ -306,11 +324,40 @@ DEMO_APPLICATIONS = [
 ]
 
 
+def request_hostname():
+    host = (request.host or "").strip().lower()
+    if ":" in host:
+        host = host.split(":", 1)[0]
+    return host.rstrip(".")
+
+
+def organization_slug_from_host():
+    host = request_hostname()
+    base_domain = OPERAHUB_TENANT_DOMAIN
+
+    if not host or not base_domain or host == base_domain:
+        return None
+
+    suffix = f".{base_domain}"
+    if not host.endswith(suffix):
+        return None
+
+    subdomain = host[: -len(suffix)].strip(".")
+    if not subdomain or "." in subdomain:
+        return "__invalid_tenant__"
+
+    if not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", subdomain):
+        return "__invalid_tenant__"
+
+    return TENANT_HOST_ALIASES.get(subdomain, subdomain)
+
+
 def active_organization_slug():
-    return (
-        str(session.get("organization_slug") or OPERAHUB_DEFAULT_ORG).strip()
-        or OPERAHUB_DEFAULT_ORG
-    )
+    host_slug = organization_slug_from_host()
+    if host_slug is not None:
+        return host_slug
+
+    return OPERAHUB_DEFAULT_ORG
 
 
 def fallback_organization(slug):
@@ -817,7 +864,13 @@ def load_users():
 
 
 def current_user():
+    active_slug = active_organization_slug()
+    session_slug = str(session.get("organization_slug") or "").strip()
+
     if session.get("user_id"):
+        if session_slug != active_slug:
+            return None
+
         name = session.get("user_name") or session.get("username") or "Usuário"
         initials = "".join(
             part[0] for part in str(name).split()[:2] if part
@@ -838,6 +891,9 @@ def current_user():
         }
 
     if session.get("admin_ok"):
+        if session_slug != active_slug:
+            return None
+
         return {
             "id": "legacy-admin",
             "username": "admin",
@@ -846,6 +902,9 @@ def current_user():
             "role": "admin",
             "initials": "AD",
             "has_avatar": False,
+            "organization_slug": session_slug,
+            "organization_name": session.get("organization_name"),
+            "organization_mode": session.get("organization_mode"),
             "legacy": True,
         }
 
@@ -1667,6 +1726,10 @@ def login():
         if legacy_admin_match:
             session.clear()
             session["admin_ok"] = True
+            session["organization_id"] = int(organization.get("id") or 0)
+            session["organization_slug"] = organization["slug"]
+            session["organization_name"] = organization["name"]
+            session["organization_mode"] = organization["mode"]
             session.permanent = True
             flash(
                 "Acesso administrativo realizado.",
@@ -1719,6 +1782,18 @@ def start_request_timer():
     g.request_started_at = time.perf_counter()
 
 
+@app.before_request
+def reject_unknown_tenant():
+    if request.path == "/healthz" or request.path.startswith("/static/"):
+        return None
+
+    organization = current_organization()
+    if int(organization.get("id") or 0) <= 0:
+        abort(404)
+
+    return None
+
+
 @app.after_request
 def add_server_timing(response):
     started_at = getattr(
@@ -1759,6 +1834,8 @@ def healthz():
         ),
         "admin_auth_configured": admin_enabled(),
         "default_organization": OPERAHUB_DEFAULT_ORG,
+        "tenant_domain": OPERAHUB_TENANT_DOMAIN,
+        "resolved_by_host": organization_slug_from_host(),
         "active_organization": active_organization_slug(),
     }
 
