@@ -14,7 +14,7 @@ services:
       SUPABASE_WRITE_TOKEN: ${SUPABASE_WRITE_TOKEN}
     labels:
       - traefik.enable=true
-      - "traefik.http.routers.operahub.rule=Host(\`${OPERA_HUB_DOMAIN:-operahub.nexonlabs.com.br}\`)"
+      - "traefik.http.routers.operahub.rule=Host(`${OPERA_HUB_DOMAIN:-operahub.nexonlabs.com.br}`)"
       - traefik.http.routers.operahub.entrypoints=websecure
       - traefik.http.routers.operahub.tls=true
       - traefik.http.routers.operahub.tls.certresolver=letsencrypt
