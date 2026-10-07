@@ -84,6 +84,14 @@
           >
         </div>
 
+        <div class="tenant-chip tenant-chip-{{ organization['mode'] }}" title="Configuração isolada por ambiente">
+          <span class="tenant-chip-dot"></span>
+          <div>
+            <small>{{ 'BASE / DEMO' if organization['mode'] == 'demo' else 'CLIENTE' }}</small>
+            <strong>{{ organization['name'] }}</strong>
+          </div>
+        </div>
+
         <div class="top-actions">
           <a class="icon-button" href="{{ url_for('index') }}" aria-label="Voltar ao início" title="Voltar ao início">
             <i class="fa-solid fa-house"></i>
@@ -127,7 +135,7 @@
       <div class="admin-title">
         <div>
           <h1>Configurações</h1>
-          <p>Identidade visual, acessos e atalhos do Opera Hub.</p>
+          <p>Identidade visual, acessos e atalhos de <strong>{{ organization['name'] }}</strong>. As alterações ficam restritas a este ambiente.</p>
         </div>
 
         {% if not supabase_write_ready %}

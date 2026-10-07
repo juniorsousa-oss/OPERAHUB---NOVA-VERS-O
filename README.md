@@ -2,6 +2,57 @@
 
 Aplicativo-base do Opera Hub para centralização de operações industriais e logísticas.
 
+## Modos / organizações
+
+O Opera Hub usa **uma única base de código** e separa cada implantação por organização.
+
+### Opera Hub — base oficial / demonstração
+
+Slug técnico: `opera-hub-demo`.
+
+- É o produto padrão.
+- Serve como ambiente de demonstração comercial.
+- É a referência para novos clientes.
+- Possui navegação, aplicações, identidade, usuários e dados próprios.
+- Não acessa configurações nem usuários de clientes.
+
+### Cliente atual — Setta
+
+Slug técnico: `setta`.
+
+- Preserva exatamente os itens que já estavam configurados no Opera Hub.
+- Mantém os 11 atalhos atuais, 9 aplicações, identidade visual e usuário já existente.
+- URLs e customizações atuais foram mantidas.
+- Alterações neste ambiente não afetam a base Opera Hub.
+
+A seleção do ambiente é feita pela variável:
+
+```env
+OPERAHUB_DEFAULT_ORG=setta
+```
+
+Para o deploy oficial de demonstração:
+
+```env
+OPERAHUB_DEFAULT_ORG=opera-hub-demo
+```
+
+O código mantém `setta` como fallback por compatibilidade com o deploy já existente. Assim, publicar a nova versão não troca o cliente atual para o ambiente de demonstração acidentalmente.
+
+## Arquitetura multiempresa
+
+As tabelas multiempresa são:
+
+- `operahub_organizations`
+- `operahub_tenant_settings`
+- `operahub_tenant_nav_items`
+- `operahub_tenant_applications`
+- `operahub_tenant_users`
+
+Cada consulta e alteração usa a organização ativa. Imagens, configurações, navegação, aplicações, usuários e caches também são segmentados por organização.
+
+As tabelas antigas foram mantidas intactas como camada de segurança da migração. Os dados atuais foram copiados para a organização Setta sem exclusões.
+
 ## Estado atual
 
 - Layout principal responsivo conforme identidade Opera Hub.
@@ -9,35 +60,30 @@ Aplicativo-base do Opera Hub para centralização de operações industriais e l
 - Grade de aplicações com links configuráveis.
 - Busca de aplicações.
 - Painel de Configurações.
-- Logo e favicon configuráveis pelo próprio app.
+- Logo, favicon, banner e imagem de login configuráveis por organização.
+- Usuários isolados por organização.
+- Login restrito ao tenant do deploy.
+- Identificação visual de **BASE / DEMO** ou **CLIENTE**.
 - Persistência permanente no Supabase.
-- Deploy preparado para Render.
+- Deploy preparado para Hostinger/Render.
 - Endpoint de saúde: `/healthz`.
 
 ## Supabase
 
-A configuração foi migrada do SQLite para o Supabase.
+As leituras e gravações multiempresa passam por funções RPC protegidas pelo token de servidor `SUPABASE_WRITE_TOKEN`. As novas tabelas não são expostas diretamente aos papéis `anon` e `authenticated`.
 
-Tabelas:
-
-- `operahub_settings`
-- `operahub_nav_items`
-- `operahub_applications`
-- `operahub_private`
-
-As leituras são públicas para o app e as alterações são feitas por funções RPC protegidas por um token de escrita.
-
-### Variáveis necessárias no Render
+Variáveis necessárias:
 
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 - `SUPABASE_WRITE_TOKEN`
 - `SECRET_KEY`
 - `ADMIN_PASSWORD`
+- `OPERAHUB_DEFAULT_ORG`
 
-O `render.yaml` já contém URL e chave publishable do projeto. O token de escrita deve ser criado como variável secreta no Render.
+Nunca exponha `SUPABASE_WRITE_TOKEN` no navegador.
 
-## Render
+## Deploy
 
 Build:
 
@@ -51,21 +97,39 @@ Start:
 gunicorn --bind 0.0.0.0:$PORT app:app
 ```
 
+No ambiente do cliente atual:
+
+```env
+OPERAHUB_DEFAULT_ORG=setta
+```
+
+No ambiente base/demonstração:
+
+```env
+OPERAHUB_DEFAULT_ORG=opera-hub-demo
+```
+
 ## Configurações
 
 Acesse:
 
-```
+```text
 /configuracoes
 ```
 
-No painel é possível:
+O painel altera somente a organização ativa. É possível configurar:
 
-- enviar a logo principal;
-- definir a escala da logo;
-- enviar o favicon;
-- informar os links do menu lateral;
-- informar os links dos cartões de aplicações;
-- escolher se cada destino abre em nova aba.
+- logo principal;
+- escala da logo;
+- favicon;
+- banner;
+- imagem de login;
+- links do menu lateral;
+- links, status e imagens dos cartões;
+- usuários e exigência de login.
 
-Todas essas alterações são persistidas no Supabase.
+## Regra para novos clientes
+
+A organização `opera-hub-demo` é a **matriz funcional** do produto. Novos clientes devem nascer a partir dessa estrutura padrão e depois receber apenas suas customizações de marca, usuários, URLs, permissões e módulos contratados.
+
+A organização Setta é um cliente e **não deve ser usada como matriz** para novos ambientes.

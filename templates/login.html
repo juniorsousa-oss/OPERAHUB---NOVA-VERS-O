@@ -54,7 +54,13 @@
 
     <section class="login-form-panel">
       <div class="login-form-inner">
-      <div class="login-badge">OPERA HUB • ACESSO</div>
+      <div class="login-badge">
+        {% if organization['mode'] == 'demo' %}
+          OPERA HUB • BASE / DEMO
+        {% else %}
+          OPERA HUB • CLIENTE · {{ organization['name']|upper }}
+        {% endif %}
+      </div>
       <h2>Entrar na plataforma</h2>
       <p>Informe seu usuário ou e-mail e sua senha para continuar.</p>
 
