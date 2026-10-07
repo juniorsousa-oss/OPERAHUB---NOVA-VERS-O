@@ -90,6 +90,14 @@
           <input id="appSearch" type="search" placeholder="Buscar no Opera Hub..." autocomplete="off">
         </div>
 
+        <div class="tenant-chip tenant-chip-{{ organization['mode'] }}" title="Ambiente ativo">
+          <span class="tenant-chip-dot"></span>
+          <div>
+            <small>{{ 'BASE / DEMO' if organization['mode'] == 'demo' else 'CLIENTE' }}</small>
+            <strong>{{ organization['name'] }}</strong>
+          </div>
+        </div>
+
         <div class="top-actions">
           <button class="icon-button" type="button" aria-label="Notificações">
             <i class="fa-regular fa-bell"></i>
