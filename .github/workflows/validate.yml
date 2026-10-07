@@ -33,6 +33,7 @@ jobs:
       - name: Smoke test Flask
         env:
           OPERAHUB_DEFAULT_ORG: ${{ matrix.organization }}
+          OPERAHUB_TENANT_DOMAIN: operahub.nexonlabs.com.br
           SUPABASE_URL: https://example.supabase.co
           SUPABASE_KEY: test-publishable-key
           SUPABASE_WRITE_TOKEN: ""
@@ -46,8 +47,11 @@ jobs:
           app.config["TESTING"] = True
           client = app.test_client()
 
-          assert client.get("/healthz").status_code == 200
-          assert client.get("/login").status_code == 200
+          health = client.get("/healthz")
+          assert health.status_code == 200
+
+          root_login = client.get("/login")
+          assert root_login.status_code == 200
 
           home = client.get("/", follow_redirects=False)
           if os.environ["OPERAHUB_DEFAULT_ORG"] == "opera-hub-demo":
@@ -55,6 +59,36 @@ jobs:
               assert "/login" in home.headers["Location"]
           else:
               assert home.status_code == 200, home.status_code
+
+          demo_health = client.get(
+              "/healthz",
+              headers={"Host": "demo.operahub.nexonlabs.com.br"},
+          )
+          demo_payload = demo_health.get_json()
+          assert demo_payload["active_organization"] == "opera-hub-demo"
+          assert demo_payload["resolved_by_host"] == "opera-hub-demo"
+
+          demo_home = client.get(
+              "/",
+              headers={"Host": "demo.operahub.nexonlabs.com.br"},
+              follow_redirects=False,
+          )
+          assert demo_home.status_code == 302, demo_home.status_code
+          assert "/login" in demo_home.headers["Location"]
+
+          setta_home = client.get(
+              "/",
+              headers={"Host": "setta.operahub.nexonlabs.com.br"},
+              follow_redirects=False,
+          )
+          assert setta_home.status_code == 200, setta_home.status_code
+
+          unknown_home = client.get(
+              "/",
+              headers={"Host": "cliente-inexistente.operahub.nexonlabs.com.br"},
+              follow_redirects=False,
+          )
+          assert unknown_home.status_code == 404, unknown_home.status_code
 
           print("Smoke test OK")
           PY
