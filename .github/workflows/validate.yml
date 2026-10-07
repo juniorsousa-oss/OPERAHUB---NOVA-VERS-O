@@ -40,14 +40,21 @@ jobs:
           ADMIN_PASSWORD: ""
         run: |
           python - <<'PY'
+          import os
           from app import app
 
           app.config["TESTING"] = True
           client = app.test_client()
 
-          for path in ("/healthz", "/", "/login"):
-              response = client.get(path)
-              assert response.status_code == 200, (path, response.status_code)
+          assert client.get("/healthz").status_code == 200
+          assert client.get("/login").status_code == 200
+
+          home = client.get("/", follow_redirects=False)
+          if os.environ["OPERAHUB_DEFAULT_ORG"] == "opera-hub-demo":
+              assert home.status_code == 302, home.status_code
+              assert "/login" in home.headers["Location"]
+          else:
+              assert home.status_code == 200, home.status_code
 
           print("Smoke test OK")
           PY
