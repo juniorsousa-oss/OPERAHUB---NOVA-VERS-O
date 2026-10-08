@@ -1,0 +1,85 @@
+/* Administração multiempresa — estilos isolados do Opera Hub */
+.opera-admin-page .main-area{min-width:0}
+.opera-admin-page .oa-content{padding:28px 26px 44px;max-width:1590px;margin:0 auto}
+.oa-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px}
+.oa-eyebrow{display:block;color:#BF8B08;font-weight:900;letter-spacing:.18em;font-size:10px;margin-bottom:9px}
+.oa-heading h1{font-size:26px;line-height:1.2;letter-spacing:-.03em;color:#102039;margin:0 0 8px;font-weight:850}
+.oa-heading p,.oa-section-title p{font-size:13px;color:#66748b;line-height:1.6;margin:0}
+.oa-button{font:inherit;font-size:12px;font-weight:800;border:0;background:#ffc33b;color:#101d34;border-radius:11px;padding:10px 15px;display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.oa-button:hover{background:#f1b427}
+.oa-button-muted,.oa-button:disabled{background:#e9edf3;color:#8591a2;cursor:not-allowed}
+.oa-button-muted span{font-size:9px;font-weight:700}
+.oa-alert{padding:13px 16px;border-radius:11px;margin-bottom:14px;font-size:13px}
+.oa-alert-success{background:#ecfaf3;color:#157451;border:1px solid #c2edd9}
+.oa-alert-error{background:#fff0f0;color:#b02929;border:1px solid #f7c8c8}
+.oa-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:20px}
+.oa-summary-card{background:#fff;border:1px solid #e2e8f0;border-radius:15px;padding:17px 20px;box-shadow:0 6px 16px rgba(10,30,60,.03)}
+.oa-summary-card span{display:flex;align-items:center;gap:8px;font-size:12px;color:#718099;font-weight:650}
+.oa-summary-card span i{color:#daa011}
+.oa-summary-card strong{font-size:27px;color:#14243a;font-weight:900;display:block;margin-top:7px}
+.oa-section{background:#fff;border:1px solid #e3e9f1;border-radius:17px;padding:22px;margin-bottom:19px;scroll-margin-top:18px}
+.oa-section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.oa-section-title h2{font-size:18px;color:#102037;letter-spacing:-.02em;margin:0 0 5px}
+.oa-organizations{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.oa-organization{border:1px solid #e2e9f2;border-radius:13px;display:flex;align-items:center;padding:14px;gap:13px;text-decoration:none;background:#fff;min-width:0}
+.oa-organization:hover{border-color:#d4aa2d;background:#fffdf7}
+.oa-organization.selected{border-color:#edb327;background:#fffcf4;box-shadow:0 0 0 1px #edb327 inset}
+.oa-org-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:#fff2d4;color:#bd8a05}
+.oa-org-details{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.oa-org-details strong{font-weight:800;color:#142338;font-size:13px}
+.oa-org-details small{color:#697991;font-size:11px;word-break:break-word}
+.oa-org-details span{font-size:10px;color:#8492a7}
+.oa-org-status{font-size:10px;font-weight:750;white-space:nowrap;color:#168b63}
+.oa-org-status i{font-size:7px}
+.oa-template-chip{background:#fff6dc;border:1px solid #f2dfa9;border-radius:50px;color:#a27100;font-size:11px;padding:9px 11px;font-weight:750;white-space:nowrap}
+.oa-info{display:flex;align-items:flex-start;gap:10px;background:#f4f7fb;border-radius:12px;border:1px solid #e5ebf3;padding:13px 15px;color:#53657d;font-size:12px;margin:0 0 17px}
+.oa-info i{margin-top:2px;color:#336da6}
+.oa-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+.oa-module{min-width:0;border:1px solid #e5eaf2;border-radius:13px;padding:16px;background:#fff}
+.oa-module-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:15px}
+.oa-module-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#f2f6fc;color:#234971;flex:0 0 42px}
+.oa-module-copy{flex:1;min-width:0}
+.oa-module-copy strong{display:block;color:#142137;font-size:13px;font-weight:800}
+.oa-module-copy small{display:block;color:#738098;font-size:11px;line-height:1.4;margin:4px 0}
+.oa-module-copy code{font:500 10px/1.3 monospace;background:#f3f6fa;border-radius:4px;padding:2px 5px;color:#738098}
+.oa-status{font-size:10px;font-weight:800;padding:6px 8px;border-radius:7px;white-space:nowrap}
+.oa-on{background:#e8f8f0;color:#128459}
+.oa-off{background:#fff0ef;color:#ba453c}
+.oa-module-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid #edf1f6;padding-top:14px}
+.oa-module-options label{display:flex;gap:8px;align-items:center;font-size:12px;color:#4b5b73;cursor:pointer;line-height:1.5}
+.oa-module-options label:first-child{grid-column:1/-1;font-weight:800;color:#162d45}
+.oa-module-options input{accent-color:#da9d06;width:16px;height:16px;flex-shrink:0}
+.oa-module-options input:disabled{opacity:.4}
+.oa-module-options small{color:#a3aebe;font-size:10px}
+.oa-module-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px;margin-top:14px;border-top:1px solid #edf1f6}
+.oa-module-footer>span{font-size:10px;color:#7e8da0}
+.oa-next-step{display:flex;gap:14px;align-items:center;background:#f5f8fb;border:1px solid #e1e8f0;border-radius:15px;padding:20px}
+.oa-next-step>i{font-size:25px;color:#e6ae24}
+.oa-next-step>div{flex:1}
+.oa-next-step strong{color:#182a42;font-weight:800;font-size:13px}
+.oa-next-step p{font-size:12px;color:#6b7a91;line-height:1.5;margin:5px 0 0}
+.oa-next-step a{color:#9c6b00;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap}
+@media(max-width:960px){
+  .opera-admin-page .oa-content{padding:20px 16px 36px}
+  .oa-heading h1{font-size:23px}
+}
+@media(max-width:700px){
+  .oa-heading{align-items:stretch;flex-direction:column;gap:14px}
+  .oa-heading .oa-button{align-self:flex-start}
+  .oa-summary{gap:7px}
+  .oa-summary-card{padding:12px}
+  .oa-summary-card span{font-size:10px}
+  .oa-summary-card strong{font-size:22px}
+  .oa-section{padding:14px}
+  .oa-modules{grid-template-columns:1fr}
+  .oa-organization{padding:11px}
+  .oa-next-step{align-items:flex-start;flex-wrap:wrap}
+  .oa-next-step a{width:100%}
+}
+@media(max-width:390px){
+  .oa-module-options{grid-template-columns:1fr}
+  .oa-module-options label:first-child{grid-column:auto}
+  .oa-module-head{flex-wrap:wrap}
+  .oa-status{margin-left:54px}
+  .oa-module-footer{flex-wrap:wrap}
+}

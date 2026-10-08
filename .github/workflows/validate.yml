@@ -30,6 +30,17 @@ jobs:
       - name: Compile Python
         run: python -m py_compile app.py
 
+      - name: Unit tests — admin and tenant module visibility
+        env:
+          OPERAHUB_DEFAULT_ORG: ${{ matrix.organization }}
+          OPERAHUB_TENANT_DOMAIN: operahub.nexonlabs.com.br
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_KEY: test-publishable-key
+          SUPABASE_WRITE_TOKEN: ""
+          SECRET_KEY: ci-test-key
+          ADMIN_PASSWORD: ""
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
       - name: Smoke test Flask
         env:
           OPERAHUB_DEFAULT_ORG: ${{ matrix.organization }}

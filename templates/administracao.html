@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0F1B2D">
+  <title>Administração Opera Hub</title>
+  {% if settings['has_favicon'] %}
+  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at']) }}">
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body class="home-page config-page opera-admin-page">
+  <div class="app-shell">
+    <aside class="side-nav" id="sideNav">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Opera Hub">
+        {% if settings['has_logo'] %}
+        <img class="brand-logo-img" src="{{ url_for('logo_asset', v=settings['updated_at']) }}" alt="Opera Hub" style="--brand-user-width: {{ settings['logo_width'] }}px">
+        {% else %}
+        <div class="brand-mark">∞</div>
+        <div class="brand-text"><span>OPERA</span><strong>HUB</strong></div>
+        {% endif %}
+      </a>
+      <nav class="nav-primary">
+        <a class="nav-link" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i><span>Início</span></a>
+        <a class="nav-link" href="{{ url_for('configuracoes') }}"><i class="fa-solid fa-palette"></i><span>Identidade e configurações</span></a>
+        <a class="nav-link active" href="{{ url_for('administracao') }}"><i class="fa-solid fa-building-user"></i><span>Administração</span></a>
+      </nav>
+      <div class="nav-secondary">
+        <a class="nav-link" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sair</span></a>
+      </div>
+    </aside>
+    <main class="main-area">
+      <header class="top-bar">
+        <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="search-wrap oa-search"><i class="fa-solid fa-shield-halved"></i><input type="text" value="Administração Opera Hub" readonly aria-label="Administração Opera Hub"></div>
+        <div class="tenant-chip tenant-chip-demo"><span class="tenant-chip-dot"></span><div><small>BASE / DEMO</small><strong>Opera Hub</strong></div></div>
+        <div class="top-actions">
+          <a class="icon-button" href="{{ url_for('index') }}" title="Voltar ao início" aria-label="Voltar ao início"><i class="fa-solid fa-house"></i></a>
+          <div class="user-session">
+            <div class="user-chip"><div class="avatar small">{{ current_user['initials'] }}</div><div class="user-copy"><strong>{{ current_user['name'] }}</strong><span>Administrador</span></div></div>
+            <a class="logout-button" href="{{ url_for('logout') }}" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+          </div>
+        </div>
+      </header>
+
+      <div class="oa-content">
+        <div class="oa-heading">
+          <div>
+            <span class="oa-eyebrow">GESTÃO DA PLATAFORMA</span>
+            <h1>Administração Opera Hub</h1>
+            <p>Gerencie organizações e defina quais módulos aparecem na página inicial e no menu lateral de cada cliente.</p>
+          </div>
+          <button type="button" class="oa-button oa-button-muted" disabled title="Disponível após aprovação da identidade oficial da matriz"><i class="fa-solid fa-plus"></i> Novo cliente <span>Em preparação</span></button>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="oa-alert oa-alert-{{ category }}" role="status">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        <div class="oa-summary">
+          <div class="oa-summary-card"><span><i class="fa-solid fa-building"></i> Organizações</span><strong>{{ organizations|length }}</strong></div>
+          <div class="oa-summary-card"><span><i class="fa-solid fa-boxes-stacked"></i> Clientes</span><strong>{{ organizations|selectattr('mode', 'equalto', 'client')|list|length }}</strong></div>
+          <div class="oa-summary-card"><span><i class="fa-solid fa-layer-group"></i> Módulos da matriz</span><strong>{{ (organizations|selectattr('mode', 'equalto', 'demo')|first)['modules']|length if organizations|selectattr('mode','equalto','demo')|list else 0 }}</strong></div>
+        </div>
+
+        <section class="oa-section" aria-labelledby="oa-orgs">
+          <div class="oa-section-title">
+            <div><h2 id="oa-orgs">Organizações</h2><p>Escolha o ambiente cujos módulos deseja consultar e configurar.</p></div>
+          </div>
+          <div class="oa-organizations">
+            {% for org in organizations %}
+            <a class="oa-organization {{ 'selected' if selected and org['slug']==selected['slug'] else '' }}" href="{{ url_for('administracao', organization=org['slug']) }}#modulos">
+              <div class="oa-org-icon"><i class="fa-solid {{ 'fa-cubes' if org['mode']=='demo' else 'fa-building' }}"></i></div>
+              <div class="oa-org-details">
+                <strong>{{ org['name'] }}</strong>
+                <small>{{ org['slug'] }}</small>
+                <span>{{ 'Matriz / Demonstração' if org['mode']=='demo' else 'Cliente' }} · {{ org['modules']|length }} módulos</span>
+              </div>
+              <div class="oa-org-status"><i class="fa-solid fa-circle"></i> {{ 'Ativo' if org['active'] else 'Inativo' }}</div>
+            </a>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="oa-section" id="modulos" aria-labelledby="oa-modules">
+          <div class="oa-section-title">
+            <div><h2 id="oa-modules">Módulos — {{ selected['name'] if selected else 'Sem organização' }}</h2><p>Controle individual de habilitação, cards da tela inicial e itens do menu lateral.</p></div>
+            {% if selected and selected['mode']=='demo' %}<span class="oa-template-chip"><i class="fa-solid fa-star"></i> Matriz padrão</span>{% endif %}
+          </div>
+          {% if selected %}
+            <div class="oa-info"><i class="fa-solid fa-circle-info"></i><span>As mudanças afetam somente <strong>{{ selected['name'] }}</strong>. As configurações dos outros clientes não serão alteradas. Módulos sem atalho de menu exibem apenas o card.</span></div>
+            <div class="oa-modules">
+              {% for module in selected['modules'] %}
+              <form class="oa-module" method="post" action="{{ url_for('administracao') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="organization_slug" value="{{ selected['slug'] }}">
+                <input type="hidden" name="module_key" value="{{ module['key'] }}">
+                <div class="oa-module-head">
+                  <span class="oa-module-icon"><i class="fa-solid fa-layer-group"></i></span>
+                  <div class="oa-module-copy"><strong>{{ module['name'] }}</strong><small>{{ module['description'] }}</small><code>{{ module['key'] }}</code></div>
+                  <span class="oa-status {{ 'oa-on' if module['enabled'] else 'oa-off' }}">{{ 'Habilitado' if module['enabled'] else 'Desabilitado' }}</span>
+                </div>
+                <div class="oa-module-options">
+                  <label><input type="checkbox" name="enabled" {% if module['enabled'] %}checked{% endif %}> <span>Habilitado</span></label>
+                  <label><input type="checkbox" name="show_home" {% if module['show_home'] %}checked{% endif %}> <span>Card na página inicial</span></label>
+                  <label title="{{ 'Item associado: ' ~ module['nav_key'] if module['nav_key'] else 'Sem item correspondente no menu lateral' }}"><input type="checkbox" name="show_menu" {% if module['show_menu'] %}checked{% endif %} {% if not module['nav_key'] %}disabled{% endif %}> <span>Menu lateral {% if not module['nav_key'] %}<small>(sem vínculo)</small>{% endif %}</span></label>
+                </div>
+                <div class="oa-module-footer">
+                  <span>Menu: {{ module['nav_key'] if module['nav_key'] else 'não associado' }}</span>
+                  <button type="submit" class="oa-button"><i class="fa-solid fa-floppy-disk"></i> Salvar módulo</button>
+                </div>
+              </form>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="oa-info">Nenhuma organização disponível.</p>
+          {% endif %}
+        </section>
+
+        <div class="oa-next-step">
+          <i class="fa-solid fa-palette"></i>
+          <div><strong>Identidade oficial e novos clientes</strong><p>A identidade visual da matriz será validada antes de habilitarmos a criação e replicação automática de novos ambientes.</p></div>
+          <a href="{{ url_for('configuracoes') }}">Abrir identidade visual <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="nav-overlay" id="navOverlay"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

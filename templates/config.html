@@ -61,6 +61,12 @@
           </a>
         {% endfor %}
 
+        {% if organization['mode'] == 'demo' and current_user and current_user['role'] == 'admin' and not current_user.get('legacy') %}
+        <a class="nav-link" href="{{ url_for('administracao') }}">
+          <i class="fa-solid fa-building-user"></i>
+          <span>Administração Opera Hub</span>
+        </a>
+        {% endif %}
         <a class="nav-link config-link active" href="{{ url_for('configuracoes') }}">
           <i class="fa-solid fa-gear"></i>
           <span>Configurações</span>
