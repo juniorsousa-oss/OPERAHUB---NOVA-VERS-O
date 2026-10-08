@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css') }}">
 </head>
 <body class="login-page">
   <div class="login-shell">
@@ -96,7 +97,6 @@
             placeholder="{{ 'Digite seu usuário' if organization['mode'] == 'demo' else 'Digite seu usuário ou e-mail' }}"
             autocomplete="username"
             required
-            autofocus
           >
           <i class="fa-regular fa-user"></i>
         </div>
@@ -114,6 +114,11 @@
           <i class="fa-solid fa-lock"></i>
         </div>
 
+        <label class="login-show-password" for="show-password">
+          <input id="show-password" type="checkbox" autocomplete="off">
+          <span>Mostrar senha digitada</span>
+        </label>
+
         <button
           type="submit"
           {% if not auth_users_exist and not admin_enabled %}disabled{% endif %}
@@ -126,10 +131,23 @@
         <i class="fa-solid fa-arrow-left"></i>
         Voltar para a página inicial
       </a>
+      <div class="login-security-note">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Acesso restrito a usuários autorizados.
+      </div>
       </div>
     </section>
   </div>
 
+  <script>
+    (() => {
+      const control = document.getElementById('show-password');
+      const password = document.getElementById('password');
+      if (!control || !password) return;
+      control.addEventListener('change', () => {
+        password.type = control.checked ? 'text' : 'password';
+      });
+    })();
+  </script>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
 </body>
