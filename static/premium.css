@@ -297,8 +297,8 @@ body.login-page{
     box-shadow:0 23px 60px rgba(0,9,27,.38);
   }
   .login-page .login-visual{
-    height:auto;min-height:245px;
-    padding:22px 23px 24px;
+    height:auto;min-height:208px;
+    padding:20px 23px 19px;
     border-radius:0;
     background:#0b2a42;
     justify-content:space-between;
@@ -327,37 +327,37 @@ body.login-page{
   .login-page .login-copy-panel p{display:none}
   .login-page .login-form-panel{
     height:auto;min-height:0;
-    padding:28px 24px 29px;
+    padding:21px 24px 22px;
     background:#fff;
   }
   .login-page .login-form-inner{max-width:none}
   .login-page .login-form-panel .login-badge{
-    padding:8px 12px;font-size:10px;
+    padding:7px 12px;font-size:10px;
   }
   .login-page .login-form-panel h2{
-    margin:18px 0 8px;
+    margin:12px 0 5px;
     font-size:clamp(25px,7vw,30px);
     line-height:1.15;
   }
   .login-page .login-form-inner>p{
-    margin:0 0 20px;
+    margin:0 0 13px;
     font-size:12px;line-height:1.5;
   }
   .login-page .flash{font-size:11px;padding:11px 13px;margin-bottom:13px}
-  .login-page .login-form-panel form{gap:9px}
+  .login-page .login-form-panel form{gap:7px}
   .login-page .login-form-panel label{font-size:12px}
   .login-page .login-password input{
-    height:50px;
+    height:48px;
     border-radius:14px;
     padding:0 46px 0 15px;
     font-size:16px; /* Safari: sem zoom automático do campo */
   }
-  .login-page .login-show-password{margin:1px 0 7px;font-size:12px}
+  .login-page .login-show-password{margin:1px 0 4px;font-size:12px}
   .login-page .login-form-panel button[type="submit"]{
-    height:52px;border-radius:15px;font-size:14px;margin-top:0;
+    height:49px;border-radius:15px;font-size:14px;margin-top:0;
   }
-  .login-page .login-back{font-size:12px;margin-top:14px}
-  .login-page .login-security-note{margin-top:23px;padding-top:16px;font-size:10px}
+  .login-page .login-back{font-size:12px;margin-top:9px}
+  .login-page .login-security-note{margin-top:15px;padding-top:13px;font-size:10px}
 
   body.home-page{
     padding:11px;
@@ -510,9 +510,9 @@ body.login-page{
   .config-page .config-content{padding-left:1px;padding-right:1px}
 }
 @media (max-width:380px){
-  .login-page .login-visual{min-height:220px;padding:18px 19px 20px}
+  .login-page .login-visual{min-height:198px;padding:18px 19px 18px}
   .login-page .login-copy-panel h1{font-size:23px}
-  .login-page .login-form-panel{padding:23px 19px 24px}
+  .login-page .login-form-panel{padding:20px 19px 20px}
   .home-page .top-bar{gap:5px;padding:0 9px}
   .home-page .top-actions{gap:0}
   .home-page .search-wrap{padding:0 8px}
