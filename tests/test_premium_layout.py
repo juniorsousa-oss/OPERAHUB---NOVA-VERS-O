@@ -44,6 +44,33 @@ class OperaPremiumLayoutTests(unittest.TestCase):
         self.assertIn('class="hero"', html)
         self.assertIn('id="sideNav"', html)
 
+    def test_nexon_branding_is_discreet_and_preserves_auth_fields(self):
+        response = self.client.get("/login", headers=DEMO)
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('class="nexon-signature"', html)
+        self.assertIn('class="login-security-note"', html)
+        self.assertIn('name="login"', html)
+        self.assertIn('name="password"', html)
+
+        response = self.client.get("/", headers=SETTA)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('class="opera-brand-footer"', response.get_data(as_text=True))
+
+    def test_opera_connection_motif_and_gold_theme(self):
+        css_response = self.client.get("/static/premium.css")
+        self.assertEqual(css_response.status_code, 200)
+        css = css_response.get_data(as_text=True)
+        self.assertIn("--opera-login-width:960px", css)
+        self.assertIn("--opera-login-min-height:535px", css)
+        self.assertIn("nexon-connections.svg", css)
+        self.assertIn(".home-page .kpi-blue .kpi-icon", css)
+        self.assertIn("font-size:16px; /* Safari:", css)
+
+        pattern_response = self.client.get("/static/nexon-connections.svg")
+        self.assertEqual(pattern_response.status_code, 200)
+        self.assertIn('viewBox="0 0 640 420"', pattern_response.get_data(as_text=True))
+
     def test_css_asset_is_served_and_contains_mobile_rules(self):
         response = self.client.get("/static/premium.css")
         self.assertEqual(response.status_code, 200)
