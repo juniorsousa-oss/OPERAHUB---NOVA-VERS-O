@@ -41,7 +41,7 @@
       </a>
 
       <nav class="nav-primary">
-        {% for item in nav_items[:9] %}
+        {% for item in nav_items if item['sort_order'] <= 9 %}
           {% set configured = item['url']|length > 0 %}
           {% set href = item['url'] if configured else ('/' if item['key'] == 'inicio' else '#') %}
           <a
@@ -57,7 +57,7 @@
       </nav>
 
       <div class="nav-secondary">
-        {% for item in nav_items[9:] %}
+        {% for item in nav_items if item['sort_order'] > 9 %}
           {% set configured = item['url']|length > 0 %}
           <a
             class="nav-link {{ 'disabled' if not configured else '' }}"
@@ -70,6 +70,12 @@
           </a>
         {% endfor %}
 
+        {% if can_platform_admin %}
+        <a class="nav-link" href="{{ url_for('administracao') }}">
+          <i class="fa-solid fa-building-user"></i>
+          <span>Administração Opera Hub</span>
+        </a>
+        {% endif %}
         {% if can_admin %}
         <a class="nav-link config-link" href="{{ url_for('configuracoes') }}">
           <i class="fa-solid fa-gear"></i>
