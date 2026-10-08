@@ -1,6 +1,8 @@
 import base64
 import os
 import re
+import secrets
+import hmac
 import time
 import unicodedata
 from io import BytesIO
@@ -85,6 +87,7 @@ SLOW_BACKEND_SECONDS = 0.8
 
 WRITE_RPCS = {
     "operahub_create_user_v3",
+    "operahub_admin_set_module_v1",
     "operahub_update_user_avatar_v2",
     "operahub_set_login_required_v2",
     "operahub_save_login_visual_v2",
@@ -411,6 +414,7 @@ def load_bootstrap(organization_slug=None):
             DEMO_APPLICATIONS if is_demo else DEFAULT_APPLICATIONS
         ),
         "has_users": False,
+        "module_access": {},
     }
 
     try:
@@ -437,6 +441,7 @@ def load_bootstrap(organization_slug=None):
                 "nav": nav_items,
                 "applications": applications,
                 "has_users": bool(payload.get("has_users")),
+                "module_access": payload.get("module_access") or {},
             }
             return cache_set(cache_key, result)
     except Exception as exc:
@@ -929,6 +934,54 @@ def admin_authorized():
     return False
 
 
+
+def module_visibility(bootstrap):
+    """Controla somente cards e atalhos do Opera Hub, sem alterar links externos."""
+    flags = bootstrap.get("module_access") or {}
+    cards = [
+        dict(item)
+        for item in bootstrap["applications"]
+        if bool(flags.get(item["key"], {}).get("enabled", True))
+        and bool(flags.get(item["key"], {}).get("show_home", True))
+    ]
+    linked = {}
+    for rule in flags.values():
+        nav_key = rule.get("nav_key")
+        if nav_key:
+            linked.setdefault(nav_key, []).append(
+                bool(rule.get("enabled", True))
+                and bool(rule.get("show_menu", True))
+            )
+    nav_items = [
+        dict(item)
+        for item in bootstrap["nav"]
+        if item["key"] not in linked or any(linked[item["key"]])
+    ]
+    return nav_items, cards
+
+
+def is_platform_admin():
+    """Só a conta administrativa autenticada na matriz pode gerir clientes."""
+    user = current_user()
+    organization = current_organization()
+    return bool(
+        user
+        and not user.get("legacy")
+        and user.get("role") == "admin"
+        and user.get("organization_slug") == "opera-hub-demo"
+        and organization.get("slug") == "opera-hub-demo"
+        and organization.get("mode") == "demo"
+    )
+
+
+def admin_csrf_token():
+    token = session.get("platform_admin_csrf")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["platform_admin_csrf"] = token
+    return token
+
+
 @app.route("/assets/logo")
 def logo_asset():
     version = request.args.get("v", "current")
@@ -1163,7 +1216,8 @@ def user_avatar_asset(user_id):
 
 @app.route("/")
 def index():
-    settings = load_settings()
+    bootstrap = load_bootstrap()
+    settings = dict(bootstrap["settings"])
 
     if (
         login_required_for_current_tenant(settings)
@@ -1171,19 +1225,87 @@ def index():
     ):
         return redirect(url_for("login", next=url_for("index")))
 
+    nav_items, applications = module_visibility(bootstrap)
     return render_template(
         "index.html",
-        nav_items=load_nav(),
-        applications=load_apps(),
+        nav_items=nav_items,
+        applications=applications,
         settings=settings,
         logged_in=is_logged_in(),
         current_user=current_user(),
         can_admin=admin_authorized(),
+        can_platform_admin=is_platform_admin(),
         organization=current_organization(),
         hero_image=url_for(
             "hero_asset",
             v=settings.get("updated_at", ""),
         ),
+    )
+
+
+
+@app.route("/administracao", methods=["GET", "POST"])
+def administracao():
+    if not is_platform_admin():
+        abort(403)
+
+    if request.method == "POST":
+        sent_token = request.form.get("csrf_token", "")
+        if not hmac.compare_digest(sent_token, admin_csrf_token()):
+            abort(400)
+
+        organization_slug = request.form.get("organization_slug", "").strip()
+        module_key = request.form.get("module_key", "").strip()
+        if not organization_slug or not module_key:
+            abort(400)
+
+        try:
+            sb_rpc(
+                "operahub_admin_set_module_v1",
+                {
+                    "p_organization_slug": organization_slug,
+                    "p_module_key": module_key,
+                    "p_enabled": request.form.get("enabled") == "on",
+                    "p_show_home": request.form.get("show_home") == "on",
+                    "p_show_menu": request.form.get("show_menu") == "on",
+                },
+            )
+            flash("Configuração do módulo salva.", "success")
+        except Exception as exc:
+            app.logger.warning(
+                "Falha na administração de módulo org=%s module=%s: %s",
+                organization_slug,
+                module_key,
+                exc,
+            )
+            flash("Não foi possível salvar o módulo. Tente novamente.", "error")
+
+        return redirect(
+            url_for("administracao", organization=organization_slug)
+        )
+
+    try:
+        overview = sb_rpc("operahub_admin_overview_v1", {}) or {}
+    except Exception as exc:
+        app.logger.warning("Falha ao carregar administração: %s", exc)
+        overview = {}
+        flash("Não foi possível carregar as organizações.", "error")
+
+    organizations = overview.get("organizations") or []
+    selected_slug = request.args.get("organization", "opera-hub-demo")
+    selected = next(
+        (item for item in organizations if item["slug"] == selected_slug),
+        organizations[0] if organizations else None,
+    )
+    return render_template(
+        "administracao.html",
+        organizations=organizations,
+        selected=selected,
+        settings=load_settings(),
+        organization=current_organization(),
+        current_user=current_user(),
+        nav_items=load_nav(),
+        csrf_token=admin_csrf_token(),
     )
 
 
