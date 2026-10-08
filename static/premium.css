@@ -10,6 +10,8 @@
   --opera-hairline:rgba(166,187,212,.26);
   --opera-elevated:0 18px 44px rgba(12,32,56,.095),0 3px 12px rgba(12,32,56,.04);
   --opera-soft:0 8px 22px rgba(12,32,56,.06),0 1px 3px rgba(12,32,56,.025);
+  --opera-login-width:960px;
+  --opera-login-min-height:535px;
 }
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body.home-page{
@@ -80,11 +82,37 @@ a,button,input{ -webkit-tap-highlight-color:transparent }
   box-shadow:0 1px 9px rgba(246,183,10,.2);
 }
 .home-page .kpi-card{
-  border-radius:17px;border-color:#e2e9f3;
-  background:linear-gradient(145deg,#fff,#fbfdff);
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border-radius:17px;
+  border-color:#e5e7e8;
+  background:linear-gradient(145deg,#fff 0%,#fffcf4 100%);
   box-shadow:var(--opera-soft);
 }
-.home-page .kpi-icon{border-radius:15px}
+.home-page .kpi-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#f6b80b,#dfaa2c);
+  opacity:.75;pointer-events:none;
+}
+.home-page .kpi-card::after{
+  content:"";position:absolute;right:-23px;top:-32px;
+  width:145px;height:145px;pointer-events:none;
+  background:url('/static/nexon-connections.svg') center/contain no-repeat;
+  opacity:.24;
+}
+.home-page .kpi-card > *{position:relative;z-index:1}
+.home-page .kpi-icon{
+  border-radius:14px;
+  background:#fff3d7;color:#9d6800;
+  border:1px solid rgba(223,173,61,.19);
+}
+.home-page .kpi-green .kpi-icon{background:#fff4dd;color:#a76f07}
+.home-page .kpi-blue .kpi-icon{background:#eaf0f5;color:#264b6c;border-color:#e0e8ee}
+.home-page .kpi-orange .kpi-icon{background:#fff1d2;color:#a66c00}
+.home-page .kpi-red .kpi-icon{background:#f7ece7;color:#a35d3f;border-color:#f0e1da}
+.home-page .kpi-card span{color:#566882}
+.home-page .kpi-card strong{color:#14243c}
 .home-page .apps-section .section-head h2{letter-spacing:.20em}
 .home-page .app-card{
   border-radius:17px;
@@ -103,31 +131,62 @@ a,button,input{ -webkit-tap-highlight-color:transparent }
 .home-page .status-pill{box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
 .home-page .empty-search{border-radius:17px}
 
+/* Assinatura do estúdio: discreta, presente na base do produto. */
+.opera-brand-footer{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:21px auto 0;padding:17px 12px 10px;
+  border-top:1px solid rgba(161,175,190,.21);
+  color:#8791a1;font-size:10px;letter-spacing:.05em;
+  line-height:1.6;text-align:center;
+}
+.opera-brand-footer strong,.nexon-signature strong{font-weight:800;letter-spacing:.045em}
+.opera-brand-footer .opera-brand-node{
+  width:17px;height:14px;flex:0 0 17px;
+  background:
+    radial-gradient(circle at 2px 7px,#c9a44f 0 2px,transparent 2.3px),
+    radial-gradient(circle at 9px 3px,#c9a44f 0 2px,transparent 2.3px),
+    radial-gradient(circle at 15px 10px,#c9a44f 0 2px,transparent 2.3px),
+    linear-gradient(145deg,transparent 39%,#c9a44f 41% 46%,transparent 48%) 2px 2px/10px 9px no-repeat,
+    linear-gradient(38deg,transparent 38%,#c9a44f 40% 45%,transparent 47%) 8px 5px/7px 8px no-repeat;
+  opacity:.78;
+}
+.login-page .nexon-signature{white-space:nowrap;color:#8e96a3;font-size:10px}
+.login-page .nexon-signature strong{color:#667487}
+
 /* Login: Atria como referência de acabamento, sem copiar sua identidade.
    A personalização de imagem, logo, zoom e posição continua intacta. */
 body.login-page{
+  position:relative;
+  isolation:isolate;
   min-height:100vh;
   min-height:100svh;
   background:
-    radial-gradient(circle at 0% 0%,rgba(16,94,132,.42),transparent 42%),
-    radial-gradient(circle at 100% 95%,rgba(10,74,113,.36),transparent 40%),
-    linear-gradient(150deg,#071829,#0b3047 60%,#082037);
+    radial-gradient(ellipse at 2% 8%,rgba(246,184,11,.32),transparent 48%),
+    radial-gradient(ellipse at 98% 96%,rgba(250,197,64,.22),transparent 44%),
+    radial-gradient(ellipse at 60% 100%,rgba(75,64,36,.24),transparent 65%),
+    linear-gradient(145deg,#152237 0%,#18263a 53%,#1d2831 100%);
   padding:clamp(18px,3vw,42px);
 }
+body.login-page::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url('/static/nexon-connections.svg') center/560px auto repeat;
+  opacity:.12;
+}
 .login-page .login-shell{
-  width:min(1020px,100%);
+  position:relative;z-index:1;
+  width:min(var(--opera-login-width),100%);
   height:auto;
-  min-height:575px;
+  min-height:var(--opera-login-min-height);
   max-height:none;
-  grid-template-columns:minmax(0,1.07fr) minmax(370px,.93fr);
-  border:1px solid rgba(236,244,255,.48);
-  border-radius:29px;
-  box-shadow:0 35px 95px rgba(2,12,26,.40),0 3px 12px rgba(1,8,24,.14);
+  grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr);
+  border:1px solid rgba(255,239,204,.40);
+  border-radius:26px;
+  box-shadow:0 32px 86px rgba(2,12,26,.33),0 3px 12px rgba(1,8,24,.12);
   background:#fff;
   isolation:isolate;
 }
 .login-page .login-visual{
-  padding:42px 40px;
+  padding:37px 36px;
   background:#0a2339;
 }
 .login-page .login-visual::after{
@@ -142,25 +201,25 @@ body.login-page{
 .login-page .login-copy-panel h1 strong{color:#ffca37;margin-top:6px;font-weight:850}
 .login-page .login-copy-panel p{line-height:1.7;color:#dce7f2;max-width:400px;font-size:13px}
 .login-page .login-form-panel{
-  padding:48px clamp(30px,4.8vw,58px);
-  background:linear-gradient(145deg,#fff 0%,#fcfdff 100%);
+  padding:34px clamp(28px,4vw,46px);
+  background:linear-gradient(145deg,#fff 0%,#fffefd 100%);
 }
 .login-page .login-form-inner{max-width:395px}
 .login-page .login-form-panel .login-badge{
   border:1px solid #f2e2a8;
   background:linear-gradient(120deg,#fff5d7,#fffaf0);
-  color:#976908;padding:9px 13px;letter-spacing:.055em;font-size:10px;
+  color:#976908;padding:7px 12px;letter-spacing:.055em;font-size:10px;
 }
 .login-page .login-form-panel h2{
-  color:var(--opera-ink);font-size:clamp(25px,2.9vw,33px);
+  color:var(--opera-ink);font-size:clamp(25px,2.9vw,30px);
   letter-spacing:-.045em;line-height:1.15;
-  margin:22px 0 9px;font-weight:850;
+  margin:15px 0 7px;font-weight:850;
 }
-.login-page .login-form-inner>p{font-size:13px;line-height:1.55;margin-bottom:25px;color:#718199}
-.login-page .login-form-panel form{gap:11px}
+.login-page .login-form-inner>p{font-size:13px;line-height:1.55;margin-bottom:16px;color:#718199}
+.login-page .login-form-panel form{gap:8px}
 .login-page .login-form-panel label{font-size:12px;color:#4d5f79;font-weight:750}
 .login-page .login-password input{
-  height:53px;
+  height:49px;
   border-radius:14px;
   border:1px solid #d8e1ed;
   background:#f8fafc;
@@ -180,14 +239,14 @@ body.login-page{
 .login-page .login-show-password{
   display:inline-flex;align-items:center;gap:10px;
   color:#62718a;font-size:12px;font-weight:500;
-  margin:0 0 7px;cursor:pointer;user-select:none;
+  margin:0 0 3px;cursor:pointer;user-select:none;
 }
 .login-page .login-show-password input{
   width:17px;height:17px;accent-color:#dca409;cursor:pointer;
   flex:0 0 17px;
 }
 .login-page .login-form-panel button[type="submit"]{
-  height:54px;
+  height:50px;
   border-radius:15px;
   background:linear-gradient(110deg,#f4b208,#ffd34a);
   font-size:14px;
@@ -199,14 +258,16 @@ body.login-page{
   box-shadow:0 16px 28px rgba(236,170,4,.24);
 }
 .login-page .login-back{
-  margin-top:19px;color:#66788f;font-size:12px;min-height:26px;
+  margin-top:12px;color:#66788f;font-size:12px;min-height:24px;
 }
 .login-page .flash{
   border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.5;
 }
 .login-page .login-security-note{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;
   border-top:1px solid #e6ecf3;
-  padding-top:18px;margin-top:29px;
+  padding-top:12px;margin-top:18px;
   color:#8a98ab;font-size:11px;letter-spacing:.005em;
 }
 .login-page .login-security-note i{margin-right:7px}
@@ -281,10 +342,11 @@ body.login-page{
       13px
       max(20px,env(safe-area-inset-bottom));
     background:
-      radial-gradient(circle at 10% 0%,rgba(17,101,143,.56),transparent 52%),
-      radial-gradient(circle at 100% 86%,rgba(15,86,128,.34),transparent 49%),
-      #09253d;
+      radial-gradient(circle at 3% 7%,rgba(245,186,33,.35),transparent 54%),
+      radial-gradient(circle at 100% 88%,rgba(242,188,56,.19),transparent 49%),
+      linear-gradient(160deg,#13243a 0%,#1c2a3a 60%,#252a2d 100%);
   }
+  body.login-page::before{background-size:385px auto;opacity:.11}
   .login-page .login-shell{
     width:100%;max-width:510px;
     min-height:0;height:auto;
@@ -357,7 +419,9 @@ body.login-page{
     height:49px;border-radius:15px;font-size:14px;margin-top:0;
   }
   .login-page .login-back{font-size:12px;margin-top:9px}
-  .login-page .login-security-note{margin-top:15px;padding-top:13px;font-size:10px}
+  .login-page .login-security-note{margin-top:15px;padding-top:13px;font-size:10px;gap:6px}
+  .login-page .nexon-signature{font-size:9px}
+  .opera-brand-footer{margin-top:17px;padding:15px 8px 9px;font-size:9px}
 
   body.home-page{
     padding:11px;
