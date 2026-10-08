@@ -109,6 +109,18 @@ No ambiente base/demonstração:
 OPERAHUB_DEFAULT_ORG=opera-hub-demo
 ```
 
+## Central de notificações
+
+O sino do cabeçalho abre um painel responsivo com as abas **Todas**, **Não lidas** e **Sistema**.
+O item **Notificações** do menu lateral também abre o painel quando não houver um link externo configurado.
+
+- A aba **Sistema** apresenta o ambiente ativo e números derivados das aplicações realmente cadastradas, dos links configurados e do status de manutenção.
+- As abas **Todas** e **Não lidas** usam estados vazios, pois ainda não existe integração de eventos/notificações. O indicador vermelho do sino permanece oculto enquanto não houver fonte de avisos não lidos.
+- O painel possui botão de fechar, fechamento ao clicar fora, tecla **Esc**, navegação de abas por teclado e acesso pelo smartphone.
+- A implantação não cria registros, tabelas, mensagens fictícias nem alterações nas regras de autenticação ou no isolamento por cliente.
+
+Os arquivos da funcionalidade são `templates/index.html`, `static/app.js` e `static/premium.css`. Atualizar os arquivos no GitHub não publica automaticamente uma nova imagem Docker no VPS Hostinger.
+
 ## Configurações
 
 Acesse:
