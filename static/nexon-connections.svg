@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" fill="none" aria-hidden="true">
+  <!-- Textura de conexões: assinatura ornamental discreta, sem substituir a logo Nexon Labs. -->
+  <g stroke="#DDB764" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" opacity=".66">
+    <path d="M-20 124 74 70 157 136 247 38 331 100 435 40 536 123 663 49"/>
+    <path d="M-15 291 91 251 157 136 250 227 331 100 387 216 536 123 648 262"/>
+    <path d="M32 420 91 251 208 340 250 227 387 216 485 342 648 262"/>
+    <path d="M208 340 333 409 485 342 569 421"/>
+    <path d="M74 70 91 251M247 38 250 227M435 40 387 216M536 123 485 342"/>
+  </g>
+  <g fill="#E6C577" opacity=".43">
+    <circle cx="74" cy="70" r="12"/><circle cx="157" cy="136" r="20"/>
+    <circle cx="247" cy="38" r="9"/><circle cx="331" cy="100" r="16"/>
+    <circle cx="435" cy="40" r="23"/><circle cx="536" cy="123" r="12"/>
+    <circle cx="91" cy="251" r="17"/><circle cx="250" cy="227" r="12"/>
+    <circle cx="387" cy="216" r="25"/><circle cx="485" cy="342" r="22"/>
+    <circle cx="208" cy="340" r="10"/><circle cx="333" cy="409" r="14"/>
+  </g>
+  <g stroke="#FFE8B2" stroke-width="1" opacity=".52">
+    <circle cx="157" cy="136" r="26"/><circle cx="387" cy="216" r="31"/><circle cx="435" cy="40" r="28"/>
+  </g>
+</svg>
