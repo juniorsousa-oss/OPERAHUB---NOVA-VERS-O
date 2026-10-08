@@ -79,4 +79,106 @@
   window.addEventListener("resize", () => {
     if (window.innerWidth > 860) closeMenu();
   });
+
+  // O sino abre uma central acessível; nenhum aviso fictício é criado.
+  // As informações da aba Sistema são derivadas dos aplicativos do tenant ativo.
+  const notificationTrigger = document.getElementById("notificationsTrigger");
+  const notificationPanel = document.getElementById("notificationsPanel");
+  const notificationClose = document.getElementById("notificationsClose");
+  const notificationTabs = Array.from(document.querySelectorAll("[data-notification-tab]"));
+  const notificationPanels = Array.from(document.querySelectorAll("[data-notification-panel]"));
+
+  if (notificationTrigger && notificationPanel) {
+    const updateSystemSummary = () => {
+      const registered = document.getElementById("notificationsAppsTotal");
+      const configured = document.getElementById("notificationsAppsConfigured");
+      const maintenance = document.getElementById("notificationsAppsMaintenance");
+      if (registered) registered.textContent = String(cards.length);
+      if (configured) configured.textContent = String(cards.filter((card) => !card.classList.contains("app-disabled")).length);
+      if (maintenance) maintenance.textContent = String(cards.filter((card) => card.querySelector(".status-maintenance")).length);
+    };
+
+    const positionNotifications = () => {
+      if (notificationPanel.hidden) return;
+      const trigger = notificationTrigger.getBoundingClientRect();
+      const width = notificationPanel.offsetWidth;
+      const left = Math.max(12, Math.min(trigger.right - width, window.innerWidth - width - 12));
+      const top = Math.max(8, Math.min(trigger.bottom + 10, window.innerHeight - 130));
+      notificationPanel.style.left = left + "px";
+      notificationPanel.style.top = top + "px";
+      notificationPanel.style.maxHeight = Math.max(100, window.innerHeight - top - 12) + "px";
+    };
+
+    const selectNotificationsTab = (category, focusTab = false) => {
+      let selected = null;
+      notificationTabs.forEach((tab) => {
+        const active = tab.dataset.notificationTab === category;
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active) selected = tab;
+      });
+      notificationPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.notificationPanel !== category;
+      });
+      if (focusTab && selected) selected.focus();
+    };
+
+    const closeNotifications = (returnFocus = false) => {
+      if (notificationPanel.hidden) return;
+      notificationPanel.hidden = true;
+      notificationTrigger.setAttribute("aria-expanded", "false");
+      notificationTrigger.setAttribute("aria-label", "Abrir central de notificações");
+      if (returnFocus) notificationTrigger.focus();
+    };
+
+    const openNotifications = () => {
+      closeMenu();
+      updateSystemSummary();
+      notificationPanel.hidden = false;
+      notificationTrigger.setAttribute("aria-expanded", "true");
+      notificationTrigger.setAttribute("aria-label", "Fechar central de notificações");
+      positionNotifications();
+      notificationPanel.focus({ preventScroll: true });
+    };
+
+    notificationTrigger.addEventListener("click", () => {
+      if (notificationPanel.hidden) openNotifications();
+      else closeNotifications(true);
+    });
+    notificationClose?.addEventListener("click", () => closeNotifications(true));
+
+    document.querySelectorAll("[data-open-notifications]").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        openNotifications();
+      });
+    });
+
+    notificationTabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => selectNotificationsTab(tab.dataset.notificationTab));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let next = index;
+        if (event.key === "ArrowRight") next = (index + 1) % notificationTabs.length;
+        if (event.key === "ArrowLeft") next = (index - 1 + notificationTabs.length) % notificationTabs.length;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = notificationTabs.length - 1;
+        selectNotificationsTab(notificationTabs[next].dataset.notificationTab, true);
+      });
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (notificationPanel.hidden) return;
+      if (!notificationPanel.contains(event.target) && !notificationTrigger.contains(event.target)) closeNotifications();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !notificationPanel.hidden) {
+        event.preventDefault();
+        closeNotifications(true);
+      }
+    });
+    window.addEventListener("resize", positionNotifications);
+    document.addEventListener("scroll", positionNotifications, true);
+  }
 })();
