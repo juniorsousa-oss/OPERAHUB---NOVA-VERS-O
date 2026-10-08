@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-identity-v2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-notifications-v1') }}">
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -61,10 +61,10 @@
         {% for item in nav_items if item['sort_order'] > 9 %}
           {% set configured = item['url']|length > 0 %}
           <a
-            class="nav-link {{ 'disabled' if not configured else '' }}"
+            class="nav-link {{ 'disabled' if not configured and item['key'] != 'notificacoes' else '' }}"
             href="{{ item['url'] if configured else '#' }}"
             {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
-            {% if not configured %}data-unconfigured="true"{% endif %}
+            {% if not configured and item['key'] == 'notificacoes' %}data-open-notifications="true"{% elif not configured %}data-unconfigured="true"{% endif %}
           >
             <i class="{{ item['icon'] }}"></i>
             <span>{{ item['label'] }}</span>
@@ -106,9 +106,11 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-button" type="button" aria-label="Notificações">
-            <i class="fa-regular fa-bell"></i>
-            <span class="notification-dot"></span>
+          <button class="icon-button" id="notificationsTrigger" type="button"
+                  aria-label="Abrir central de notificações" aria-expanded="false"
+                  aria-controls="notificationsPanel" aria-haspopup="dialog">
+            <i class="fa-regular fa-bell" aria-hidden="true"></i>
+            <span class="notification-dot" id="notificationsDot" hidden></span>
           </button>
 
           {% if logged_in %}
@@ -281,6 +283,62 @@
     </main>
   </div>
 
+  <section class="notifications-panel" id="notificationsPanel" role="dialog"
+           aria-label="Central de notificações" aria-modal="false" tabindex="-1" hidden>
+    <header class="notifications-heading">
+      <span class="notifications-heading-icon" aria-hidden="true"><i class="fa-regular fa-bell"></i></span>
+      <div class="notifications-heading-copy">
+        <h2>Notificações</h2>
+        <p>Acompanhe os avisos do Opera Hub</p>
+      </div>
+      <button type="button" class="notifications-close" id="notificationsClose"
+              aria-label="Fechar notificações"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </header>
+
+    <div class="notifications-tabs" role="tablist" aria-label="Categorias de notificações">
+      <button id="notifTabAll" class="notifications-tab" role="tab" type="button"
+              data-notification-tab="all" aria-selected="false" aria-controls="notifPanelAll" tabindex="-1">Todas</button>
+      <button id="notifTabUnread" class="notifications-tab" role="tab" type="button"
+              data-notification-tab="unread" aria-selected="false" aria-controls="notifPanelUnread" tabindex="-1">Não lidas</button>
+      <button id="notifTabSystem" class="notifications-tab" role="tab" type="button"
+              data-notification-tab="system" aria-selected="true" aria-controls="notifPanelSystem" tabindex="0">Sistema</button>
+    </div>
+
+    <div class="notifications-content">
+      <div class="notifications-tab-panel" id="notifPanelAll" role="tabpanel"
+           aria-labelledby="notifTabAll" data-notification-panel="all" hidden>
+        <div class="notifications-empty">
+          <span class="notifications-empty-icon" aria-hidden="true"><i class="fa-regular fa-bell-slash"></i></span>
+          <strong>Nenhuma notificação no momento</strong>
+          <p>Quando os módulos enviarem avisos, eles aparecerão aqui.</p>
+        </div>
+      </div>
+      <div class="notifications-tab-panel" id="notifPanelUnread" role="tabpanel"
+           aria-labelledby="notifTabUnread" data-notification-panel="unread" hidden>
+        <div class="notifications-empty">
+          <span class="notifications-empty-icon" aria-hidden="true"><i class="fa-regular fa-circle-check"></i></span>
+          <strong>Nenhuma notificação não lida</strong>
+          <p>Os novos avisos ainda não estão integrados ao Opera Hub.</p>
+        </div>
+      </div>
+      <div class="notifications-tab-panel" id="notifPanelSystem" role="tabpanel"
+           aria-labelledby="notifTabSystem" data-notification-panel="system">
+        <div class="notifications-system-intro">
+          <span class="notifications-live-label"><span aria-hidden="true"></span> Ambiente atual</span>
+          <strong>{{ organization['name'] }}</strong>
+          <small>{{ 'Base / Demonstração' if organization['mode'] == 'demo' else 'Ambiente do cliente' }}</small>
+        </div>
+        <div class="notifications-system-stats" aria-label="Resumo de aplicações">
+          <div><span>Aplicações cadastradas</span><strong id="notificationsAppsTotal">{{ applications|length }}</strong></div>
+          <div><span>Links configurados</span><strong id="notificationsAppsConfigured">—</strong></div>
+          <div><span>Em manutenção</span><strong id="notificationsAppsMaintenance">—</strong></div>
+        </div>
+        <p class="notifications-system-note">Este resumo usa as configurações atuais do ambiente. Alertas automáticos serão exibidos quando houver uma fonte de eventos integrada.</p>
+      </div>
+    </div>
+    <footer class="notifications-footer">Opera Hub <span aria-hidden="true">•</span> by Nexon Labs</footer>
+  </section>
+
   <div class="toast" id="toast" role="status" aria-live="polite">
     Configure o link deste módulo em Configurações.
   </div>
@@ -295,6 +353,6 @@
 
   <div class="nav-overlay" id="navOverlay"></div>
 
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js', v='opera-notifications-v1') }}"></script>
 </body>
 </html>
