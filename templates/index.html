@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-identity-v2') }}">
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -273,6 +273,11 @@
           Nenhuma aplicação encontrada.
         </div>
       </section>
+
+      <footer class="opera-brand-footer" aria-label="Aplicativo desenvolvido pela Nexon Labs">
+        <span class="opera-brand-node" aria-hidden="true"></span>
+        <span>by <strong>Nexon Labs</strong></span>
+      </footer>
     </main>
   </div>
 
