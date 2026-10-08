@@ -22,6 +22,7 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css') }}">
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -73,7 +74,7 @@
         {% if can_platform_admin %}
         <a class="nav-link" href="{{ url_for('administracao') }}">
           <i class="fa-solid fa-building-user"></i>
-          <span>Administração Opera Hub</span>
+          <span>Administração</span>
         </a>
         {% endif %}
         {% if can_admin %}

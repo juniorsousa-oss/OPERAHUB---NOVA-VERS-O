@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='premium.css') }}">
 </head>
 <body class="home-page config-page opera-admin-page">
   <div class="app-shell">
@@ -31,7 +32,7 @@
       </a>
       <nav class="nav-primary">
         <a class="nav-link" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i><span>Início</span></a>
-        <a class="nav-link" href="{{ url_for('configuracoes') }}"><i class="fa-solid fa-palette"></i><span>Identidade e configurações</span></a>
+        <a class="nav-link" href="{{ url_for('configuracoes') }}"><i class="fa-solid fa-palette"></i><span>Identidade visual</span></a>
         <a class="nav-link active" href="{{ url_for('administracao') }}"><i class="fa-solid fa-building-user"></i><span>Administração</span></a>
       </nav>
       <div class="nav-secondary">
