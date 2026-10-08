@@ -133,3 +133,11 @@ O painel altera somente a organização ativa. É possível configurar:
 A organização `opera-hub-demo` é a **matriz funcional** do produto. Novos clientes devem nascer a partir dessa estrutura padrão e depois receber apenas suas customizações de marca, usuários, URLs, permissões e módulos contratados.
 
 A organização Setta é um cliente e **não deve ser usada como matriz** para novos ambientes.
+
+## Padrão visual de login
+
+O Opera Hub segue a **referência visual de proporções do ATRIA** para telas de login, respeitando identidade própria e campos de acesso distintos.
+
+O padrão de referência está documentado em [NEXONLABS/docs/PADRAO-VISUAL-LOGIN.md](https://github.com/juniorsousa-oss/NEXONLABS/blob/main/docs/PADRAO-VISUAL-LOGIN.md).
+
+A versão mobile usa cartão centralizado com altura ajustada ao conteúdo, preservando imagem institucional, cores, identificação BASE/DEMO ou CLIENTE, usuário, senha e link de retorno. Alterações visuais não devem afetar os tenants, a autenticação nem o layout desktop validado.
