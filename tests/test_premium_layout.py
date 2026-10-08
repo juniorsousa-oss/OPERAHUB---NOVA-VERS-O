@@ -71,6 +71,38 @@ class OperaPremiumLayoutTests(unittest.TestCase):
         self.assertEqual(pattern_response.status_code, 200)
         self.assertIn('viewBox="0 0 640 420"', pattern_response.get_data(as_text=True))
 
+    def test_notification_center_has_three_accessible_tabs_and_real_system_info(self):
+        response = self.client.get("/", headers=SETTA)
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('id="notificationsTrigger"', html)
+        self.assertIn('aria-controls="notificationsPanel"', html)
+        self.assertIn('id="notificationsPanel"', html)
+        self.assertIn('role="dialog"', html)
+        for tab in ("all", "unread", "system"):
+            self.assertIn(f'data-notification-tab="{tab}"', html)
+            self.assertIn(f'data-notification-panel="{tab}"', html)
+        self.assertIn('id="notificationsAppsConfigured"', html)
+        self.assertIn('id="notificationsAppsMaintenance"', html)
+        self.assertIn('data-open-notifications="true"', html)
+        self.assertIn('id="notificationsDot" hidden', html)
+        self.assertIn("opera-notifications-v1", html)
+
+    def test_notification_assets_bind_clicks_and_keep_mobile_bell_visible(self):
+        script = self.client.get("/static/app.js")
+        self.assertEqual(script.status_code, 200)
+        js = script.get_data(as_text=True)
+        self.assertIn('notificationTrigger.addEventListener("click"', js)
+        self.assertIn('data-open-notifications', js)
+        self.assertIn('selectNotificationsTab', js)
+        self.assertIn('event.key === "Escape"', js)
+        css_response = self.client.get("/static/premium.css")
+        self.assertEqual(css_response.status_code, 200)
+        css = css_response.get_data(as_text=True)
+        self.assertIn(".home-page .top-actions #notificationsTrigger", css)
+        self.assertIn(".notifications-panel[hidden]", css)
+        self.assertIn(".notifications-tab[aria-selected", css)
+
     def test_css_asset_is_served_and_contains_mobile_rules(self):
         response = self.client.get("/static/premium.css")
         self.assertEqual(response.status_code, 200)
