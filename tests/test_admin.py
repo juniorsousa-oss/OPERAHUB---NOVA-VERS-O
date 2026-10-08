@@ -47,7 +47,7 @@ class OperaHubAdminTests(unittest.TestCase):
         self.client = opera.app.test_client()
 
     def authenticate_demo(self, role="admin"):
-        with self.client.session_transaction() as session:
+        with self.client.session_transaction(headers=HOST_DEMO) as session:
             session["user_id"] = "user-testing"
             session["username"] = "admin"
             session["user_name"] = "Administrador"
@@ -107,7 +107,7 @@ class OperaHubAdminTests(unittest.TestCase):
         self.authenticate_demo()
         with patch.object(opera, "sb_rpc", side_effect=self.fake_rpc):
             self.client.get("/administracao", headers=HOST_DEMO)
-            with self.client.session_transaction() as session:
+            with self.client.session_transaction(headers=HOST_DEMO) as session:
                 csrf = session["platform_admin_csrf"]
             response = self.client.post(
                 "/administracao",
