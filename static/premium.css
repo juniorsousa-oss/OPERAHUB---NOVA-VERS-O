@@ -161,10 +161,10 @@ body.login-page{
   min-height:100vh;
   min-height:100svh;
   background:
-    radial-gradient(ellipse at 2% 8%,rgba(246,184,11,.32),transparent 48%),
-    radial-gradient(ellipse at 98% 96%,rgba(250,197,64,.22),transparent 44%),
-    radial-gradient(ellipse at 60% 100%,rgba(75,64,36,.24),transparent 65%),
-    linear-gradient(145deg,#152237 0%,#18263a 53%,#1d2831 100%);
+    radial-gradient(ellipse at 2% 8%,rgba(255,204,88,.38),transparent 49%),
+    radial-gradient(ellipse at 98% 96%,rgba(235,165,36,.27),transparent 50%),
+    radial-gradient(ellipse at 60% 100%,rgba(70,49,22,.22),transparent 62%),
+    linear-gradient(145deg,#46341b 0%,#312b25 47%,#192a3d 100%);
   padding:clamp(18px,3vw,42px);
 }
 body.login-page::before{
@@ -342,9 +342,9 @@ body.login-page::before{
       13px
       max(20px,env(safe-area-inset-bottom));
     background:
-      radial-gradient(circle at 3% 7%,rgba(245,186,33,.35),transparent 54%),
-      radial-gradient(circle at 100% 88%,rgba(242,188,56,.19),transparent 49%),
-      linear-gradient(160deg,#13243a 0%,#1c2a3a 60%,#252a2d 100%);
+      radial-gradient(circle at 3% 7%,rgba(251,193,57,.40),transparent 53%),
+      radial-gradient(circle at 100% 88%,rgba(235,170,37,.26),transparent 49%),
+      linear-gradient(160deg,#48351e 0%,#302d2a 57%,#1c2b3b 100%);
   }
   body.login-page::before{background-size:385px auto;opacity:.11}
   .login-page .login-shell{
