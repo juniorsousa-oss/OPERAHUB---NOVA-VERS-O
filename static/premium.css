@@ -1,0 +1,531 @@
+/* OPERA HUB | Premium visual system v1
+   Camada visual isolada, sem alteração dos módulos, permissões e autenticação.
+   Carregada depois de styles.css (e admin.css, quando presente). */
+
+:root{
+  --opera-ink:#10223a;
+  --opera-ink-deep:#091a2c;
+  --opera-gold:#f6b80b;
+  --opera-gold-light:#ffd34d;
+  --opera-hairline:rgba(166,187,212,.26);
+  --opera-elevated:0 18px 44px rgba(12,32,56,.095),0 3px 12px rgba(12,32,56,.04);
+  --opera-soft:0 8px 22px rgba(12,32,56,.06),0 1px 3px rgba(12,32,56,.025);
+}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body.home-page{
+  background:radial-gradient(circle at 12% 5%,rgba(241,183,27,.1),transparent 27%),
+             radial-gradient(circle at 100% 88%,rgba(40,88,131,.13),transparent 32%),#ebf0f6;
+}
+a,button,input{ -webkit-tap-highlight-color:transparent }
+:where(a,button,input,summary):focus-visible{
+  outline:3px solid rgba(239,171,0,.58);
+  outline-offset:3px;
+}
+
+/* O desktop conserva a estrutura: apenas materiais, profundidade e tipografia. */
+.home-page .app-shell{
+  border-color:rgba(181,197,219,.7);
+  box-shadow:0 26px 74px rgba(9,25,44,.14),0 2px 9px rgba(9,25,44,.04);
+}
+.home-page .side-nav{
+  background:linear-gradient(155deg,#081829 0%,#102741 67%,#0b1f35 100%);
+}
+.home-page .side-nav::before{
+  content:"";position:absolute;inset:0 0 auto;
+  height:170px;pointer-events:none;
+  background:radial-gradient(circle at 0% 0%,rgba(247,189,41,.07),transparent 75%);
+}
+.home-page .side-nav .brand,.home-page .side-nav .nav-primary,.home-page .side-nav .nav-secondary{
+  position:relative;z-index:1;
+}
+.home-page .nav-primary,.home-page .nav-secondary{gap:4px}
+.home-page .nav-link{border-radius:12px;letter-spacing:-.015em}
+.home-page .nav-link:hover{background:rgba(255,255,255,.09)}
+.home-page .nav-link.active{
+  background:linear-gradient(125deg,#f8bc23,#ffcf4c);
+  box-shadow:0 9px 18px rgba(237,175,5,.19),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.home-page .main-area{
+  background:linear-gradient(155deg,#fbfcff 0%,#f2f6fb 64%,#f6f9fd 100%);
+}
+.home-page .top-bar{
+  background:rgba(255,255,255,.94);
+  border-bottom:1px solid rgba(217,226,238,.87);
+  box-shadow:0 3px 16px rgba(27,50,79,.028);
+}
+.home-page .search-wrap{
+  border-color:#dce6f0;background:#f2f6fb;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.95);
+  border-radius:14px;
+}
+.home-page .search-wrap:focus-within{
+  border-color:#e3b03d;
+  box-shadow:0 0 0 3px rgba(243,181,19,.12);
+}
+.home-page .tenant-chip{
+  border-radius:13px;box-shadow:0 3px 10px rgba(18,35,62,.04);
+}
+.home-page .user-chip{border-radius:13px}
+.home-page .avatar{box-shadow:0 2px 7px rgba(11,29,50,.1)}
+.home-page .hero{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:21px;
+  box-shadow:0 20px 38px rgba(12,32,56,.15),0 2px 7px rgba(12,32,56,.06);
+}
+.home-page .hero::before{
+  background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 35%,rgba(3,15,30,.18) 100%);
+}
+.home-page .hero-line{
+  background:linear-gradient(90deg,#ffcc3e,#f0a900);
+  box-shadow:0 1px 9px rgba(246,183,10,.2);
+}
+.home-page .kpi-card{
+  border-radius:17px;border-color:#e2e9f3;
+  background:linear-gradient(145deg,#fff,#fbfdff);
+  box-shadow:var(--opera-soft);
+}
+.home-page .kpi-icon{border-radius:15px}
+.home-page .apps-section .section-head h2{letter-spacing:.20em}
+.home-page .app-card{
+  border-radius:17px;
+  border-color:#e1e8f1;
+  background:linear-gradient(155deg,#fff 0%,#fcfdff 100%);
+  box-shadow:var(--opera-soft);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.home-page .app-card:hover{
+  transform:translateY(-2px);
+  border-color:#d2dfeb;
+  box-shadow:0 15px 32px rgba(13,34,62,.11);
+}
+.home-page .app-icon{border-radius:15px;box-shadow:0 5px 15px rgba(18,43,68,.05),inset 0 1px 0 #fff}
+.home-page .app-footer{border-top-color:#e9eef5}
+.home-page .status-pill{box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.home-page .empty-search{border-radius:17px}
+
+/* Login: Atria como referência de acabamento, sem copiar sua identidade.
+   A personalização de imagem, logo, zoom e posição continua intacta. */
+body.login-page{
+  min-height:100vh;
+  min-height:100svh;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(16,94,132,.42),transparent 42%),
+    radial-gradient(circle at 100% 95%,rgba(10,74,113,.36),transparent 40%),
+    linear-gradient(150deg,#071829,#0b3047 60%,#082037);
+  padding:clamp(18px,3vw,42px);
+}
+.login-page .login-shell{
+  width:min(1020px,100%);
+  height:auto;
+  min-height:575px;
+  max-height:none;
+  grid-template-columns:minmax(0,1.07fr) minmax(370px,.93fr);
+  border:1px solid rgba(236,244,255,.48);
+  border-radius:29px;
+  box-shadow:0 35px 95px rgba(2,12,26,.40),0 3px 12px rgba(1,8,24,.14);
+  background:#fff;
+  isolation:isolate;
+}
+.login-page .login-visual{
+  padding:42px 40px;
+  background:#0a2339;
+}
+.login-page .login-visual::after{
+  background:linear-gradient(180deg,rgba(5,22,38,.80) 0%,rgba(8,31,51,.62) 42%,rgba(4,17,34,.95) 100%);
+}
+.login-page .login-visual::before{filter:saturate(.86) contrast(1.07)}
+.login-page .login-visual .brand{height:66px}
+.login-page .login-visual .brand-mark{filter:drop-shadow(0 3px 9px rgba(250,195,41,.1))}
+.login-page .login-copy-panel{max-width:445px}
+.login-page .login-copy-panel span{font-size:10px;letter-spacing:.30em;font-weight:750}
+.login-page .login-copy-panel h1{font-size:clamp(30px,3.25vw,39px);line-height:1.14;letter-spacing:-.045em;font-weight:600}
+.login-page .login-copy-panel h1 strong{color:#ffca37;margin-top:6px;font-weight:850}
+.login-page .login-copy-panel p{line-height:1.7;color:#dce7f2;max-width:400px;font-size:13px}
+.login-page .login-form-panel{
+  padding:48px clamp(30px,4.8vw,58px);
+  background:linear-gradient(145deg,#fff 0%,#fcfdff 100%);
+}
+.login-page .login-form-inner{max-width:395px}
+.login-page .login-form-panel .login-badge{
+  border:1px solid #f2e2a8;
+  background:linear-gradient(120deg,#fff5d7,#fffaf0);
+  color:#976908;padding:9px 13px;letter-spacing:.055em;font-size:10px;
+}
+.login-page .login-form-panel h2{
+  color:var(--opera-ink);font-size:clamp(25px,2.9vw,33px);
+  letter-spacing:-.045em;line-height:1.15;
+  margin:22px 0 9px;font-weight:850;
+}
+.login-page .login-form-inner>p{font-size:13px;line-height:1.55;margin-bottom:25px;color:#718199}
+.login-page .login-form-panel form{gap:11px}
+.login-page .login-form-panel label{font-size:12px;color:#4d5f79;font-weight:750}
+.login-page .login-password input{
+  height:53px;
+  border-radius:14px;
+  border:1px solid #d8e1ed;
+  background:#f8fafc;
+  padding:0 48px 0 17px;
+  font-size:15px;
+  color:#1a2b43;
+  box-shadow:inset 0 1px 2px rgba(9,32,56,.03);
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.login-page .login-password input::placeholder{color:#9ba8b7}
+.login-page .login-password input:focus{
+  background:#fff;
+  border-color:#e7b12a;
+  box-shadow:0 0 0 4px rgba(246,184,11,.13);
+}
+.login-page .login-password i,.login-page .login-password svg{color:#8092a8}
+.login-page .login-show-password{
+  display:inline-flex;align-items:center;gap:10px;
+  color:#62718a;font-size:12px;font-weight:500;
+  margin:0 0 7px;cursor:pointer;user-select:none;
+}
+.login-page .login-show-password input{
+  width:17px;height:17px;accent-color:#dca409;cursor:pointer;
+  flex:0 0 17px;
+}
+.login-page .login-form-panel button[type="submit"]{
+  height:54px;
+  border-radius:15px;
+  background:linear-gradient(110deg,#f4b208,#ffd34a);
+  font-size:14px;
+  box-shadow:0 12px 24px rgba(236,170,4,.21),inset 0 1px 0 rgba(255,255,255,.48);
+  transition:transform .18s,filter .18s,box-shadow .18s;
+}
+.login-page .login-form-panel button[type="submit"]:not(:disabled):hover{
+  transform:translateY(-1px);filter:saturate(1.1);
+  box-shadow:0 16px 28px rgba(236,170,4,.24);
+}
+.login-page .login-back{
+  margin-top:19px;color:#66788f;font-size:12px;min-height:26px;
+}
+.login-page .flash{
+  border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.5;
+}
+.login-page .login-security-note{
+  border-top:1px solid #e6ecf3;
+  padding-top:18px;margin-top:29px;
+  color:#8a98ab;font-size:11px;letter-spacing:.005em;
+}
+.login-page .login-security-note i{margin-right:7px}
+
+/* Configuração e administração: acabamento consistente com a home. */
+.config-page .config-content{max-width:1500px}
+.config-page .settings-accordion,
+.config-page .login-settings-card,
+.config-page .admin-card{
+  border-radius:17px;
+  box-shadow:var(--opera-soft);
+  border-color:#e0e8f1;
+}
+.config-page .settings-accordion summary{border-radius:15px}
+.config-page .config-tab{border-radius:12px}
+.config-page .btn{border-radius:12px}
+.opera-admin-page .oa-section{
+  border-radius:20px;
+  border-color:#dfe8f1;
+  box-shadow:var(--opera-soft);
+}
+.opera-admin-page .oa-summary-card{
+  border-radius:18px;
+  box-shadow:var(--opera-soft);
+}
+.opera-admin-page .oa-organization{
+  border-radius:16px;
+  box-shadow:0 3px 12px rgba(12,32,56,.035);
+  transition:transform .18s,box-shadow .18s,border-color .18s;
+}
+.opera-admin-page .oa-organization:hover{
+  transform:translateY(-1px);box-shadow:0 11px 24px rgba(12,32,56,.065);
+}
+.opera-admin-page .oa-module{
+  border-radius:16px;box-shadow:0 4px 15px rgba(12,32,56,.035);
+}
+.opera-admin-page .oa-module-icon{border-radius:13px}
+.opera-admin-page .oa-next-step{border-radius:18px}
+.opera-admin-page .oa-button{border-radius:12px}
+.opera-admin-page .oa-module-options input{accent-color:#efb420}
+
+/* Tablet: login já fica empilhado, mantendo o visual de cartão. */
+@media (max-width:860px){
+  .login-page .login-shell{
+    grid-template-columns:1fr;
+    width:min(650px,100%);
+    min-height:0;height:auto;
+    border-radius:28px;
+  }
+  .login-page .login-visual{
+    min-height:270px;height:auto;
+    padding:28px 33px 30px;
+  }
+  .login-page .login-visual .brand{height:45px;min-height:45px}
+  .login-page .login-copy-panel h1{font-size:29px}
+  .login-page .login-form-panel{height:auto;padding:36px 38px 40px}
+  .login-page .login-form-inner{max-width:500px}
+  .home-page .side-nav{box-shadow:20px 0 48px rgba(2,15,33,.24)}
+  .home-page .nav-overlay.show{
+    display:block;background:rgba(4,19,37,.57);
+    backdrop-filter:blur(3px);
+  }
+}
+
+/* Smartphone: cartão central de ponta a ponta, SEM layout de página branca chapada. */
+@media (max-width:600px){
+  body.login-page{
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;min-height:100svh;
+    padding:
+      max(16px,env(safe-area-inset-top))
+      13px
+      max(20px,env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 10% 0%,rgba(17,101,143,.56),transparent 52%),
+      radial-gradient(circle at 100% 86%,rgba(15,86,128,.34),transparent 49%),
+      #09253d;
+  }
+  .login-page .login-shell{
+    width:100%;max-width:510px;
+    min-height:0;height:auto;
+    display:grid;grid-template-columns:1fr;
+    grid-template-rows:auto auto;
+    margin:auto;
+    border-radius:28px;
+    border:1px solid rgba(239,247,255,.55);
+    overflow:hidden;
+    box-shadow:0 23px 60px rgba(0,9,27,.38);
+  }
+  .login-page .login-visual{
+    height:auto;min-height:245px;
+    padding:22px 23px 24px;
+    border-radius:0;
+    background:#0b2a42;
+    justify-content:space-between;
+  }
+  .login-page .login-visual::after{
+    background:linear-gradient(180deg,rgba(6,25,43,.77) 0%,rgba(6,25,43,.59) 40%,rgba(5,22,40,.95) 100%);
+  }
+  .login-page .login-visual .brand{
+    min-height:38px;height:38px;
+  }
+  .login-page .login-visual .brand-logo-img{
+    width:auto;
+    max-width:min(210px,80%);
+    max-height:37px;
+  }
+  .login-page .login-copy-panel span{
+    font-size:9px;letter-spacing:.28em;margin-bottom:11px;
+  }
+  .login-page .login-copy-panel h1{
+    max-width:370px;
+    font-size:clamp(24px,6.6vw,29px);
+    line-height:1.14;
+    letter-spacing:-.04em;
+  }
+  .login-page .login-copy-panel h1 strong{margin-top:3px}
+  .login-page .login-copy-panel p{display:none}
+  .login-page .login-form-panel{
+    height:auto;min-height:0;
+    padding:28px 24px 29px;
+    background:#fff;
+  }
+  .login-page .login-form-inner{max-width:none}
+  .login-page .login-form-panel .login-badge{
+    padding:8px 12px;font-size:10px;
+  }
+  .login-page .login-form-panel h2{
+    margin:18px 0 8px;
+    font-size:clamp(25px,7vw,30px);
+    line-height:1.15;
+  }
+  .login-page .login-form-inner>p{
+    margin:0 0 20px;
+    font-size:12px;line-height:1.5;
+  }
+  .login-page .flash{font-size:11px;padding:11px 13px;margin-bottom:13px}
+  .login-page .login-form-panel form{gap:9px}
+  .login-page .login-form-panel label{font-size:12px}
+  .login-page .login-password input{
+    height:50px;
+    border-radius:14px;
+    padding:0 46px 0 15px;
+    font-size:16px; /* Safari: sem zoom automático do campo */
+  }
+  .login-page .login-show-password{margin:1px 0 7px;font-size:12px}
+  .login-page .login-form-panel button[type="submit"]{
+    height:52px;border-radius:15px;font-size:14px;margin-top:0;
+  }
+  .login-page .login-back{font-size:12px;margin-top:14px}
+  .login-page .login-security-note{margin-top:23px;padding-top:16px;font-size:10px}
+
+  body.home-page{
+    padding:11px;
+    background:linear-gradient(160deg,#e6edf5,#f2f6fa);
+  }
+  .home-page .app-shell{
+    display:block;
+    width:100%;height:auto;min-height:calc(100svh - 22px);
+    border:1px solid #dbe4ed;
+    border-radius:23px;
+    box-shadow:0 14px 36px rgba(8,27,51,.12);
+  }
+  .home-page .main-area{
+    min-height:calc(100svh - 24px);
+    padding:0 13px 24px;
+    border-radius:22px;
+  }
+  .home-page .top-bar{
+    height:62px;gap:9px;
+    padding:0 13px;
+    margin:0 -13px 14px;
+    border-radius:22px 22px 0 0;
+    background:rgba(255,255,255,.97);
+  }
+  .home-page .mobile-menu{
+    background:#f2f6fa;
+    border:1px solid #e2eaf2;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(9,28,52,.045);
+    width:39px;height:39px;flex-basis:39px;
+  }
+  .home-page .search-wrap{
+    height:39px;min-width:0;padding:0 10px;
+    border-radius:12px;
+  }
+  .home-page .search-wrap input{font-size:12px}
+  .home-page .avatar.small{width:36px;height:36px}
+  .home-page .user-chip{padding:2px 0 2px 5px}
+  .home-page .logout-button{width:32px;height:36px}
+  .home-page .hero{
+    height:auto;min-height:198px;
+    padding:24px 22px 24px;
+    margin-top:0;
+    border-radius:20px;
+    align-items:flex-end;
+    box-shadow:0 14px 28px rgba(9,30,55,.18);
+  }
+  .home-page .hero::before{
+    background:linear-gradient(90deg,rgba(5,23,42,.45),rgba(5,23,42,.05));
+  }
+  .home-page .hero-content{max-width:100%}
+  .home-page .hero-kicker{font-size:8px;letter-spacing:3px}
+  .home-page .hero h1{
+    font-size:clamp(23px,5.8vw,28px);
+    line-height:1.16;letter-spacing:-.035em;
+    max-width:390px;margin:13px 0 0;
+  }
+  .home-page .hero-line{height:4px;width:64px;margin-top:16px}
+  .home-page .hero-message{display:none}
+  .home-page .kpi-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;margin-top:13px;
+  }
+  .home-page .kpi-card{
+    height:98px;min-height:98px;
+    padding:13px 11px;
+    gap:8px;
+    border-radius:16px;
+    box-shadow:var(--opera-soft);
+  }
+  .home-page .kpi-icon{
+    width:39px;height:39px;flex:0 0 39px;
+    border-radius:12px;font-size:18px;
+  }
+  .home-page .kpi-card span{
+    font-size:10px;white-space:normal;line-height:1.35;
+  }
+  .home-page .kpi-card strong{font-size:19px}
+  .home-page .apps-section{padding-top:20px}
+  .home-page .section-head{gap:5px;margin-bottom:13px}
+  .home-page .section-head h2{font-size:12px;letter-spacing:3px}
+  .home-page .section-head span{font-size:11px}
+  .home-page .apps-grid{display:grid;grid-template-columns:1fr;gap:12px}
+  .home-page .app-card{
+    display:flex;
+    height:auto;min-height:133px;
+    padding:16px 16px 12px;
+    border-radius:18px;
+    border-color:#dfe8f2;
+    box-shadow:var(--opera-soft);
+  }
+  .home-page .app-card:hover{transform:none}
+  .home-page .app-main{
+    display:grid;
+    grid-template-columns:58px minmax(0,1fr);
+    grid-template-rows:auto auto;
+    align-items:center;
+    gap:4px 13px;
+    width:100%;
+  }
+  .home-page .app-icon{
+    width:58px;height:58px;
+    grid-column:1;grid-row:1 / span 2;
+    border-radius:16px;
+  }
+  .home-page .app-copy{
+    grid-column:2;grid-row:1;
+    align-self:end;
+    padding-top:0;
+  }
+  .home-page .app-copy h3{
+    font-size:13px;line-height:1.25;
+    margin-bottom:5px;letter-spacing:-.01em;
+  }
+  .home-page .app-copy p{
+    font-size:11px;line-height:1.4;
+    -webkit-line-clamp:2;
+  }
+  .home-page .status-pill{
+    grid-column:2;grid-row:2;
+    height:23px;margin-top:6px;
+    padding:0 9px;gap:6px;
+    font-size:9px;justify-self:start;
+    align-self:start;
+  }
+  .home-page .status-pill>span{width:7px;height:7px}
+  .home-page .app-footer{
+    display:flex;margin-top:14px;padding-top:10px;
+    font-size:11px;gap:8px;
+  }
+  .home-page .side-nav{
+    width:min(82vw,300px);
+    left:calc(-82vw - 35px);
+    padding:22px 15px 20px;
+    border-radius:0 22px 22px 0;
+  }
+  .home-page .side-nav.open{left:0}
+  .home-page .nav-link{
+    min-height:45px;padding:10px 12px;
+    border-radius:12px;font-size:13px;gap:11px;
+  }
+  .home-page .nav-link i{font-size:17px}
+  .opera-admin-page .oa-content{padding:20px 13px 32px}
+  .opera-admin-page .oa-heading{gap:14px}
+  .opera-admin-page .oa-heading h1{font-size:24px}
+  .opera-admin-page .oa-section{padding:16px}
+  .opera-admin-page .oa-summary{gap:8px}
+  .opera-admin-page .oa-summary-card{padding:12px;border-radius:15px}
+  .opera-admin-page .oa-modules{grid-template-columns:1fr}
+  .config-page .config-content{padding-left:1px;padding-right:1px}
+}
+@media (max-width:380px){
+  .login-page .login-visual{min-height:220px;padding:18px 19px 20px}
+  .login-page .login-copy-panel h1{font-size:23px}
+  .login-page .login-form-panel{padding:23px 19px 24px}
+  .home-page .top-bar{gap:5px;padding:0 9px}
+  .home-page .top-actions{gap:0}
+  .home-page .search-wrap{padding:0 8px}
+  .home-page .kpi-card{gap:7px;padding:10px 8px}
+  .home-page .kpi-icon{width:35px;height:35px;flex-basis:35px;font-size:16px}
+  .home-page .kpi-card span{font-size:9px}
+  .home-page .app-card{padding:14px}
+  .opera-admin-page .oa-summary-card span{font-size:9px}
+}
+@media (prefers-reduced-motion:reduce){
+  .home-page .app-card,
+  .opera-admin-page .oa-organization,
+  .login-page .login-form-panel button[type="submit"]{
+    transition:none;
+  }
+}
