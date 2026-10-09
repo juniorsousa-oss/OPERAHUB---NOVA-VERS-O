@@ -888,6 +888,7 @@ def current_user():
             "role": session.get("user_role") or "user",
             "initials": initials,
             "has_avatar": bool(session.get("user_has_avatar")),
+            "avatar_version": session.get("user_avatar_version") or "initial",
             "organization_id": session.get("organization_id"),
             "organization_slug": session.get("organization_slug"),
             "organization_name": session.get("organization_name"),
@@ -1205,11 +1206,9 @@ def user_avatar_asset(user_id):
             data = ""
         cache_set(cache_key, data)
 
-    response = data_uri_response(
-        data,
-        max_age=2592000,
-    )
+    response = data_uri_response(data, max_age=3600)
     if response is not None:
+        response.headers["Cache-Control"] = "private, max-age=3600"
         return response
     return ("", 404)
 
@@ -1405,7 +1404,7 @@ def configuracoes():
                         "Selecione uma foto antes de salvar."
                     )
 
-                sb_rpc(
+                result = sb_rpc(
                     "operahub_update_user_avatar_v2",
                     {
                         "p_organization_id": current_organization_id(),
@@ -1414,8 +1413,20 @@ def configuracoes():
                     },
                 )
 
-                if session.get("user_id") == target_user_id:
+                if result is False:
+                    raise ValueError("O Supabase não confirmou a atualização da foto.")
+
+                organization_id = current_organization_id()
+                RUNTIME_CACHE.pop(f"users:{organization_id}", None)
+                RUNTIME_CACHE.pop(f"asset:{organization_id}:user_avatar:{target_user_id}", None)
+                prefix = f"user-avatar:{organization_id}:{target_user_id}:"
+                for key in list(RUNTIME_CACHE):
+                    if key.startswith(prefix):
+                        RUNTIME_CACHE.pop(key, None)
+
+                if str(session.get("user_id")) == str(target_user_id):
                     session["user_has_avatar"] = bool(avatar_data)
+                    session["user_avatar_version"] = str(time.time_ns())
 
                 flash(
                     "Foto do usuário atualizada.",
