@@ -86,7 +86,7 @@ class OperaPremiumLayoutTests(unittest.TestCase):
         self.assertIn('id="notificationsAppsMaintenance"', html)
         self.assertIn('data-open-notifications="true"', html)
         self.assertIn('id="notificationsDot" hidden', html)
-        self.assertIn("opera-notifications-v1", html)
+        self.assertIn("opera-mobile-hero-v2", html)
 
     def test_notification_assets_bind_clicks_and_keep_mobile_bell_visible(self):
         script = self.client.get("/static/app.js")
@@ -102,6 +102,29 @@ class OperaPremiumLayoutTests(unittest.TestCase):
         self.assertIn(".home-page .top-actions #notificationsTrigger", css)
         self.assertIn(".notifications-panel[hidden]", css)
         self.assertIn(".notifications-tab[aria-selected", css)
+
+    def test_home_mobile_hero_is_compact_and_does_not_change_desktop_layout(self):
+        response = self.client.get("/", headers=SETTA)
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("opera-mobile-hero-v2", html)
+        self.assertIn('class="hero"', html)
+        self.assertIn("--hero-pos-x:", html)
+        self.assertIn("--hero-image:", html)
+
+        response = self.client.get("/static/premium.css")
+        self.assertEqual(response.status_code, 200)
+        css = response.get_data(as_text=True)
+        self.assertIn("Opera Hub mobile hero v2", css)
+        scoped = css.split("Opera Hub mobile hero v2", 1)[1]
+        self.assertIn("@media (max-width:600px)", scoped)
+        self.assertIn("min-height:172px", scoped)
+        self.assertIn("font-size:clamp(20px,5.55vw,23px)", scoped)
+        self.assertIn("background-position:center,var(--hero-pos-x,50%) 54%", scoped)
+        self.assertIn("var(--hero-image)", scoped)
+        self.assertIn("@media (max-width:390px)", scoped)
+        self.assertIn("min-height:164px", scoped)
+        self.assertEqual(css.count("{"), css.count("}"))
 
     def test_css_asset_is_served_and_contains_mobile_rules(self):
         response = self.client.get("/static/premium.css")
