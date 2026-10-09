@@ -725,3 +725,76 @@ body.login-page::before{
   .notifications-tabs{padding:4px 12px 10px}
   .notifications-tab-panel{padding:14px 15px 17px}
 }
+
+/* Opera Hub mobile hero v2 — proporção refinada
+   Apenas o banner da tela inicial no smartphone.
+   Preserva a imagem e o enquadramento configuráveis do tenant, o desktop
+   e os indicadores/cards que já foram validados. */
+@media (max-width:600px){
+  .home-page .hero{
+    height:auto;
+    min-height:172px;
+    margin-top:0;
+    padding:19px 19px 17px;
+    border-radius:20px;
+    align-items:flex-end;
+    background-image:
+      linear-gradient(90deg,
+        rgba(7,23,41,.91) 0%,
+        rgba(7,23,41,.78) 42%,
+        rgba(7,23,41,.30) 83%,
+        rgba(7,23,41,.62) 100%
+      ),
+      var(--hero-image);
+    background-size:cover,cover;
+    background-position:center,var(--hero-pos-x,50%) 54%;
+    box-shadow:0 12px 26px rgba(9,30,55,.16);
+  }
+  .home-page .hero::before{
+    background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 32%,rgba(2,13,27,.09));
+  }
+  /* Protege a marca gráfica que pode vir incorporada à foto no canto direito. */
+  .home-page .hero::after{
+    width:30%;
+    background:linear-gradient(90deg,
+      rgba(7,23,41,0) 0%,
+      rgba(7,23,41,.24) 45%,
+      rgba(7,23,41,.70) 100%);
+  }
+  .home-page .hero-content{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:100%;
+  }
+  .home-page .hero-kicker{
+    font-size:8px;
+    letter-spacing:2.8px;
+  }
+  .home-page .hero h1{
+    max-width:340px;
+    margin:9px 0 0;
+    font-size:clamp(20px,5.55vw,23px);
+    line-height:1.17;
+    letter-spacing:-.035em;
+    font-weight:500;
+    text-wrap:pretty;
+  }
+  .home-page .hero-line{
+    width:58px;
+    height:3px;
+    margin-top:12px;
+  }
+}
+@media (max-width:390px){
+  .home-page .hero{
+    min-height:164px;
+    padding:17px 16px 15px;
+  }
+  .home-page .hero h1{
+    max-width:100%;
+    font-size:clamp(19px,5.4vw,21px);
+    line-height:1.17;
+  }
+  .home-page .hero-line{margin-top:10px}
+}
