@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-identity-v2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='nexon-20261009') }}">
 </head>
 <body class="login-page">
   <div class="login-shell">
@@ -133,7 +134,7 @@
       </a>
       <div class="login-security-note">
         <span class="login-security-copy"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Acesso restrito a usuários autorizados.</span>
-        <span class="nexon-signature">by <strong>Nexon Labs</strong></span>
+        <img class="nexon-mono-signature" src="{{ url_for('static', filename='nexon-monochrome-dark.svg') }}" alt="Nexon Labs — Soluções Digitais" width="146" height="29">
       </div>
       </div>
     </section>
