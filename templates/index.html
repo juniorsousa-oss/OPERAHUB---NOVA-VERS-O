@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-mobile-hero-v2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='nexon-20261009') }}">
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -123,7 +124,7 @@
               <div class="avatar small {{ 'has-photo' if current_user['has_avatar'] else '' }}">
                 {% if current_user['has_avatar'] %}
                   <img
-                    src="{{ url_for('user_avatar_asset', user_id=current_user['id']) }}"
+                    src="{{ url_for('user_avatar_asset', user_id=current_user['id'], v=current_user.get('avatar_version', 'initial')) }}"
                     alt="{{ current_user['name'] }}"
                   >
                 {% else %}
@@ -277,8 +278,7 @@
       </section>
 
       <footer class="opera-brand-footer" aria-label="Aplicativo desenvolvido pela Nexon Labs">
-        <span class="opera-brand-node" aria-hidden="true"></span>
-        <span>by <strong>Nexon Labs</strong></span>
+        <img class="nexon-mono-signature" src="{{ url_for('static', filename='nexon-monochrome-dark.svg') }}" alt="Nexon Labs — Soluções Digitais" width="180" height="36">
       </footer>
     </main>
   </div>

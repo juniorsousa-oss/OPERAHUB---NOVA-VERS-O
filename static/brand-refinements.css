@@ -1,0 +1,45 @@
+/* Opera Hub: marcas proporcionais nos ambientes Base/Demo e Cliente */
+.home-page .side-nav .brand{
+  display:flex;align-items:center;justify-content:center;
+  min-height:99px;padding:15px 11px 20px;
+  width:100%;flex-shrink:0;overflow:hidden;
+}
+.home-page .side-nav .brand-logo-img{
+  display:block;margin:0 auto;
+  width:min(var(--brand-user-width,190px),100%);
+  max-width:100%;max-height:76px;
+  height:auto;object-fit:contain;object-position:center;
+}
+.home-page .side-nav .brand-mark{line-height:1}
+.home-page .side-nav .brand-text{min-width:0}
+.home-page .side-nav .nav-primary{min-height:0}
+.login-page .login-visual .brand{
+  display:flex;align-items:center;
+  min-height:88px;height:auto;
+  padding:5px 0;overflow:visible;
+}
+.login-page .login-visual .brand-logo-img{
+  display:block;width:min(calc(var(--brand-user-width,190px) * 1.32),292px);
+  max-height:83px;max-width:90%;height:auto;
+  object-fit:contain;object-position:left center;
+  margin:0;
+}
+.opera-brand-footer{padding:16px 12px 13px}
+.opera-brand-footer img.nexon-mono-signature{display:block;width:171px;max-width:75vw;height:auto;max-height:40px;object-fit:contain}
+.login-page .login-security-note .nexon-mono-signature{display:block;width:150px;height:auto;max-height:34px;object-fit:contain;flex-shrink:0}
+@media(max-width:1366px){
+ .home-page .side-nav .brand{min-height:85px;padding:12px 8px 16px}
+ .home-page .side-nav .brand-logo-img{max-height:63px}
+}
+@media(max-width:860px){
+ .home-page .side-nav .brand{min-height:90px;padding:12px 10px 16px}
+ .home-page .side-nav .brand-logo-img{max-height:69px}
+ .login-page .login-visual .brand{min-height:66px}
+ .login-page .login-visual .brand-logo-img{width:min(calc(var(--brand-user-width,190px) * 1.15),260px);max-height:68px}
+}
+@media(max-width:560px){
+ .login-page .login-visual .brand{min-height:57px;height:57px}
+ .login-page .login-visual .brand-logo-img{max-height:54px;max-width:86%;width:min(calc(var(--brand-user-width,190px) * 1.14),236px)}
+ .login-page .login-security-note .nexon-mono-signature{width:112px}
+ .opera-brand-footer img.nexon-mono-signature{width:151px}
+}
