@@ -67,6 +67,7 @@ class BrandAndSidebarTests(TestCase):
         self.assertIn('name="institutional_brand_upload"',config)
         self.assertIn('name="remove_institutional_brand"',config)
         self.assertIn('value="save_institutional_brand"',config)
+        self.assertIn('type="submit" formnovalidate',config)
         self.assertIn('name="institutional_csrf_token"',config)
         self.assertIn("has_institutional_brand",config)
 
