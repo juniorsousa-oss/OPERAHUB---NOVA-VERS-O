@@ -22,7 +22,7 @@ class OperaBrandAvatarTests(unittest.TestCase):
         login=(ROOT/"templates/login.html").read_text(encoding="utf-8")
         home=(ROOT/"templates/index.html").read_text(encoding="utf-8")
         for html in (login,home):
-            self.assertIn('nexon-monochrome-dark.svg',html)
+            self.assertIn('institutional_logo_asset',html)
             self.assertIn("brand-refinements.css",html)
         self.assertIn("brand-refinements.css",(ROOT/"templates/config.html").read_text(encoding="utf-8"))
         assert (ROOT/"static/nexon-monochrome-dark.svg").exists()
