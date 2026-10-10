@@ -278,6 +278,7 @@
                     <input type="checkbox" name="remove_institutional_brand">
                     Restaurar assinatura institucional padrão
                   </label>
+                  <input type="hidden" name="institutional_csrf_token" value="{{ institutional_csrf_token }}">
                   <button class="btn btn-primary" type="submit"
                           name="config_action" value="save_institutional_brand">
                     <i class="fa-solid fa-floppy-disk"></i>
