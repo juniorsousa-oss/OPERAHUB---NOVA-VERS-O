@@ -140,3 +140,21 @@
   object-fit:contain;
   object-position:center;
 }
+
+/* Login desktop: logo mais proporcional ao cartão de 960 × 510 px.
+   A redução usa object-fit:contain para respeitar marcas de clientes. */
+@media (min-width:861px){
+  .login-page .login-visual .brand{
+    min-height:70px;
+    height:70px;
+    padding:0;
+  }
+  .login-page .login-visual .brand-logo-img{
+    width:min(calc(var(--brand-user-width,190px) * 1.16),255px);
+    max-width:86%;
+    max-height:68px;
+    height:auto;
+    object-fit:contain;
+    object-position:left center;
+  }
+}
