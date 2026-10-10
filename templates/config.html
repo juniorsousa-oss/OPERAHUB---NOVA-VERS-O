@@ -247,12 +247,13 @@
               </div>
             </details>
 
+            {% if can_edit_institutional_brand %}
             <details class="settings-accordion" id="institutionalBrandSettings">
               <summary>
                 <span class="settings-accordion-icon"><i class="fa-solid fa-certificate"></i></span>
                 <span class="settings-accordion-copy">
                   <strong>Assinatura institucional Nexon Labs</strong>
-                  <small>Uma única imagem para o rodapé da página inicial e da tela de login</small>
+                  <small>Identidade oficial Nexon Labs compartilhada por todos os clientes do Opera Hub</small>
                 </span>
                 <span class="settings-accordion-status">
                   {{ 'Personalizada' if has_institutional_brand else 'Padrão Nexon Labs' }}
@@ -273,7 +274,7 @@
                     name="institutional_brand_upload"
                     accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                   >
-                  <small>PNG transparente recomendado. Até 6 MB. Esta imagem substitui a assinatura institucional no login e na página inicial deste ambiente; não altera a logo do Opera Hub.</small>
+                  <small>PNG transparente recomendado. Até 6 MB. Alterar esta imagem atualiza a assinatura Nexon Labs no login e no rodapé da Base/Demo e de todos os clientes. As logos próprias dos clientes não são alteradas.</small>
                   <label class="check-wrap">
                     <input type="checkbox" name="remove_institutional_brand">
                     Restaurar assinatura institucional padrão
@@ -287,6 +288,7 @@
                 </div>
               </div>
             </details>
+            {% endif %}
 
             <details class="settings-accordion">
               <summary>

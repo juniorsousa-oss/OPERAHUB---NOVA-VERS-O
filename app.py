@@ -557,7 +557,10 @@ def asset_data(asset_type, key=None):
     stale_item = RUNTIME_CACHE.get(cache_key)
     stale_value = stale_item[1] if stale_item else None
 
-    cached = cache_get(cache_key, ASSET_DATA_TTL)
+    # A marca institucional é global: mudanças na Base/Demo precisam
+    # chegar rapidamente aos clientes sem afetar cache de imagens próprias.
+    asset_ttl = 60 if asset_type == "institutional_logo" else ASSET_DATA_TTL
+    cached = cache_get(cache_key, asset_ttl)
     if cached is not None:
         return cached
 
@@ -1065,10 +1068,13 @@ def institutional_signature_response(data_uri):
 
 @app.route("/assets/institutional-logo")
 def institutional_logo_asset():
-    """Marca institucional do tenant, sem padding invisível no login e rodapé."""
+    """Assinatura central da Nexon Labs, idêntica em Base/Demo e clientes."""
     data = asset_data("institutional_logo")
     response = institutional_signature_response(data)
     if response is not None:
+        # Clientes compartilham a mesma imagem. Cache curto para refletir
+        # trocas feitas pelo administrador da plataforma sem novo deploy.
+        response.headers["Cache-Control"] = "public, max-age=60, must-revalidate"
         return response
     return redirect(url_for("static", filename="nexon-monochrome-dark.svg"))
 
@@ -1517,6 +1523,10 @@ def configuracoes():
                 )
 
             if config_action == "save_institutional_brand":
+                # Mesmo um administrador de cliente não pode trocar a marca
+                # institucional da Nexon Labs. É um ativo da plataforma.
+                if not is_platform_admin():
+                    return ("Assinatura institucional gerenciada exclusivamente pela Base/Demo.", 403)
                 if not hmac.compare_digest(
                     request.form.get("institutional_csrf_token", ""),
                     admin_csrf_token(),
@@ -1544,7 +1554,7 @@ def configuracoes():
                         "p_image_data": "" if remove_image else new_image,
                     },
                 )
-                flash("Identidade institucional atualizada no login e na página inicial.", "success")
+                flash("Assinatura institucional atualizada para a Base/Demo e todos os clientes.", "success")
                 return redirect(url_for("configuracoes", _anchor="identity"))
 
             if config_action == "save_login_visual":
@@ -1872,8 +1882,9 @@ def configuracoes():
         current_user=current_user(),
         organization=current_organization(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
-        has_institutional_brand=bool(asset_data("institutional_logo")),
-        institutional_csrf_token=admin_csrf_token(),
+        can_edit_institutional_brand=is_platform_admin(),
+        has_institutional_brand=bool(asset_data("institutional_logo")) if is_platform_admin() else False,
+        institutional_csrf_token=admin_csrf_token() if is_platform_admin() else "",
     )
 
 
