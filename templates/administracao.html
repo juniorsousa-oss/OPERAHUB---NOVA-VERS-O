@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#0F1B2D">
   <title>Administração Opera Hub</title>
   {% if settings['has_favicon'] %}
-  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at']) }}">
+  <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at'], style='optical93-v1') }}">
   {% else %}
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg', v='optical93-v1') }}" type="image/svg+xml">
   {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
