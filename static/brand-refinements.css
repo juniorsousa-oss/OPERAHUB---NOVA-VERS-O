@@ -43,3 +43,33 @@
  .login-page .login-security-note .nexon-mono-signature{width:112px}
  .opera-brand-footer img.nexon-mono-signature{width:151px}
 }
+
+/* Assinatura institucional personalizável — preview da mesma imagem
+   utilizada no login e no rodapé. Nunca distorcer o arquivo carregado. */
+.config-page .asset-preview-institutional{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:120px;
+  padding:20px;
+  border:1px solid #dfe8f0;
+  border-radius:16px;
+  background:linear-gradient(135deg,#fff,#f7f9fc);
+}
+.config-page .asset-preview-institutional img{
+  display:block;
+  width:auto;
+  max-width:min(100%,340px);
+  height:auto;
+  max-height:96px;
+  object-fit:contain;
+}
+.config-page .institutional-brand-settings .btn{
+  align-self:flex-start;
+  min-height:44px;
+}
+.login-page .login-security-note .nexon-mono-signature,
+.home-page .opera-brand-footer .nexon-mono-signature{
+  object-fit:contain;
+  object-position:center;
+}
