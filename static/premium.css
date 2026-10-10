@@ -309,6 +309,92 @@ body.login-page::before{
 .opera-admin-page .oa-button{border-radius:12px}
 .opera-admin-page .oa-module-options input{accent-color:#efb420}
 
+
+/* Proporção desktop alinhada à referência AXORA (zoom 100%).
+   O comparativo mostra a mesma largura visual de 960px, mas altura
+   maior no Opera. Redimensionar sem transform/zoom preserva nitidez,
+   focos de input, rolagem e responsividade. Mobile permanece intacto. */
+@media (min-width:861px){
+  .login-page .login-shell{
+    width:min(960px,100%);
+    min-height:510px;
+    border-radius:26px;
+  }
+  .login-page .login-visual{
+    padding:34px 44px;
+  }
+  .login-page .login-visual .brand{
+    min-height:66px;
+  }
+  .login-page .login-copy-panel{
+    max-width:385px;
+  }
+  .login-page .login-copy-panel span{
+    font-size:9px;
+    letter-spacing:.28em;
+    margin-bottom:10px;
+  }
+  .login-page .login-copy-panel h1{
+    font-size:33px;
+    line-height:1.14;
+    letter-spacing:-.04em;
+  }
+  .login-page .login-copy-panel p{
+    font-size:12px;
+    line-height:1.58;
+    margin-top:12px;
+  }
+  .login-page .login-form-panel{
+    padding:28px 56px;
+  }
+  .login-page .login-form-inner{
+    max-width:360px;
+  }
+  .login-page .login-form-panel .login-badge{
+    padding:7px 11px;
+    font-size:9px;
+  }
+  .login-page .login-form-panel h2{
+    font-size:27px;
+    margin:13px 0 6px;
+  }
+  .login-page .login-form-inner>p{
+    margin-bottom:13px;
+    font-size:12px;
+  }
+  .login-page .login-form-panel form{
+    gap:7px;
+  }
+  .login-page .login-password input{
+    height:45px;
+    font-size:14px;
+  }
+  .login-page .login-show-password{
+    font-size:11px;
+    margin-bottom:2px;
+  }
+  .login-page .login-form-panel button[type="submit"]{
+    height:48px;
+    font-size:13px;
+  }
+  .login-page .login-back{
+    margin-top:9px;
+    font-size:11px;
+  }
+  .login-page .login-security-note{
+    margin-top:14px;
+    padding-top:11px;
+    font-size:10px;
+  }
+}
+
+/* Manter respiro lateral em desktops compactos sem causar overflow. */
+@media (min-width:861px) and (max-width:1030px){
+  .login-page .login-visual{padding-inline:32px}
+  .login-page .login-form-panel{padding-inline:clamp(26px,4vw,48px)}
+  .login-page .login-copy-panel h1{font-size:clamp(27px,3.15vw,33px)}
+}
+
 /* Tablet: login já fica empilhado, mantendo o visual de cartão. */
 @media (max-width:860px){
   .login-page .login-shell{
