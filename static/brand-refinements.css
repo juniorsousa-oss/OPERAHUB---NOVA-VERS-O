@@ -25,8 +25,33 @@
   margin:0;
 }
 .opera-brand-footer{padding:16px 12px 13px}
-.opera-brand-footer img.nexon-mono-signature{display:block;width:171px;max-width:75vw;height:auto;max-height:40px;object-fit:contain}
-.login-page .login-security-note .nexon-mono-signature{display:block;width:150px;height:auto;max-height:34px;object-fit:contain;flex-shrink:0}
+.home-page .opera-brand-footer img.nexon-mono-signature{
+  display:block;
+  flex:0 0 auto;
+  width:180px;
+  max-width:min(180px,80vw);
+  height:auto;
+  max-height:42px;
+  object-fit:contain;
+  object-position:center;
+}
+.login-page .login-security-note .nexon-signature{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  max-width:min(170px,42vw);
+}
+.login-page .login-security-note .nexon-mono-signature{
+  display:block;
+  flex:0 0 auto;
+  width:170px;
+  max-width:100%;
+  height:auto;
+  max-height:40px;
+  object-fit:contain;
+  object-position:center;
+}
 @media(max-width:1366px){
  .home-page .side-nav .brand{min-height:85px;padding:12px 8px 16px}
  .home-page .side-nav .brand-logo-img{max-height:63px}
@@ -40,8 +65,11 @@
 @media(max-width:560px){
  .login-page .login-visual .brand{min-height:57px;height:57px}
  .login-page .login-visual .brand-logo-img{max-height:54px;max-width:86%;width:min(calc(var(--brand-user-width,190px) * 1.14),236px)}
- .login-page .login-security-note .nexon-mono-signature{width:112px}
- .opera-brand-footer img.nexon-mono-signature{width:151px}
+ /* No celular, a assinatura mantém presença sem empurrar
+    a mensagem de segurança para fora do card. */
+ .login-page .login-security-note .nexon-signature{max-width:min(148px,44vw)}
+ .login-page .login-security-note .nexon-mono-signature{width:148px;max-height:36px}
+ .home-page .opera-brand-footer img.nexon-mono-signature{width:165px;max-width:80vw;max-height:39px}
 }
 
 /* Assinatura institucional personalizável — preview da mesma imagem
