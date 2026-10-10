@@ -1079,11 +1079,52 @@ def institutional_logo_asset():
     return redirect(url_for("static", filename="nexon-monochrome-dark.svg"))
 
 
+def normalized_favicon_asset(data_uri):
+    """Renderiza a marca do tenant com área útil de 93% em PNG 512².
+
+    Padrão visual comum a ATRIA e AXORA. Não modifica a imagem no banco.
+    Preserva integralmente a proporção e não recorta imagens opacas.
+    """
+    mime, raw = data_uri_parts(data_uri)
+    if not mime or raw is None:
+        return None, None
+    if mime == "image/svg+xml":
+        return mime, raw
+
+    try:
+        with Image.open(BytesIO(raw)) as source:
+            icon = ImageOps.exif_transpose(source).convert("RGBA")
+            alpha = icon.getchannel("A")
+            if alpha.getextrema()[0] < 255:
+                visible = alpha.point(lambda value: 255 if value >= 20 else 0)
+                bounds = visible.getbbox() or alpha.getbbox()
+                if bounds is None:
+                    return mime, raw
+                icon = icon.crop(bounds)
+
+            canvas_size = 512
+            visual_size = round(canvas_size * 0.93)
+            icon.thumbnail(
+                (visual_size, visual_size),
+                Image.Resampling.LANCZOS,
+            )
+            canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+            canvas.alpha_composite(
+                icon,
+                ((canvas_size - icon.width) // 2, (canvas_size - icon.height) // 2),
+            )
+            output = BytesIO()
+            canvas.save(output, format="PNG", optimize=True)
+            return "image/png", output.getvalue()
+    except (OSError, ValueError, Image.DecompressionBombError):
+        return mime, raw
+
+
 @app.route("/assets/favicon")
 def favicon_asset():
     version = request.args.get("v", "current")
     organization_id = current_organization_id()
-    cache_key = f"{organization_id}:favicon:{version}"
+    cache_key = f"{organization_id}:favicon:optical93:{version}"
 
     cached = BRAND_IMAGE_CACHE.get(cache_key)
     if cached:
@@ -1091,26 +1132,10 @@ def favicon_asset():
         return binary_response(raw, mime, max_age=2592000)
 
     data = asset_data("favicon")
-
     if data:
-        optimized = optimize_brand_data_uri(data, favicon=True)
-        mime, raw = data_uri_parts(optimized)
+        mime, raw = normalized_favicon_asset(data)
         if mime and raw is not None:
             BRAND_IMAGE_CACHE[cache_key] = (raw, mime)
-
-            if optimized != data and SUPABASE_WRITE_TOKEN:
-                try:
-                    sb_rpc(
-                        "operahub_store_optimized_brand_assets_v2",
-                        {
-                            "p_organization_id": organization_id,
-                            "p_logo_data": None,
-                            "p_favicon_data": optimized,
-                        },
-                    )
-                except Exception:
-                    pass
-
             return binary_response(raw, mime, max_age=2592000)
 
     return redirect(url_for("static", filename="favicon.svg"))
