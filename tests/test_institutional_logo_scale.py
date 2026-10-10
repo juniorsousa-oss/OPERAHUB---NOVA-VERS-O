@@ -41,7 +41,12 @@ class InstitutionalLogoScaleTests(unittest.TestCase):
     def test_css_and_asset_version_for_all_surfaces(self):
         for page in ("index.html", "login.html", "config.html"):
             html = (BASE / "templates" / page).read_text()
-            self.assertIn("institutional-crop-contextual-v4", html)
+            expected_cache_key = (
+                "institutional-desktop-axora-v1"
+                if page == "login.html"
+                else "institutional-crop-contextual-v4"
+            )
+            self.assertIn(expected_cache_key, html)
             self.assertIn("presentation='trim-v2'", html)
 
     def test_same_tenant_asset_is_used_in_login_and_home(self):
