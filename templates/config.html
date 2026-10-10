@@ -16,8 +16,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-identity-v2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='nexon-20261009') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='exterior-frame.css', v='opera-axora-shell-20261010-v1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='institutional-upload-20261010-v2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='exterior-frame.css', v='opera-login-wallpaper-navfix-20261010-v2') }}">
 </head>
 <body class="home-page config-page">
   <div class="app-shell config-shell">
@@ -243,6 +243,47 @@
                     <input type="checkbox" name="remove_logo">
                     Remover logo personalizada
                   </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="settings-accordion" id="institutionalBrandSettings">
+              <summary>
+                <span class="settings-accordion-icon"><i class="fa-solid fa-certificate"></i></span>
+                <span class="settings-accordion-copy">
+                  <strong>Assinatura institucional Nexon Labs</strong>
+                  <small>Uma única imagem para o rodapé da página inicial e da tela de login</small>
+                </span>
+                <span class="settings-accordion-status">
+                  {{ 'Personalizada' if has_institutional_brand else 'Padrão Nexon Labs' }}
+                </span>
+                <i class="fa-solid fa-chevron-down settings-accordion-chevron"></i>
+              </summary>
+              <div class="settings-accordion-body">
+                <div class="identity-field identity-field-single institutional-brand-settings">
+                  <div class="asset-preview asset-preview-institutional">
+                    <img src="{{ url_for('institutional_logo_asset', v=settings['updated_at']) }}"
+                         alt="Assinatura institucional atual" decoding="async">
+                  </div>
+                  <label class="field-label" for="institutionalBrandUpload">Imagem da assinatura institucional</label>
+                  <input
+                    id="institutionalBrandUpload"
+                    class="file-input"
+                    type="file"
+                    name="institutional_brand_upload"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                  >
+                  <small>PNG transparente recomendado. Até 6 MB. Esta imagem substitui a assinatura institucional no login e na página inicial deste ambiente; não altera a logo do Opera Hub.</small>
+                  <label class="check-wrap">
+                    <input type="checkbox" name="remove_institutional_brand">
+                    Restaurar assinatura institucional padrão
+                  </label>
+                  <input type="hidden" name="institutional_csrf_token" value="{{ institutional_csrf_token }}">
+                  <button class="btn btn-primary" type="submit"
+                          name="config_action" value="save_institutional_brand">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Salvar assinatura institucional
+                  </button>
                 </div>
               </div>
             </details>

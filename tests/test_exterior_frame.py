@@ -19,8 +19,8 @@ class ExteriorFrameTests(unittest.TestCase):
         css=response.get_data(as_text=True)
         self.assertIn('body.home-page{',css)
         self.assertIn('url("/static/nexon-connections.svg")',css)
-        self.assertIn("background-color:#302c29",css)
-        self.assertIn("background-size:560px auto",css)
+        self.assertIn("linear-gradient(145deg,#46341b 0%,#312b25 47%,#192a3d 100%)",css)
+        self.assertIn("center/560px auto repeat",css)
         self.assertIn("height:calc(100dvh - (2 * var(--opera-frame-gap)))",css)
         self.assertIn("overflow:hidden",css)
         self.assertIn("overflow-y:auto",css)
@@ -35,7 +35,7 @@ class ExteriorFrameTests(unittest.TestCase):
             html=(ROOT/"templates"/path).read_text()
             self.assertEqual(html.count("exterior-frame.css"),1,path)
             self.assertGreater(html.index("exterior-frame.css"),html.index("premium.css"),path)
-            self.assertIn("opera-axora-shell-20261010-v1",html)
+            self.assertIn("opera-login-wallpaper-navfix-20261010-v2",html)
 
     def test_original_login_remains_untouched(self):
         login=(ROOT/"templates/login.html").read_text()
