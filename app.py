@@ -1475,6 +1475,11 @@ def configuracoes():
                 )
 
             if config_action == "save_institutional_brand":
+                if not hmac.compare_digest(
+                    request.form.get("institutional_csrf_token", ""),
+                    admin_csrf_token(),
+                ):
+                    return ("Sessão de edição expirada. Recarregue e tente novamente.", 400)
                 remove_image = request.form.get("remove_institutional_brand") == "on"
                 file_storage = request.files.get("institutional_brand_upload")
                 new_image = None
@@ -1826,6 +1831,7 @@ def configuracoes():
         organization=current_organization(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
         has_institutional_brand=bool(asset_data("institutional_logo")),
+        institutional_csrf_token=admin_csrf_token(),
     )
 
 
