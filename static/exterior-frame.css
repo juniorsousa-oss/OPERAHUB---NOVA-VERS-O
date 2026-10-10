@@ -9,19 +9,31 @@ body.home-page{
   min-height:100dvh;
   padding:var(--opera-frame-gap);
   margin:0;
-  background-color:#302c29;
-  background-image:
-    url("/static/nexon-connections.svg"),
-    radial-gradient(ellipse at 4% 7%,rgba(255,203,92,.32),transparent 50%),
-    radial-gradient(ellipse at 97% 90%,rgba(200,151,57,.20),transparent 48%),
-    linear-gradient(145deg,#49381F 0%,#302D29 45%,#152A3B 100%);
-  background-size:560px auto,auto,auto,auto;
-  background-position:center center,center,center,center;
-  background-repeat:repeat,no-repeat,no-repeat,no-repeat;
-  background-attachment:fixed,fixed,fixed,fixed;
+  /* Identical a premium.css: body.login-page, sem a textura em alta
+     opacidade que apareceu no exterior da versão anterior. */
+  position:relative;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse at 2% 8%,rgba(255,204,88,.38),transparent 49%),
+    radial-gradient(ellipse at 98% 96%,rgba(235,165,36,.27),transparent 50%),
+    radial-gradient(ellipse at 60% 100%,rgba(70,49,22,.22),transparent 62%),
+    linear-gradient(145deg,#46341b 0%,#312b25 47%,#192a3d 100%);
   overflow-x:hidden;
 }
+/* Mesmo overlay decorativo da tela de login (premium.css): opacidade
+   de 12%, textura 560px repetida e sem interação com o usuário. */
+body.home-page::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:url("/static/nexon-connections.svg") center/560px auto repeat;
+  opacity:.12;
+}
 .home-page .app-shell{
+  position:relative;
+  z-index:1;
   width:100%;
   max-width:none;
   height:calc(100dvh - (2 * var(--opera-frame-gap)));
@@ -36,11 +48,30 @@ body.home-page{
 .home-page .side-nav{
   min-height:0;
   height:100%;
+  overflow-x:hidden;
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-width:thin;
-  scrollbar-color:#37506A transparent;
+  scrollbar-color:#68839A transparent;
+  scrollbar-gutter:stable;
 }
+/* Impede que o flexbox esmague os links finais quando o painel fica baixo.
+   A rolagem acontece no próprio menu; ícones e textos não se encavalam. */
+.home-page .side-nav > .brand,
+.home-page .side-nav > .nav-primary,
+.home-page .side-nav > .nav-secondary{
+  flex-shrink:0;
+}
+.home-page .side-nav .nav-link{
+  flex-shrink:0;
+}
+.home-page .side-nav::-webkit-scrollbar{width:7px}
+.home-page .side-nav::-webkit-scrollbar-track{background:transparent}
+.home-page .side-nav::-webkit-scrollbar-thumb{
+  background:rgba(144,169,193,.45);
+  border-radius:999px;
+}
+
 .home-page .main-area{
   min-height:0;
   height:100%;
@@ -63,8 +94,13 @@ body.home-page{
     --opera-frame-radius:24px;
     min-height:100dvh;
     padding:var(--opera-frame-gap);
-    background-position:center top,center,center,center;
-    background-attachment:scroll,scroll,scroll,scroll;
+    background-attachment:scroll;
+  }
+  body.home-page::before{
+    background-size:385px auto;
+    opacity:.11;
+  }
+  body.home-page{
     overflow-y:auto;
   }
   .home-page .app-shell{
