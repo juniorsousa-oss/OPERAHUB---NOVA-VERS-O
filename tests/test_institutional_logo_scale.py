@@ -62,6 +62,7 @@ class InstitutionalLogoScaleTests(unittest.TestCase):
             response = opera.institutional_signature_response(data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, "image/webp")
+        response.direct_passthrough = False
         with Image.open(BytesIO(response.get_data())) as cropped:
             self.assertGreater(cropped.width/cropped.height, 4)
             self.assertLess(cropped.width, original.width)
