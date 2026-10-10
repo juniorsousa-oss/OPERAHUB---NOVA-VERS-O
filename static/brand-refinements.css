@@ -25,32 +25,56 @@
   margin:0;
 }
 .opera-brand-footer{padding:16px 12px 13px}
+/* Na home, o rodapé é um espaço amplo e centralizado: a imagem
+   já vem recortada do backend, por isso 168px é a medida VISÍVEL. */
+.home-page .opera-brand-footer{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:66px;
+  padding:15px 12px 13px;
+}
 .home-page .opera-brand-footer img.nexon-mono-signature{
   display:block;
-  flex:0 0 auto;
-  width:180px;
-  max-width:min(180px,80vw);
+  width:min(168px,65vw);
+  max-width:100%;
   height:auto;
-  max-height:42px;
+  max-height:43px;
   object-fit:contain;
   object-position:center;
+}
+
+/* No login, texto e assinatura ficam na MESMA linha, cada um em sua
+   própria coluna. Nunca deixar a assinatura cair para uma linha
+   alinhada à esquerda como na captura anterior. */
+.login-page .login-security-note{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 144px;
+  align-items:center;
+  gap:12px;
+}
+.login-page .login-security-note .login-security-copy{
+  display:block;
+  min-width:0;
+  line-height:1.5;
+  overflow-wrap:normal;
 }
 .login-page .login-security-note .nexon-signature{
   display:flex;
   align-items:center;
-  justify-content:center;
-  flex:0 0 auto;
-  max-width:min(170px,42vw);
+  justify-content:flex-end;
+  min-width:0;
+  width:100%;
+  max-width:none;
 }
 .login-page .login-security-note .nexon-mono-signature{
   display:block;
-  flex:0 0 auto;
-  width:170px;
+  width:144px;
   max-width:100%;
   height:auto;
-  max-height:40px;
+  max-height:36px;
   object-fit:contain;
-  object-position:center;
+  object-position:right center;
 }
 @media(max-width:1366px){
  .home-page .side-nav .brand{min-height:85px;padding:12px 8px 16px}
@@ -65,11 +89,26 @@
 @media(max-width:560px){
  .login-page .login-visual .brand{min-height:57px;height:57px}
  .login-page .login-visual .brand-logo-img{max-height:54px;max-width:86%;width:min(calc(var(--brand-user-width,190px) * 1.14),236px)}
- /* No celular, a assinatura mantém presença sem empurrar
-    a mensagem de segurança para fora do card. */
- .login-page .login-security-note .nexon-signature{max-width:min(148px,44vw)}
- .login-page .login-security-note .nexon-mono-signature{width:148px;max-height:36px}
- .home-page .opera-brand-footer img.nexon-mono-signature{width:165px;max-width:80vw;max-height:39px}
+ /* No celular, centraliza a marca ABAIXO do aviso em vez de deixá-la
+    cair involuntariamente no canto esquerdo. */
+ .login-page .login-security-note{
+   display:grid;
+   grid-template-columns:minmax(0,1fr);
+   justify-items:center;
+   gap:10px;
+ }
+ .login-page .login-security-note .login-security-copy{text-align:center}
+ .login-page .login-security-note .nexon-signature{
+   justify-content:center;
+   width:auto;
+   max-width:100%;
+ }
+ .login-page .login-security-note .nexon-mono-signature{
+   width:146px;
+   max-width:80vw;
+   max-height:36px;
+ }
+ .home-page .opera-brand-footer img.nexon-mono-signature{width:164px;max-width:80vw;max-height:41px}
 }
 
 /* Assinatura institucional personalizável — preview da mesma imagem
