@@ -1104,8 +1104,12 @@ def normalized_favicon_asset(data_uri):
 
             canvas_size = 512
             visual_size = round(canvas_size * 0.93)
-            icon.thumbnail(
-                (visual_size, visual_size),
+            # thumbnail() apenas diminui; favicons pequenos também
+            # precisam ser ampliados para a mesma presença visual.
+            factor = visual_size / max(icon.width, icon.height)
+            icon = icon.resize(
+                (max(1, round(icon.width * factor)),
+                 max(1, round(icon.height * factor))),
                 Image.Resampling.LANCZOS,
             )
             canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
