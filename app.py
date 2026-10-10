@@ -86,6 +86,7 @@ SUPABASE_WRITE_TIMEOUT = 12
 SLOW_BACKEND_SECONDS = 0.8
 
 WRITE_RPCS = {
+    "operahub_set_institutional_brand_v1",
     "operahub_create_user_v3",
     "operahub_admin_set_module_v1",
     "operahub_update_user_avatar_v2",
@@ -1020,6 +1021,16 @@ def logo_asset():
     return redirect(url_for("static", filename="favicon.svg"))
 
 
+@app.route("/assets/institutional-logo")
+def institutional_logo_asset():
+    """Marca institucional configurada neste tenant, igual no login e rodapé."""
+    data = asset_data("institutional_logo")
+    response = data_uri_response(data, max_age=120)
+    if response is not None:
+        return response
+    return redirect(url_for("static", filename="nexon-monochrome-dark.svg"))
+
+
 @app.route("/assets/favicon")
 def favicon_asset():
     version = request.args.get("v", "current")
@@ -1463,6 +1474,32 @@ def configuracoes():
                     url_for("configuracoes", _anchor="login")
                 )
 
+            if config_action == "save_institutional_brand":
+                remove_image = request.form.get("remove_institutional_brand") == "on"
+                file_storage = request.files.get("institutional_brand_upload")
+                new_image = None
+                if not remove_image:
+                    if file_storage and file_storage.filename:
+                        allowed_mime = {"image/png", "image/jpeg", "image/webp"}
+                        if (file_storage.mimetype or "").lower() not in allowed_mime:
+                            raise ValueError("Use PNG, JPEG ou WEBP para a assinatura institucional.")
+                    new_image = file_to_data_uri(file_storage, 6 * 1024 * 1024)
+                    if new_image:
+                        new_image = optimize_brand_data_uri(
+                            new_image, favicon=False, force=True
+                        )
+                if not remove_image and not new_image:
+                    raise ValueError("Selecione uma imagem ou marque Restaurar assinatura padrão.")
+                sb_rpc(
+                    "operahub_set_institutional_brand_v1",
+                    {
+                        "p_organization_id": current_organization_id(),
+                        "p_image_data": "" if remove_image else new_image,
+                    },
+                )
+                flash("Identidade institucional atualizada no login e na página inicial.", "success")
+                return redirect(url_for("configuracoes", _anchor="identity"))
+
             if config_action == "save_login_visual":
                 settings = load_settings()
                 remove_login_image = (
@@ -1788,6 +1825,7 @@ def configuracoes():
         current_user=current_user(),
         organization=current_organization(),
         supabase_write_ready=bool(SUPABASE_WRITE_TOKEN),
+        has_institutional_brand=bool(asset_data("institutional_logo")),
     )
 
 
