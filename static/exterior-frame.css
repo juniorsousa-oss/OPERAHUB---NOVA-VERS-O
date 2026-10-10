@@ -1,0 +1,129 @@
+/* OPERA HUB · Nexon Labs | moldura externa no padrão AXORA
+   A paisagem institucional de conexões do login agora envolve a plataforma
+   em TODAS as páginas internas (demo, cliente, configurações e admin).
+   Não interfere em componentes, imagens cadastradas nem cores de clientes. */
+
+body.home-page{
+  --opera-frame-gap:14px;
+  --opera-frame-radius:26px;
+  min-height:100dvh;
+  padding:var(--opera-frame-gap);
+  margin:0;
+  background-color:#302c29;
+  background-image:
+    url("/static/nexon-connections.svg"),
+    radial-gradient(ellipse at 4% 7%,rgba(255,203,92,.32),transparent 50%),
+    radial-gradient(ellipse at 97% 90%,rgba(200,151,57,.20),transparent 48%),
+    linear-gradient(145deg,#49381F 0%,#302D29 45%,#152A3B 100%);
+  background-size:560px auto,auto,auto,auto;
+  background-position:center center,center,center,center;
+  background-repeat:repeat,no-repeat,no-repeat,no-repeat;
+  background-attachment:fixed,fixed,fixed,fixed;
+  overflow-x:hidden;
+}
+.home-page .app-shell{
+  width:100%;
+  max-width:none;
+  height:calc(100dvh - (2 * var(--opera-frame-gap)));
+  min-height:0;
+  margin:0 auto;
+  overflow:hidden;
+  border:1px solid rgba(242,222,168,.30);
+  border-radius:var(--opera-frame-radius);
+  background:#F6F9FC;
+  box-shadow:0 23px 64px rgba(8,16,31,.26),0 3px 12px rgba(6,16,31,.12),0 0 0 1px rgba(255,255,255,.12);
+}
+.home-page .side-nav{
+  min-height:0;
+  height:100%;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#37506A transparent;
+}
+.home-page .main-area{
+  min-height:0;
+  height:100%;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  border-radius:0 calc(var(--opera-frame-radius) - 1px) calc(var(--opera-frame-radius) - 1px) 0;
+  background:linear-gradient(153deg,#FBFCFF 0%,#F1F6FB 64%,#F7FAFC 100%);
+}
+.home-page .top-bar{
+  border-radius:0 calc(var(--opera-frame-radius) - 1px) 0 0;
+}
+
+/* O menu móvel usa drawer fixo e overlay fora da moldura:
+   mantê-los acessíveis acima do conteúdo como no Opera aprovado. */
+@media(max-width:860px){
+  body.home-page{
+    --opera-frame-gap:11px;
+    --opera-frame-radius:24px;
+    min-height:100dvh;
+    padding:var(--opera-frame-gap);
+    background-position:center top,center,center,center;
+    background-attachment:scroll,scroll,scroll,scroll;
+    overflow-y:auto;
+  }
+  .home-page .app-shell{
+    display:block;
+    width:100%;
+    min-height:calc(100dvh - 2 * var(--opera-frame-gap));
+    height:auto;
+    overflow:hidden;
+    border:1px solid rgba(239,220,176,.36);
+    border-radius:var(--opera-frame-radius);
+    box-shadow:0 20px 50px rgba(6,18,35,.28),0 4px 15px rgba(8,24,42,.10);
+  }
+  .home-page .main-area{
+    min-height:calc(100dvh - 2 * var(--opera-frame-gap) - 2px);
+    height:auto;
+    overflow:visible;
+    border-radius:calc(var(--opera-frame-radius) - 1px);
+    background:linear-gradient(157deg,#FAFCFF 0%,#F2F6FA 62%,#F7FAFC 100%);
+  }
+  .home-page .top-bar{
+    top:0;
+    border-radius:calc(var(--opera-frame-radius) - 1px) calc(var(--opera-frame-radius) - 1px) 0 0;
+  }
+  /* Sidebar permanece fora da rolagem interna e não sofre clipping.
+     O comportamento aberto/fechado continua com as regras existentes. */
+  .home-page .side-nav{
+    position:fixed;
+    height:calc(100dvh - 2 * var(--opera-frame-gap));
+    overflow-y:auto;
+    z-index:31;
+  }
+}
+@media(max-width:600px){
+  body.home-page{
+    --opera-frame-gap:10px;
+    --opera-frame-radius:23px;
+    padding:var(--opera-frame-gap);
+  }
+  .home-page .app-shell{
+    min-height:calc(100dvh - 20px);
+    border-radius:23px;
+  }
+  .home-page .main-area{
+    min-height:calc(100dvh - 22px);
+    border-radius:22px;
+  }
+  .home-page .top-bar{
+    border-radius:22px 22px 0 0;
+  }
+}
+/* A barra de rolagem do conteúdo não atravessa a moldura de borda. */
+@media(min-width:861px){
+  html:has(body.home-page){height:100%;overflow:hidden}
+  body.home-page{height:100dvh;overflow:hidden}
+}
+/* Se o navegador usar zoom alto ou viewport deitada, mantém disponível
+   a rolagem dos painéis sem expor conteúdo nos cantos do container. */
+@media(max-width:860px) and (max-height:520px){
+  .home-page .app-shell,.home-page .main-area{
+    min-height:calc(100dvh - 2 * var(--opera-frame-gap));
+  }
+}
