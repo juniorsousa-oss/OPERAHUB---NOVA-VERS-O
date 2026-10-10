@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-identity-v2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='institutional-scale-20261010-v3') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='institutional-crop-contextual-v4') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='exterior-frame.css', v='opera-login-wallpaper-navfix-20261010-v2') }}">
 </head>
 <body class="home-page config-page">
@@ -262,7 +262,7 @@
               <div class="settings-accordion-body">
                 <div class="identity-field identity-field-single institutional-brand-settings">
                   <div class="asset-preview asset-preview-institutional">
-                    <img src="{{ url_for('institutional_logo_asset', v=settings['updated_at']) }}"
+                    <img src="{{ url_for('institutional_logo_asset', v=settings['updated_at'], presentation='trim-v2') }}"
                          alt="Assinatura institucional atual" decoding="async">
                   </div>
                   <label class="field-label" for="institutionalBrandUpload">Imagem da assinatura institucional</label>
