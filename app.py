@@ -1021,11 +1021,53 @@ def logo_asset():
     return redirect(url_for("static", filename="favicon.svg"))
 
 
+def institutional_signature_response(data_uri):
+    """Recorta só margens transparentes do arquivo entregue ao navegador.
+
+    A marca cadastrada no tenant permanece intacta no Supabase. O recorte
+    corrige logos muito horizontais salvos em telas transparentes 390x260:
+    sem isso, object-fit:contain comprime toda a marca num desenho minúsculo.
+    """
+    mime, raw = data_uri_parts(data_uri)
+    if mime not in {"image/png", "image/webp", "image/jpeg"} or not raw:
+        return data_uri_response(data_uri, max_age=120)
+    try:
+        with Image.open(BytesIO(raw)) as opened:
+            if opened.width * opened.height > 12_000_000:
+                return data_uri_response(data_uri, max_age=120)
+            original = ImageOps.exif_transpose(opened).convert("RGBA")
+            alpha = original.getchannel("A")
+            if alpha.getextrema()[0] == 255:
+                return data_uri_response(data_uri, max_age=120)
+            # Ignora sombras quase invisíveis: usa a parte efetiva do desenho.
+            mask = alpha.point(lambda a: 255 if a >= 28 else 0)
+            bounds = mask.getbbox()
+            if not bounds:
+                return data_uri_response(data_uri, max_age=120)
+            left, top, right, bottom = bounds
+            if right - left < 12 or bottom - top < 8:
+                return data_uri_response(data_uri, max_age=120)
+            margin = max(2, round(min(right - left, bottom - top) * .045))
+            box = (
+                max(0, left - margin),
+                max(0, top - margin),
+                min(original.width, right + margin),
+                min(original.height, bottom + margin),
+            )
+            if ((box[2] - box[0]) * (box[3] - box[1])) >= .92 * (original.width * original.height):
+                return data_uri_response(data_uri, max_age=120)
+            output = BytesIO()
+            original.crop(box).save(output, "WEBP", lossless=True, method=4)
+            return binary_response(output.getvalue(), "image/webp", max_age=120)
+    except (OSError, ValueError, Image.DecompressionBombError):
+        return data_uri_response(data_uri, max_age=120)
+
+
 @app.route("/assets/institutional-logo")
 def institutional_logo_asset():
-    """Marca institucional configurada neste tenant, igual no login e rodapé."""
+    """Marca institucional do tenant, sem padding invisível no login e rodapé."""
     data = asset_data("institutional_logo")
-    response = data_uri_response(data, max_age=120)
+    response = institutional_signature_response(data)
     if response is not None:
         return response
     return redirect(url_for("static", filename="nexon-monochrome-dark.svg"))

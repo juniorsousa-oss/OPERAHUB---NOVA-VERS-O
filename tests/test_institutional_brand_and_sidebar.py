@@ -60,7 +60,7 @@ class BrandAndSidebarTests(TestCase):
     def test_same_institutional_asset_used_on_both_pages(self):
         for path in ("templates/login.html","templates/index.html"):
             html=(ROOT/path).read_text()
-            self.assertIn("url_for('institutional_logo_asset', v=settings['updated_at'])",html)
+            self.assertIn("url_for('institutional_logo_asset', v=settings['updated_at'], presentation='trim-v2')",html)
             self.assertNotIn("filename='nexon-monochrome-dark.svg'",html)
         config=(ROOT/"templates/config.html").read_text()
         self.assertIn("id=\"institutionalBrandSettings\"",config)
