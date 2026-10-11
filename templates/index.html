@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='premium.css', v='opera-mobile-hero-v2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='brand-refinements.css', v='institutional-crop-contextual-v4') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='exterior-frame.css', v='opera-login-wallpaper-navfix-20261010-v2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile-fixed-header.css', v='fixed-content-scroll-r1') }}">
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -157,6 +158,7 @@
           {% endif %}
         </div>
       </header>
+      <div class="main-scroll" id="main-scroll" role="region" aria-label="Conteúdo do Opera Hub" tabindex="-1">
 
       <section
         class="hero"
@@ -281,6 +283,7 @@
       <footer class="opera-brand-footer" aria-label="Aplicativo desenvolvido pela Nexon Labs">
         <img class="nexon-mono-signature" src="{{ url_for('institutional_logo_asset', v=settings['updated_at'], presentation='trim-v2') }}" alt="Nexon Labs — Soluções Digitais" width="168" height="43">
       </footer>
+      </div>
     </main>
     {# O backdrop precisa compartilhar a camada do sidebar; fora do shell ele fica acima do menu no Safari. #}
     <div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
