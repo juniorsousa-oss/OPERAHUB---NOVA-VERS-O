@@ -155,19 +155,16 @@ a,button,input{ -webkit-tap-highlight-color:transparent }
 
 /* Login: Atria como referência de acabamento, sem copiar sua identidade.
    A personalização de imagem, logo, zoom e posição continua intacta. */
-/* Login — atmosfera Nexon premium: um unico grafismo tenue, sem ladrilhos.
-   Deixar o card em evidencia e preservar ouro + azul escuro da marca. */
+/* Login — atmosfera institucional exclusiva, inspirada no acabamento
+   do AXORA: geometria fina, nodos suaves e transicao ouro/azul.
+   O artwork tem proporcao propria de viewport, sem mosaico nem zoom. */
 body.login-page{
   position:relative;
   isolation:isolate;
   min-height:100vh;
   min-height:100svh;
   padding:clamp(18px,3vw,42px);
-  background:
-    radial-gradient(ellipse at 12% 12%,rgba(228,170,46,.16),transparent 39%),
-    radial-gradient(ellipse at 89% 87%,rgba(199,139,29,.085),transparent 36%),
-    radial-gradient(ellipse at 48% 78%,rgba(40,81,119,.11),transparent 49%),
-    linear-gradient(135deg,#302b26 0%,#22282e 44%,#112336 100%);
+  background:linear-gradient(135deg,#4b3a24 0%,#283a49 49%,#102c44 100%);
 }
 body.login-page::before{
   content:"";
@@ -175,11 +172,11 @@ body.login-page::before{
   inset:0;
   z-index:0;
   pointer-events:none;
-  background-image:url('/static/nexon-connections.svg');
+  background-image:url('/static/opera-login-atmosphere-v2.svg');
   background-position:center center;
-  background-size:min(1460px,110vw) auto;
+  background-size:cover;
   background-repeat:no-repeat;
-  opacity:.075;
+  opacity:1;
 }
 .login-page .login-shell{
   position:relative;z-index:1;
@@ -459,7 +456,13 @@ body.login-page::before{
       radial-gradient(circle at 100% 88%,rgba(235,170,37,.26),transparent 49%),
       linear-gradient(160deg,#48351e 0%,#302d2a 57%,#1c2b3b 100%);
   }
-  body.login-page::before{background-size:385px auto;opacity:.11}
+  body.login-page::before{
+    /* Mobile conserva o easter egg discreto ja dimensionado para telefone. */
+    background-image:url('/static/nexon-connections.svg');
+    background-size:385px auto;
+    background-repeat:repeat;
+    opacity:.11;
+  }
   .login-page .login-shell{
     width:100%;max-width:510px;
     min-height:0;height:auto;
