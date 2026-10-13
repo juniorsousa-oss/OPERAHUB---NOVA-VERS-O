@@ -18,7 +18,7 @@ class OperaLoginScaleTests(unittest.TestCase):
                 result = self.client.get("/login", headers={"Host": host})
                 self.assertEqual(result.status_code, 200)
                 html = result.get_data(as_text=True)
-                self.assertIn("opera-login-atmosphere-no-repeat-v3", html)
+                self.assertIn("opera-login-ambient-nexon-v4", html)
                 self.assertIn("institutional-desktop-axora-v1", html)
                 self.assertIn('class="login-shell"', html)
                 self.assertIn('name="password"', html)
@@ -41,11 +41,13 @@ class OperaLoginScaleTests(unittest.TestCase):
         response = self.client.get("/static/premium.css")
         self.assertEqual(response.status_code, 200)
         css = response.get_data(as_text=True)
-        desktop = css.split("/* Login — atmosfera Nexon premium", 1)[1].split(".login-page .login-shell{", 1)[0]
+        desktop = css.split("/* Login — atmosfera institucional exclusiva", 1)[1].split(".login-page .login-shell{", 1)[0]
         self.assertIn("body.login-page::before", desktop)
         self.assertIn("background-repeat:no-repeat", desktop)
-        self.assertIn("background-image:url('/static/nexon-connections.svg')", desktop)
-        self.assertIn("opacity:.075", desktop)
+        self.assertIn("background-image:url('/static/opera-login-atmosphere-v2.svg')", desktop)
+        self.assertIn("background-size:cover", desktop)
+        self.assertIn("opacity:1", desktop)
+        self.assertIn("background-image:url('/static/nexon-connections.svg')", css)
         self.assertNotIn("center/560px auto repeat", desktop)
         self.assertEqual(css.count("{"), css.count("}"))
 
