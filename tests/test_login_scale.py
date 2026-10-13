@@ -18,7 +18,7 @@ class OperaLoginScaleTests(unittest.TestCase):
                 result = self.client.get("/login", headers={"Host": host})
                 self.assertEqual(result.status_code, 200)
                 html = result.get_data(as_text=True)
-                self.assertIn("opera-desktop-axora-960x550-v2", html)
+                self.assertIn("opera-login-atmosphere-no-repeat-v3", html)
                 self.assertIn("institutional-desktop-axora-v1", html)
                 self.assertIn('class="login-shell"', html)
                 self.assertIn('name="password"', html)
