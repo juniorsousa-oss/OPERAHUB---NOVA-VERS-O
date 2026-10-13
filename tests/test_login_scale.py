@@ -18,7 +18,7 @@ class OperaLoginScaleTests(unittest.TestCase):
                 result = self.client.get("/login", headers={"Host": host})
                 self.assertEqual(result.status_code, 200)
                 html = result.get_data(as_text=True)
-                self.assertIn("opera-login-ambient-nexon-v4", html)
+                self.assertIn("opera-login-approved-premium-v5", html)
                 self.assertIn("institutional-desktop-axora-v1", html)
                 self.assertIn('class="login-shell"', html)
                 self.assertIn('name="password"', html)
@@ -44,19 +44,23 @@ class OperaLoginScaleTests(unittest.TestCase):
         desktop = css.split("/* Login — atmosfera institucional exclusiva", 1)[1].split(".login-page .login-shell{", 1)[0]
         self.assertIn("body.login-page::before", desktop)
         self.assertIn("background-repeat:no-repeat", desktop)
-        self.assertIn("background-image:url('/static/opera-login-atmosphere-v2.svg')", desktop)
+        self.assertIn("background-image:url('/static/opera-login-approved-premium-v1.svg')", desktop)
         self.assertIn("background-size:cover", desktop)
         self.assertIn("opacity:1", desktop)
-        self.assertIn("background-image:url('/static/nexon-connections.svg')", css)
+        self.assertEqual(css.count("background-image:url('/static/opera-login-approved-premium-v1.svg')"), 2)
         self.assertNotIn("center/560px auto repeat", desktop)
         self.assertEqual(css.count("{"), css.count("}"))
-        artwork = self.client.get("/static/opera-login-atmosphere-v2.svg")
+        artwork = self.client.get("/static/opera-login-approved-premium-v1.svg")
         self.assertEqual(artwork.status_code, 200)
         svg = artwork.get_data(as_text=True)
-        self.assertIn('viewBox="0 0 1672 941"', svg)
-        self.assertIn('id="amberGlow"', svg)
-        self.assertIn('id="blueGlow"', svg)
+        self.assertIn('viewBox="0 0 1494 895"', svg)
+        self.assertIn('id="goldenAura"', svg)
+        self.assertIn('id="blueAura"', svg)
         self.assertIn('</svg>', svg)
+        import xml.etree.ElementTree as ET
+        ET.fromstring(svg)  # Asset vetorial válido e independente do cartão HTML.
+        self.assertIn('id="lightGold"', svg)
+        self.assertIn('id="lightBlue"', svg)
 
     def test_brand_keeps_aspect_ratio_and_mobile_breakpoints(self):
         css = self.client.get("/static/brand-refinements.css")
