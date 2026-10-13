@@ -155,22 +155,31 @@ a,button,input{ -webkit-tap-highlight-color:transparent }
 
 /* Login: Atria como referência de acabamento, sem copiar sua identidade.
    A personalização de imagem, logo, zoom e posição continua intacta. */
+/* Login — atmosfera Nexon premium: um unico grafismo tenue, sem ladrilhos.
+   Deixar o card em evidencia e preservar ouro + azul escuro da marca. */
 body.login-page{
   position:relative;
   isolation:isolate;
   min-height:100vh;
   min-height:100svh;
-  background:
-    radial-gradient(ellipse at 2% 8%,rgba(255,204,88,.38),transparent 49%),
-    radial-gradient(ellipse at 98% 96%,rgba(235,165,36,.27),transparent 50%),
-    radial-gradient(ellipse at 60% 100%,rgba(70,49,22,.22),transparent 62%),
-    linear-gradient(145deg,#46341b 0%,#312b25 47%,#192a3d 100%);
   padding:clamp(18px,3vw,42px);
+  background:
+    radial-gradient(ellipse at 12% 12%,rgba(228,170,46,.16),transparent 39%),
+    radial-gradient(ellipse at 89% 87%,rgba(199,139,29,.085),transparent 36%),
+    radial-gradient(ellipse at 48% 78%,rgba(40,81,119,.11),transparent 49%),
+    linear-gradient(135deg,#302b26 0%,#22282e 44%,#112336 100%);
 }
 body.login-page::before{
-  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url('/static/nexon-connections.svg') center/560px auto repeat;
-  opacity:.12;
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:url('/static/nexon-connections.svg');
+  background-position:center center;
+  background-size:min(1460px,110vw) auto;
+  background-repeat:no-repeat;
+  opacity:.075;
 }
 .login-page .login-shell{
   position:relative;z-index:1;
