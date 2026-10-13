@@ -50,6 +50,13 @@ class OperaLoginScaleTests(unittest.TestCase):
         self.assertIn("background-image:url('/static/nexon-connections.svg')", css)
         self.assertNotIn("center/560px auto repeat", desktop)
         self.assertEqual(css.count("{"), css.count("}"))
+        artwork = self.client.get("/static/opera-login-atmosphere-v2.svg")
+        self.assertEqual(artwork.status_code, 200)
+        svg = artwork.get_data(as_text=True)
+        self.assertIn('viewBox="0 0 1672 941"', svg)
+        self.assertIn('id="amberGlow"', svg)
+        self.assertIn('id="blueGlow"', svg)
+        self.assertIn('</svg>', svg)
 
     def test_brand_keeps_aspect_ratio_and_mobile_breakpoints(self):
         css = self.client.get("/static/brand-refinements.css")
