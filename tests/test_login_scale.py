@@ -37,6 +37,18 @@ class OperaLoginScaleTests(unittest.TestCase):
         self.assertIn("height:45px", css)
         self.assertIn("@media (max-width:600px)", css)
 
+    def test_login_easter_egg_is_soft_and_non_repeating(self):
+        response = self.client.get("/static/premium.css")
+        self.assertEqual(response.status_code, 200)
+        css = response.get_data(as_text=True)
+        desktop = css.split("/* Login — atmosfera Nexon premium", 1)[1].split(".login-page .login-shell{", 1)[0]
+        self.assertIn("body.login-page::before", desktop)
+        self.assertIn("background-repeat:no-repeat", desktop)
+        self.assertIn("background-image:url('/static/nexon-connections.svg')", desktop)
+        self.assertIn("opacity:.075", desktop)
+        self.assertNotIn("center/560px auto repeat", desktop)
+        self.assertEqual(css.count("{"), css.count("}"))
+
     def test_brand_keeps_aspect_ratio_and_mobile_breakpoints(self):
         css = self.client.get("/static/brand-refinements.css")
         self.assertEqual(css.status_code, 200)
