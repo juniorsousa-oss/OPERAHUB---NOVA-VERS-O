@@ -172,7 +172,7 @@ body.login-page::before{
   inset:0;
   z-index:0;
   pointer-events:none;
-  background-image:url('/static/opera-login-atmosphere-v2.svg');
+  background-image:url('/static/opera-login-approved-premium-v1.svg');
   background-position:center center;
   background-size:cover;
   background-repeat:no-repeat;
@@ -451,17 +451,15 @@ body.login-page::before{
       max(16px,env(safe-area-inset-top))
       13px
       max(20px,env(safe-area-inset-bottom));
-    background:
-      radial-gradient(circle at 3% 7%,rgba(251,193,57,.40),transparent 53%),
-      radial-gradient(circle at 100% 88%,rgba(235,170,37,.26),transparent 49%),
-      linear-gradient(160deg,#48351e 0%,#302d2a 57%,#1c2b3b 100%);
+    background:linear-gradient(160deg,#654829 0%,#243343 52%,#10283e 100%);
   }
   body.login-page::before{
-    /* Mobile conserva o easter egg discreto ja dimensionado para telefone. */
-    background-image:url('/static/nexon-connections.svg');
-    background-size:385px auto;
-    background-repeat:repeat;
-    opacity:.11;
+    /* Mesma arte aprovada: recorte responsivo sem padrao repetido. */
+    background-image:url('/static/opera-login-approved-premium-v1.svg');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    opacity:1;
   }
   .login-page .login-shell{
     width:100%;max-width:510px;
