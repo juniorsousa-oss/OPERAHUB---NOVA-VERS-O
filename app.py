@@ -2099,6 +2099,16 @@ def healthz():
     }
 
 
+
+@app.route("/service-worker.js")
+def pwa_service_worker():
+    """Service worker sem cache de operações, sessões ou dados dos clientes."""
+    response = send_file(os.path.join(app.root_path, "static", "pwa", "service-worker.js"), mimetype="application/javascript")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
+
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
