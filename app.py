@@ -5,6 +5,9 @@ import secrets
 import hmac
 import time
 import unicodedata
+from pathlib import Path
+
+import mrp_demo_data
 from io import BytesIO
 from urllib.parse import urlparse
 
@@ -16,6 +19,7 @@ from flask import (
     abort,
     flash,
     g,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -27,6 +31,11 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "opera-hub-local-dev-key")
 app.config["ADMIN_PASSWORD"] = os.getenv("ADMIN_PASSWORD", "").strip()
+app.config["MRP_DEMO_ENABLED"] = (
+    os.getenv("OPERAHUB_MRP_DEMO", "") == "1"
+    and len(os.getenv("SECRET_KEY", "")) >= 32
+    and app.secret_key != "opera-hub-local-dev-key"
+)
 
 SUPABASE_URL = os.getenv(
     "SUPABASE_URL",
@@ -1301,34 +1310,113 @@ def user_avatar_asset(user_id):
     return ("", 404)
 
 
+def _mrp_demo_available(bootstrap=None):
+    # A flag é por deploy, não por usuário ou parâmetro da URL.
+    # O cliente Setta e outros hosts jamais servem este protótipo.
+    if not (app.config["MRP_DEMO_ENABLED"]
+            and OPERAHUB_DEFAULT_ORG == "opera-hub-demo"
+            and active_organization_slug() == "opera-hub-demo"):
+        return False
+    boot = bootstrap if bootstrap is not None else load_bootstrap()
+    org = boot.get("organization") or {}
+    access = (boot.get("module_access") or {}).get("mrp-demo") or {}
+    return bool(org.get("slug") == "opera-hub-demo" and org.get("mode") == "demo"
+                and access.get("enabled", True))
+
+
+def _hub_view(bootstrap, mrp_view=False):
+    settings = dict(bootstrap["settings"])
+    user = current_user()
+    mrp_available = _mrp_demo_available(bootstrap)
+    nav_items, applications = module_visibility(bootstrap)
+    if user and mrp_available and (Path(app.static_folder) / "mrp-v2" / "mrp.js").is_file():
+        vis = (bootstrap.get("module_access") or {}).get("mrp-demo") or {}
+        if vis.get("show_menu", True):
+            nav_items = [item for item in nav_items if item["key"] != "mrp-demo"]
+            nav_items.insert(1, {
+                "key": "mrp-demo", "label": "MRP · DEMO",
+                "icon": "fa-solid fa-layer-group", "url": url_for("mrp_demo"),
+                "sort_order": 2, "new_tab": False,
+            })
+        if vis.get("show_home", True):
+            applications = [item for item in applications if item["key"] != "mrp-demo"]
+            applications.insert(0, {
+                "key": "mrp-demo", "name": "MRP · DEMO",
+                "description": "Consulta de materiais e necessidades com dados fictícios.",
+                "icon": "fa-solid fa-layer-group", "status": "development",
+                "url": url_for("mrp_demo"), "new_tab": False,
+                "has_image": False, "image_zoom": 142, "updated_at": "",
+            })
+    return render_template(
+        "index.html", nav_items=nav_items, applications=applications,
+        settings=settings, logged_in=bool(user), current_user=user,
+        can_admin=admin_authorized(), can_platform_admin=is_platform_admin(),
+        organization=current_organization(), mrp_view=mrp_view,
+        hero_image=url_for("hero_asset", v=settings.get("updated_at", "")),
+    )
+
+
 @app.route("/")
 def index():
     bootstrap = load_bootstrap()
-    settings = dict(bootstrap["settings"])
-
-    if (
-        login_required_for_current_tenant(settings)
-        and not is_logged_in()
-    ):
+    if login_required_for_current_tenant(bootstrap["settings"]) and not is_logged_in():
         return redirect(url_for("login", next=url_for("index")))
+    return _hub_view(bootstrap)
 
-    nav_items, applications = module_visibility(bootstrap)
-    return render_template(
-        "index.html",
-        nav_items=nav_items,
-        applications=applications,
-        settings=settings,
-        logged_in=is_logged_in(),
-        current_user=current_user(),
-        can_admin=admin_authorized(),
-        can_platform_admin=is_platform_admin(),
-        organization=current_organization(),
-        hero_image=url_for(
-            "hero_asset",
-            v=settings.get("updated_at", ""),
-        ),
-    )
 
+@app.get("/mrp")
+def mrp_demo():
+    if not _mrp_demo_available():
+        abort(404)
+    if not current_user():
+        return redirect(url_for("login", next=url_for("mrp_demo")))
+    if not (Path(app.static_folder) / "mrp-v2" / "mrp.js").is_file():
+        abort(503)
+    response=app.make_response(_hub_view(load_bootstrap(), mrp_view=True))
+    response.headers["Cache-Control"]="private, no-store"
+    response.headers["X-Robots-Tag"]="noindex, nofollow"
+    return response
+
+
+def _mrp_json(data, status=200):
+    response=jsonify(data)
+    response.status_code=status
+    response.headers["Cache-Control"]="private, no-store"
+    return response
+
+
+@app.get("/mrp/api/materials")
+def mrp_demo_materials():
+    if not _mrp_demo_available():
+        return _mrp_json({"erro":"Módulo indisponível."},404)
+    if not current_user():
+        return _mrp_json({"erro":"Sessão necessária."},401)
+    args=request.args
+    q=args.get("q","").strip()
+    status=args.get("status") or None
+    tipo=args.get("tipo") or None
+    sort=args.get("sort","prioridade")
+    try:
+        page=int(args.get("page","1"))
+        size=int(args.get("size","10"))
+    except (ValueError, OverflowError):
+        return _mrp_json({"erro":"Paginação inválida."},400)
+    if (len(q)>100 or status not in {None,"critico","atencao","no_prazo","nao_apto"}
+        or tipo not in {None,"MP","PI","PA"}
+        or sort not in {"prioridade","codigo","descricao","demanda","estoque","semana"}
+        or not 1<=page<=5000 or size not in {10,20,50}):
+        return _mrp_json({"erro":"Filtro ou paginação inválidos."},400)
+    return _mrp_json(mrp_demo_data.materials(q,status,tipo,page,size,sort,args.get("descending")=="true"))
+
+
+@app.get("/mrp/api/materials/<codigo>")
+def mrp_demo_material(codigo):
+    if not _mrp_demo_available():
+        return _mrp_json({"erro":"Módulo indisponível."},404)
+    if not current_user():
+        return _mrp_json({"erro":"Sessão necessária."},401)
+    data=mrp_demo_data.material(codigo)
+    return _mrp_json(data) if data else _mrp_json({"erro":"Material não encontrado."},404)
 
 
 @app.route("/administracao", methods=["GET", "POST"])

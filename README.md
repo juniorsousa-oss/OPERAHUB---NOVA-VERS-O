@@ -153,3 +153,24 @@ O Opera Hub segue a **referência visual de proporções do ATRIA** para telas d
 O padrão de referência está documentado em [NEXONLABS/docs/PADRAO-VISUAL-LOGIN.md](https://github.com/juniorsousa-oss/NEXONLABS/blob/main/docs/PADRAO-VISUAL-LOGIN.md).
 
 A versão mobile usa cartão centralizado com altura ajustada ao conteúdo, preservando imagem institucional, cores, identificação BASE/DEMO ou CLIENTE, usuário, senha e link de retorno. Alterações visuais não devem afetar os tenants, a autenticação nem o layout desktop validado.
+
+## MRP v2 — módulo de consulta DEMO
+
+Implementação isolada, sem dados da Setta e sem ações de escrita. O módulo é interno
+ao Opera Hub, usa seu login e não cria uma conta separada. Não altera o MRP
+em Streamlit, nem lê suas bases ou exporta carga para o Protheus.
+
+Para instalar em um ambiente **separado** de homologação, use a branch
+`demo/mrp-no-opera-hub` e o arquivo `Dockerfile.mrp-preview`. Configure
+`OPERAHUB_DEFAULT_ORG=opera-hub-demo`, `OPERAHUB_MRP_DEMO=1` e gere
+um `SECRET_KEY` exclusivo com pelo menos 32 caracteres. Use uma conta de
+teste do Hub aprovada para esse ambiente. Não copie segredos, credenciais ou
+bases do serviço de produção. O módulo fica desligado no deploy cliente Setta.
+
+A página é `/mrp` e o check do serviço é `/healthz`. O fluxo do MRP atual,
+separação/entrega de solicitações, carga Protheus e paridade do cálculo são fases
+posteriores; o seletor de perfil do MRP não foi inventado no DEMO. Antes de
+dados reais, mapear ADMIN/OPERADOR/CONSULTA em autorização verificável no servidor.
+
+Build local: `npm --prefix mrp_frontend ci && npm --prefix mrp_frontend run build`.
+O Dockerfile de homologação também gera os arquivos estáticos.

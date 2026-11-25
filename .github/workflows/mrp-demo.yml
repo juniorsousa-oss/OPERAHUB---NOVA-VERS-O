@@ -1,0 +1,21 @@
+name: MRP DEMO no Opera Hub
+on:
+  push:
+    branches: [demo/mrp-no-opera-hub]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm --prefix mrp_frontend ci && npm --prefix mrp_frontend run build
+      - run: pip install -r requirements.txt 'playwright>=1.54,<2'
+      - run: python -m unittest discover -s tests -p test_mrp_demo_module.py -v
+      - run: python tests/browser_mrp_demo.py

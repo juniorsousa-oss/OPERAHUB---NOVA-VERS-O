@@ -4,18 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0F1B2D">
-  <title>Opera Hub | Operações conectadas</title>
+  <title>{{ 'MRP · DEMO | Opera Hub' if mrp_view else 'Opera Hub | Operações conectadas' }}</title>
+  {% if mrp_view %}
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mrp-v2/mrp.css') }}">
+  {% endif %}
   {% if settings['has_favicon'] %}
   <link rel="icon" href="{{ url_for('favicon_asset', v=settings['updated_at'], style='optical93-v1') }}">
   {% else %}
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg', v='optical93-v1') }}" type="image/svg+xml">
   {% endif %}
-  <link
+  {% if not mrp_view %}<link
     rel="preload"
     as="image"
     href="{{ hero_image }}"
     fetchpriority="high"
-  >
+  >{% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -49,7 +53,7 @@
           {% set configured = item['url']|length > 0 %}
           {% set href = item['url'] if configured else ('/' if item['key'] == 'inicio' else '#') %}
           <a
-            class="nav-link {{ 'active' if item['key'] == 'inicio' else '' }} {{ 'disabled' if not configured and item['key'] != 'inicio' else '' }}"
+            class="nav-link {{ 'active' if (mrp_view and item['key'] == 'mrp-demo') or (not mrp_view and item['key'] == 'inicio') else '' }} {{ 'disabled' if not configured and item['key'] != 'inicio' else '' }}"
             href="{{ href }}"
             {% if configured and item['new_tab'] %}target="_blank" rel="noopener noreferrer"{% endif %}
             {% if not configured and item['key'] != 'inicio' %}data-unconfigured="true"{% endif %}
@@ -95,11 +99,15 @@
           <i class="fa-solid fa-bars"></i>
         </button>
 
+        {% if mrp_view %}
+        <a class="mrp-hub-back" href="{{ url_for('index') }}">Início <span aria-hidden="true">›</span> MRP</a>
+        {% else %}
         <div class="search-wrap">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input id="appSearch" type="search" placeholder="Buscar no Opera Hub..." autocomplete="off">
         </div>
 
+        {% endif %}
         <div class="tenant-chip tenant-chip-{{ organization['mode'] }}" title="Ambiente ativo">
           <span class="tenant-chip-dot"></span>
           <div>
@@ -160,6 +168,11 @@
       </header>
       <div class="main-scroll" id="main-scroll" role="region" aria-label="Conteúdo do Opera Hub" tabindex="-1">
 
+      {% if mrp_view %}
+      <section id="mrp-root" data-api="{{ url_for('mrp_demo_materials') }}" data-login="{{ url_for('login', next=url_for('mrp_demo')) }}" aria-label="Consulta MRP">
+        <p>Carregando o módulo MRP DEMO…</p>
+      </section>
+      {% else %}
       <section
         class="hero"
         style="
@@ -280,6 +293,7 @@
         </div>
       </section>
 
+      {% endif %}
       <footer class="opera-brand-footer" aria-label="Aplicativo desenvolvido pela Nexon Labs">
         <img class="nexon-mono-signature" src="{{ url_for('institutional_logo_asset', v=settings['updated_at'], presentation='trim-v2') }}" alt="Nexon Labs — Soluções Digitais" width="168" height="43">
       </footer>
@@ -358,5 +372,6 @@
   {% endwith %}
 
   <script src="{{ url_for('static', filename='app.js', v='opera-drawer-layer-r1') }}"></script>
+  {% if mrp_view %}<script type="module" src="{{ url_for('static', filename='mrp-v2/mrp.js') }}"></script>{% endif %}
 </body>
 </html>
